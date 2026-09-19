@@ -8,6 +8,7 @@ import { HowThingsWork } from './components/HowThingsWork';
 import { TreasurySettingsModal } from './components/TreasurySettingsModal';
 import { WalletConnectModal } from './components/WalletConnectModal';
 import { TransparencyProofModal } from './components/TransparencyProofModal';
+import { FloatingCoinsBackground } from './components/FloatingCoinsBackground';
 import { 
   INITIAL_TOKENS, 
   INITIAL_FEES, 
@@ -516,7 +517,10 @@ export default function App() {
   const totalDisbursedUsd = payouts.reduce((acc, curr) => acc + curr.amountUsd, 0);
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark bg-zinc-950 text-zinc-100' : 'bg-zinc-100/70 text-zinc-900'} flex flex-col font-sans transition-colors`}>
+    <div className={`min-h-screen ${isDarkMode ? 'dark bg-zinc-950 text-zinc-100' : 'bg-zinc-100/70 text-zinc-900'} flex flex-col font-sans transition-colors relative overflow-x-hidden`}>
+      {/* Floating Animated Coins Layer like usepaid.app */}
+      <FloatingCoinsBackground interactive={true} />
+
       {/* Toast Notification - mobile elevated above bottom nav */}
       {toastMessage && (
         <div className="fixed bottom-20 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-50 bg-zinc-900 dark:bg-zinc-800 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center justify-center sm:justify-start gap-3 border border-zinc-700 dark:border-zinc-600 animate-fade-in text-xs sm:text-sm max-w-sm sm:max-w-md mx-auto sm:mx-0">
