@@ -16,11 +16,11 @@ export const INITIAL_TREASURY_CONFIG: TreasuryConfig = {
 
 export const INITIAL_TOKENS: TokenLaunchData[] = [
   {
-    id: 'tok-user-spacex-mars',
+    id: 'tok-user-spacex-mars-79k',
     name: 'SpaceX Martian',
     symbol: 'MARS',
-    description: 'SpaceX Martian token launched on Pump.fun (Solana). 100% of creator trading royalties and graduation rewards are bound to Treasury ChKVce...EMy8 and routed to @elonmusk via X Money.',
-    logoUrl: 'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=200&auto=format&fit=crop&q=80',
+    description: 'The official Mars settlement meme coin on Pump.fun with auto 𝕏 Money royalty routing [Treasury Auto-Connected] Creator trading fees automatically routed to @elonmusk via Protocol Treasury: ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
+    logoUrl: 'https://gateway.pinata.cloud/ipfs/QmRZzpB9Dawb6QrJBJKW1NqtrYo25eAaEf6nY2Q3aZdRZ4',
     platform: 'pumpfun',
     network: 'solana',
     beneficiaryXHandle: '@elonmusk',
@@ -28,18 +28,19 @@ export const INITIAL_TOKENS: TokenLaunchData[] = [
     beneficiaryAvatar: 'https://pbs.twimg.com/profile_images/1838634862464733184/pXj9iWd0_400x400.jpg',
     initialBuyAmount: 0.1,
     feeSplitPct: 80,
-    mintAddress: 'AjyyfC92o3Eado4UzbtDdgt35AYK3R88tjQB9gUcoF2J',
-    pairAddress: '9MZehZ1xfeYL2FRCmnEE4zKXbzjsLC4j548CDiZJvJWe',
+    mintAddress: '79KZuAWcKWfbxmVAwpkigZc6qBVRfrvNaaEeeUwE74vF',
+    pairAddress: 'FtwaHYHmQkwxZjfB59Gtpr7mibZNjUqwE6tb1Vb5isCj',
     beneficiaryAccount: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
     creatorFeeRecipient: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
-    marketCapUsd: 0,
-    volume24hUsd: 0,
-    bondingCurveProgress: 0,
-    createdAt: '2026-09-18T22:09:50Z',
-    creatorWallet: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
+    marketCapUsd: 3237.73,
+    volume24hUsd: 142.50,
+    bondingCurveProgress: 4.2,
+    createdAt: new Date().toISOString(),
+    creatorWallet: '7hTGvweCCagv64AFbFda1KVaYyLEqqqqP839aGyqpyK6',
     status: 'active',
     twitterLink: 'https://x.com/elonmusk',
-    metadataUri: 'https://gateway.pinata.cloud/ipfs/QmZ6hU3NhEWPMmzmrZKm4wazd8Z1v3CeLENdwsADqnXxwS',
+    metadataUri: 'https://gateway.pinata.cloud/ipfs/QmRi9SXWF42uDnmuAMZ5AnVwKgRTfFZ4ShWBDzGQE2LhuH',
+    ipfsImageUrl: 'https://gateway.pinata.cloud/ipfs/QmRZzpB9Dawb6QrJBJKW1NqtrYo25eAaEf6nY2Q3aZdRZ4'
   },
   {
     id: 'tok-user-cyberdog',
@@ -69,7 +70,25 @@ export const INITIAL_TOKENS: TokenLaunchData[] = [
   }
 ];
 
-export const INITIAL_FEES: FeeCollectionRecord[] = [];
+export const INITIAL_FEES: FeeCollectionRecord[] = [
+  {
+    id: 'fee-pump-79k-accrued',
+    tokenId: 'tok-user-spacex-mars-79k',
+    tokenSymbol: 'MARS',
+    tokenName: 'SpaceX Martian',
+    platform: 'pumpfun',
+    network: 'solana',
+    rawAmount: 0.02239,
+    currency: 'SOL',
+    amountUsd: 3.80,
+    beneficiaryXHandle: '@elonmusk',
+    beneficiaryCutUsd: 3.04,
+    protocolCutUsd: 0.76,
+    status: 'accrued_on_curve',
+    timestamp: new Date().toISOString(),
+    sourceTxHash: '79KZuAWcKWfbxmVAwpkigZc6qBVRfrvNaaEeeUwE74vF'
+  }
+];
 
 export const INITIAL_PAYOUTS: XMoneyPayout[] = [];
 

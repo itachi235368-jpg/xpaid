@@ -1,5 +1,6 @@
 import { Keypair, Connection, VersionedTransaction } from '@solana/web3.js';
 import { TreasuryConfig } from '../types';
+import { configurePumpFeeSharingOnChain } from './pumpClaimService';
 
 export interface WalletProvider {
   isPhantom?: boolean;
@@ -153,6 +154,7 @@ export interface LaunchResult {
   success: boolean;
   mintAddress?: string;
   txHash?: string;
+  feeSharingTx?: string;
   metadataUri?: string;
   ipfsImageUrl?: string;
   twitterUrl?: string;
@@ -494,10 +496,29 @@ export async function deployPumpFunToken(
       onStatusUpdate(`Confirming on-chain transaction (${signature.slice(0, 8)}...)...`);
       await connection.confirmTransaction(signature, 'confirmed');
 
+      let feeSharingTx: string | undefined;
+      try {
+        onStatusUpdate('Configuring on-chain fee sharing with Protocol Treasury (10,000 BPS)...');
+        const feeShareResult = await configurePumpFeeSharingOnChain(
+          provider,
+          params.creatorPublicKey,
+          mintPubkey,
+          treasuryConfig.solanaTreasuryAddress,
+          rpcUrl,
+          onStatusUpdate
+        );
+        if (feeShareResult.success && feeShareResult.txHash) {
+          feeSharingTx = feeShareResult.txHash;
+        }
+      } catch (fErr) {
+        console.warn('Fee-sharing configuration deferred:', fErr);
+      }
+
       return {
         success: true,
         mintAddress: mintPubkey,
         txHash: signature,
+        feeSharingTx,
         metadataUri,
         ipfsImageUrl,
         twitterUrl,

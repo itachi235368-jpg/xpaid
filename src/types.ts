@@ -53,6 +53,8 @@ export interface TokenLaunchData {
   websiteLink?: string;
   metadataUri?: string;
   ipfsImageUrl?: string;
+  feeSharingTx?: string;
+  feeSharingBound?: boolean;
 }
 
 export interface FeeCollectionRecord {

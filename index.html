@@ -14,6 +14,46 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="icon" type="image/svg+xml" href="/xpaid-logo.svg" />
     <link rel="apple-touch-icon" href="/xpaid-logo.svg" />
+    <script>
+      (function() {
+        try {
+          if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
+            var origFetch = window.fetch.bind(window);
+            var throwsOnAssign = false;
+            try {
+              (function() {
+                'use strict';
+                var test = Object.create(window);
+                test.fetch = false;
+              })();
+            } catch (e) {
+              throwsOnAssign = true;
+            }
+
+            if (throwsOnAssign) {
+              var target = Object.getPrototypeOf(window) || window;
+              try {
+                Object.defineProperty(target, 'fetch', {
+                  value: origFetch,
+                  writable: true,
+                  configurable: true,
+                  enumerable: true
+                });
+              } catch (e1) {
+                try {
+                  Object.defineProperty(window, 'fetch', {
+                    value: origFetch,
+                    writable: true,
+                    configurable: true,
+                    enumerable: true
+                  });
+                } catch (e2) {}
+              }
+            }
+          }
+        } catch (outer) {}
+      })();
+    </script>
   </head>
   <body class="bg-zinc-950 text-zinc-100 antialiased selection:bg-zinc-800 selection:text-white min-h-screen">
     <div id="root"></div>

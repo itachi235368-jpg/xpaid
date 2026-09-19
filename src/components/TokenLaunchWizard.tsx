@@ -221,6 +221,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
     let deployedMetadataUri: string | undefined;
     let deployedIpfsImageUrl: string | undefined;
     let deployedTwitterUrl: string | undefined;
+    let deployedFeeSharingTx: string | undefined;
 
     const effectiveBeneficiaryAccount = treasuryConfig.solanaTreasuryAddress;
 
@@ -276,6 +277,9 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
       if (deployResult.twitterUrl) {
         deployedTwitterUrl = deployResult.twitterUrl;
       }
+      if (deployResult.feeSharingTx) {
+        deployedFeeSharingTx = deployResult.feeSharingTx;
+      }
     } catch (err: any) {
       console.warn('Deploy pumpfun error:', err);
       setErrorMsg(err?.message || 'Failed to deploy on-chain. Please check your wallet connection and gas.');
@@ -317,6 +321,8 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
       websiteLink: websiteLink.trim() || undefined,
       metadataUri: deployedMetadataUri,
       ipfsImageUrl: deployedIpfsImageUrl,
+      feeSharingTx: deployedFeeSharingTx,
+      feeSharingBound: !!deployedFeeSharingTx,
     };
 
     onTokenLaunched(tokenData);
@@ -476,6 +482,23 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
+                {launchedToken.feeSharingTx && (
+                  <div className="sm:col-span-2 pt-1 border-t border-emerald-100 dark:border-emerald-900/60 flex items-center justify-between flex-wrap gap-1">
+                    <span className="text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>On-Chain Fee Sharing (PumpFees):</span>
+                    </span>
+                    <a
+                      href={`https://solscan.io/tx/${launchedToken.feeSharingTx}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1 font-semibold"
+                    >
+                      <span>10,000 BPS Bound to Treasury (Solscan)</span>
+                      <ExternalLink className="w-3 h-3 shrink-0" />
+                    </a>
+                  </div>
+                )}
                 {launchedToken.metadataUri && (
                   <div className="sm:col-span-2 pt-1 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between flex-wrap gap-1">
                     <span className="text-zinc-400 dark:text-zinc-500 font-medium">IPFS Metadata (Image & 𝕏 embedded):</span>

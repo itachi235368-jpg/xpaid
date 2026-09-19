@@ -74,6 +74,7 @@ export default defineConfig(() => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
+        'cross-fetch': path.resolve(__dirname, 'src/shims/cross-fetch.ts'),
       },
     },
     server: {

@@ -31,20 +31,20 @@ export default function App() {
       const saved = localStorage.getItem('xpaid_tokens_v2');
       if (saved) {
         const parsed: TokenLaunchData[] = JSON.parse(saved);
-        // Ensure that AjyyfC92o3Eado4UzbtDdgt35AYK3R88tjQB9gUcoF2J is fully linked with verified pfp, handle, and treasury wallet
+        // Ensure that real launched token 79KZuAWcKWfbxmVAwpkigZc6qBVRfrvNaaEeeUwE74vF is loaded and synced with Treasury
         const synchronized = parsed.map(tok => {
-          if (tok.mintAddress === 'AjyyfC92o3Eado4UzbtDdgt35AYK3R88tjQB9gUcoF2J' || tok.id === 'tok-user-spacex-mars') {
+          if (tok.mintAddress === '79KZuAWcKWfbxmVAwpkigZc6qBVRfrvNaaEeeUwE74vF' || tok.id === 'tok-user-spacex-mars-79k') {
             return {
               ...tok,
               name: 'SpaceX Martian',
               symbol: 'MARS',
-              mintAddress: 'AjyyfC92o3Eado4UzbtDdgt35AYK3R88tjQB9gUcoF2J',
+              mintAddress: '79KZuAWcKWfbxmVAwpkigZc6qBVRfrvNaaEeeUwE74vF',
               beneficiaryXHandle: '@elonmusk',
               beneficiaryName: 'Elon Musk',
               beneficiaryAvatar: 'https://pbs.twimg.com/profile_images/1838634862464733184/pXj9iWd0_400x400.jpg',
               beneficiaryAccount: INITIAL_TREASURY_CONFIG.solanaTreasuryAddress,
               creatorFeeRecipient: INITIAL_TREASURY_CONFIG.solanaTreasuryAddress,
-              creatorWallet: INITIAL_TREASURY_CONFIG.solanaTreasuryAddress,
+              creatorWallet: '7hTGvweCCagv64AFbFda1KVaYyLEqqqqP839aGyqpyK6',
               twitterLink: 'https://x.com/elonmusk',
               status: 'active' as const
             };
@@ -383,6 +383,7 @@ export default function App() {
             treasuryConfig={treasuryConfig}
             onHarvestFees={handleHarvestFees}
             onNavigateToPayouts={() => setActiveTab('payouts')}
+            onExecutePayout={handleExecutePayout}
             onLinkExistingToken={handleLinkExistingToken}
             onOpenProofBadge={(mint) => {
               setSelectedProofTokenMint(mint);
