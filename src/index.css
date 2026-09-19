@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Mobile viewport & touch enhancements */
+html, body {
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Smooth touch scrolling */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar for mobile horizontal swipe strips while preserving scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Safe area inset utilities for mobile navigation and sheets */
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem));
+}
+.mb-safe {
+  margin-bottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem));
+}

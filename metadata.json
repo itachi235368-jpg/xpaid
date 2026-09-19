@@ -1,0 +1,8 @@
+{
+  "name": "Xpaid - Token Launch & X Money Fee Distribution",
+  "description": "Launch meme tokens on Pump.fun, collect creator fees in the protocol treasury, and automatically distribute payouts to X users via X Money on mobile and web.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
