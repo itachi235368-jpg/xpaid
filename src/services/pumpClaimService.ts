@@ -1,6 +1,7 @@
 import { VersionedTransaction, Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import {
   canonicalPumpPoolPda,
+  feeSharingConfigPda,
   createFeeSharingConfigInstruction,
   updateFeeSharesInstruction,
 } from './pumpFeeInstructions';
@@ -111,33 +112,72 @@ export async function configurePumpFeeSharingOnChain(
       throw new Error('Solana wallet provider not available. Connect Phantom or Solflare.');
     }
 
-    onStatusUpdate?.('Initializing PumpFees protocol connection...');
+    onStatusUpdate?.('Checking bonding curve and AMM status...');
     const connection = new Connection(rpcUrl, 'confirmed');
 
     const creator = new PublicKey(creatorAddress);
     const mint = new PublicKey(mintAddress);
     const treasury = new PublicKey(treasuryAddress);
+
+    // Check if the coin has migrated to Raydium/Pump AMM or is still on the bonding curve
     const pool = canonicalPumpPoolPda(mint);
+    const poolAccount = await connection.getAccountInfo(pool);
+    const activePool = poolAccount ? pool : null;
+
+    // Check if the sharing config PDA is already created
+    const sharingConfigPdaAddr = feeSharingConfigPda(mint);
+    const sharingConfigAccount = await connection.getAccountInfo(sharingConfigPdaAddr);
+
+    // If creating new config, verify creator has enough SOL for rent-exemption (~0.00585 SOL)
+    if (!sharingConfigAccount) {
+      const balance = await connection.getBalance(creator);
+      const minRequired = 5852160; // rent exemption lamports for fee sharing account
+      if (balance < minRequired) {
+        const currentSol = (balance / LAMPORTS_PER_SOL).toFixed(4);
+        const neededSol = ((minRequired - balance) / LAMPORTS_PER_SOL).toFixed(4);
+        throw new Error(
+          `Creator wallet (${creatorAddress.slice(0, 4)}...${creatorAddress.slice(-4)}) has ${currentSol} SOL. Solana requires ~0.0059 SOL rent-exemption to initialize the on-chain fee-sharing config. Please fund ~${neededSol} SOL (~$0.40) to this wallet and retry.`
+        );
+      }
+    }
 
     onStatusUpdate?.('Building on-chain fee sharing instructions (10,000 BPS to Treasury)...');
-    const ix1 = createFeeSharingConfigInstruction(creator, mint, pool);
-    const ix2 = updateFeeSharesInstruction(
-      creator,
-      mint,
-      [{ address: treasury, shareBps: 10000 }],
-      [creator]
+    const tx = new Transaction();
+    if (!sharingConfigAccount) {
+      tx.add(createFeeSharingConfigInstruction(creator, mint, activePool));
+    }
+    tx.add(
+      updateFeeSharesInstruction(
+        creator,
+        mint,
+        [{ address: treasury, shareBps: 10000 }],
+        [creator]
+      )
     );
-
-    const tx = new Transaction().add(ix1, ix2);
     tx.feePayer = creator;
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
     tx.recentBlockhash = blockhash;
 
-    onStatusUpdate?.('Awaiting signature in wallet to bind 100% fees to Treasury...');
+    onStatusUpdate?.('Awaiting signature in wallet for Transaction 2 (PumpFees Treasury Binding)...');
     let txHash: string;
     if (walletProvider.signAndSendTransaction) {
-      const res = await walletProvider.signAndSendTransaction(tx);
-      txHash = typeof res === 'string' ? res : res.signature;
+      try {
+        const res = await walletProvider.signAndSendTransaction(tx);
+        txHash = typeof res === 'string' ? res : res.signature;
+      } catch (sendErr: any) {
+        if (sendErr?.code === 4001 || sendErr?.message?.includes('User rejected')) {
+          throw sendErr;
+        }
+        if (walletProvider.signTransaction) {
+          const signed = await walletProvider.signTransaction(tx);
+          txHash = await connection.sendRawTransaction(signed.serialize(), {
+            skipPreflight: false,
+            preflightCommitment: 'confirmed',
+          });
+        } else {
+          throw sendErr;
+        }
+      }
     } else {
       const signed = await walletProvider.signTransaction(tx);
       txHash = await connection.sendRawTransaction(signed.serialize(), {
@@ -146,19 +186,22 @@ export async function configurePumpFeeSharingOnChain(
       });
     }
 
-    onStatusUpdate?.(`Confirming on-chain fee binding (${txHash.slice(0, 8)}...)...`);
+    onStatusUpdate?.(`Confirming Transaction 2 on-chain (${txHash.slice(0, 8)}...)...`);
     await connection.confirmTransaction(
       { signature: txHash, blockhash, lastValidBlockHeight },
       'confirmed'
     );
 
-    onStatusUpdate?.('Fee sharing successfully bound to Protocol Treasury on-chain!');
+    onStatusUpdate?.('Transaction 2 Confirmed! 100% Trading Fees bound to Protocol Treasury.');
     return { success: true, txHash };
   } catch (err: any) {
     console.error('Error configuring on-chain fee sharing:', err);
+    const isRejected = err?.code === 4001 || err?.message?.includes('User rejected') || err?.message?.includes('rejected by user');
     return {
       success: false,
-      error: err?.message || 'Failed to configure fee sharing on-chain.',
+      error: isRejected
+        ? 'Transaction 2 signature was declined in wallet. You can sign it anytime to link fees.'
+        : err?.message || 'Failed to configure fee sharing on-chain.',
     };
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Rocket,
   Coins,
@@ -20,6 +20,7 @@ import {
   Shuffle
 } from 'lucide-react';
 import { TreasuryConfig } from '../types';
+import { fetchLiveSolPrice, subscribeToSolPrice, getCurrentSolPrice } from '../services/solPriceService';
 
 interface HowThingsWorkProps {
   treasuryConfig: TreasuryConfig;
@@ -34,6 +35,18 @@ export const HowThingsWork: React.FC<HowThingsWorkProps> = ({
   onNavigateToFees,
   onNavigateToPayouts
 }) => {
+  const [solPrice, setSolPrice] = useState<number>(() => getCurrentSolPrice());
+
+  useEffect(() => {
+    fetchLiveSolPrice().then(p => {
+      if (p > 0) setSolPrice(p);
+    });
+    const unsub = subscribeToSolPrice(p => {
+      if (p > 0) setSolPrice(p);
+    });
+    return () => unsub();
+  }, []);
+
   // Interactive Simulator state
   const [simStep, setSimStep] = useState<number>(0);
   const [simRunning, setSimRunning] = useState<boolean>(false);
@@ -54,7 +67,7 @@ export const HowThingsWork: React.FC<HowThingsWorkProps> = ({
       const feeSol = (simTradeAmountSol * 0.01).toFixed(3);
       setSimLogs(prev => [
         ...prev,
-        `[T+0.8s] ⚡ 1% Creator Royalty generated: +${feeSol} SOL ($${(Number(feeSol) * 150).toFixed(2)} USD).`
+        `[T+0.8s] ⚡ 1% Creator Royalty generated: +${feeSol} SOL ($${(Number(feeSol) * solPrice).toFixed(2)} USD @ $${solPrice.toFixed(2)}/SOL).`
       ]);
     }, 1000);
 
@@ -68,7 +81,7 @@ export const HowThingsWork: React.FC<HowThingsWorkProps> = ({
 
     setTimeout(() => {
       setSimStep(4);
-      const creatorUsd = ((simTradeAmountSol * 0.01 * 150) * 0.8).toFixed(2);
+      const creatorUsd = ((simTradeAmountSol * 0.01 * solPrice) * 0.8).toFixed(2);
       setSimLogs(prev => [
         ...prev,
         `[T+3.0s] 💰 𝕏 Money API called: $${creatorUsd} USD auto-deposited directly to ${simHandle} with zero claim needed!`
@@ -247,17 +260,17 @@ export const HowThingsWork: React.FC<HowThingsWorkProps> = ({
                 </span>
               </div>
               <h4 className="font-bold text-zinc-900 dark:text-zinc-100 text-base group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">
-                𝕏 Money Direct USD Payout
+                Kraken ➔ 𝕏 Money USD Payout
               </h4>
               <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                Fees are converted to USD and deposited directly to the 𝕏 user's 𝕏 Money account. <strong>Zero manual claim needed!</strong>
+                Fees are routed through Kraken Institutional for instant SOL ➔ USD spot conversion and pushed directly to the recipient's 𝕏 handle via 𝕏 Money or FedNow rails. <strong>Zero manual claim needed!</strong>
               </p>
               <ul className="text-[11px] text-zinc-500 dark:text-zinc-400 space-y-1.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                 <li className="flex items-center gap-1.5">
-                  <DollarSign className="w-3 h-3 text-emerald-600" /> Direct USD in 𝕏 Money
+                  <DollarSign className="w-3 h-3 text-emerald-600" /> Kraken Spot Auto-Convert (Zero Slippage)
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3 h-3 text-blue-500" /> No wallet or private keys required
+                  <CheckCircle2 className="w-3 h-3 text-blue-500" /> Direct USD in 𝕏 Money or FedNow
                 </li>
                 <li className="flex items-center gap-1.5">
                   <ExternalLink className="w-3 h-3 text-zinc-400" /> Verifiable public proof record
@@ -418,7 +431,7 @@ export const HowThingsWork: React.FC<HowThingsWorkProps> = ({
                 𝕏 Money Deposit
               </div>
               <div className="text-[11px] font-mono">
-                {simStep >= 4 ? `$${((simTradeAmountSol * 0.01 * 150) * 0.8).toFixed(2)} USD Sent` : 'Waiting...'}
+                {simStep >= 4 ? `$${((simTradeAmountSol * 0.01 * solPrice) * 0.8).toFixed(2)} USD Sent` : 'Waiting...'}
               </div>
             </div>
           </div>

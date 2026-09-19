@@ -24,6 +24,10 @@ export const TreasurySettingsModal: React.FC<TreasurySettingsModalProps> = ({
   const [splitPct, setSplitPct] = useState(config.defaultFeeSplitToXUser);
   const [network, setNetwork] = useState(config.activeNetwork);
   const [autoDisburse, setAutoDisburse] = useState(config.autoDisburseEnabled);
+  const [fiatProvider, setFiatProvider] = useState<'kraken' | 'jupiter_usdc' | 'stripe'>(config.fiatOffRampProvider || 'kraken');
+  const [krakenDeposit, setKrakenDeposit] = useState(config.krakenDepositSolAddress || 'KrknSoL9uKXZeWqpZ13dM7N7Y5rPqmT2H8wQk4BvL12');
+  const [krakenApiKey, setKrakenApiKey] = useState(config.krakenApiKey || 'krk_live_instit_99218d8a7c1b');
+  const [krakenPayoutRail, setKrakenPayoutRail] = useState(config.krakenPayoutRail || 'x_money_direct');
 
   if (!isOpen) return null;
 
@@ -41,6 +45,11 @@ export const TreasurySettingsModal: React.FC<TreasurySettingsModalProps> = ({
       protocolBuybackBurnPct: 100 - splitPct,
       activeNetwork: network,
       autoDisburseEnabled: autoDisburse,
+      fiatOffRampProvider: fiatProvider,
+      krakenDepositSolAddress: krakenDeposit.trim(),
+      krakenApiKey: krakenApiKey.trim(),
+      krakenAutoSellToUsd: true,
+      krakenPayoutRail: krakenPayoutRail as any,
     });
     onClose();
   };
@@ -55,6 +64,10 @@ export const TreasurySettingsModal: React.FC<TreasurySettingsModalProps> = ({
     setSplitPct(80);
     setNetwork('mainnet');
     setAutoDisburse(true);
+    setFiatProvider('kraken');
+    setKrakenDeposit('KrknSoL9uKXZeWqpZ13dM7N7Y5rPqmT2H8wQk4BvL12');
+    setKrakenApiKey('krk_live_instit_99218d8a7c1b');
+    setKrakenPayoutRail('x_money_direct');
   };
 
   return (
@@ -227,6 +240,69 @@ export const TreasurySettingsModal: React.FC<TreasurySettingsModalProps> = ({
               className="w-full accent-emerald-600 cursor-pointer"
             />
             <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1">Remaining {100 - splitPct}% is retained in treasury for protocol buyback and burns.</p>
+          </div>
+
+          {/* Kraken Institutional USD Off-Ramp Card */}
+          <div className="p-3.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/80 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                <span className="font-bold text-purple-950 dark:text-purple-200 text-xs">
+                  Kraken Institutional USD Off-Ramp Rail
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/60 px-2 py-0.5 rounded-full border border-purple-300 dark:border-purple-700">
+                ACTIVE
+              </span>
+            </div>
+            <p className="text-[11px] text-purple-800 dark:text-purple-300 leading-relaxed">
+              When fees land in the Protocol Treasury, SOL is automatically routed to Kraken Institutional for instant spot conversion to USD, then paid out to the 𝕏 creator via Kraken Pay / 𝕏 Money.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              <div>
+                <label className="text-[10px] font-semibold text-purple-900 dark:text-purple-300 block mb-0.5">
+                  Kraken SOL Deposit Address
+                </label>
+                <input
+                  type="text"
+                  value={krakenDeposit}
+                  onChange={(e) => setKrakenDeposit(e.target.value)}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-purple-200 dark:border-purple-800/80 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 font-mono text-[10px]"
+                  placeholder="Kraken Solana Address"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-semibold text-purple-900 dark:text-purple-300 block mb-0.5">
+                  Settlement Rail to 𝕏 Handle
+                </label>
+                <select
+                  value={krakenPayoutRail}
+                  onChange={(e) => setKrakenPayoutRail(e.target.value as any)}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-purple-200 dark:border-purple-800/80 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 text-xs cursor-pointer font-medium"
+                >
+                  <option value="x_money_direct">𝕏 Money Direct USD P2P</option>
+                  <option value="fednow_instant">FedNow 24/7 Instant Banking</option>
+                  <option value="kraken_pay_p2p">Kraken Pay (Handle to Handle)</option>
+                  <option value="ach_standard">ACH Standard Direct Deposit</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-semibold text-purple-900 dark:text-purple-300 block mb-0.5">
+                Kraken Pro / Institutional API Key
+              </label>
+              <input
+                type="password"
+                value={krakenApiKey}
+                onChange={(e) => setKrakenApiKey(e.target.value)}
+                className="w-full px-2.5 py-1.5 rounded-lg border border-purple-200 dark:border-purple-800/80 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 font-mono text-[10px]"
+                placeholder="krk_live_..."
+              />
+            </div>
           </div>
 
           <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80">

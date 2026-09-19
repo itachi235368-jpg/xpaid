@@ -18,6 +18,7 @@ import {
 import { TreasuryConfig } from '../types';
 import { XpaidLogo } from './XpaidLogo';
 import { getLiveSolBalance } from '../services/solanaLaunch';
+import { fetchLiveSolPrice, subscribeToSolPrice } from '../services/solPriceService';
 
 interface HeaderProps {
   activeTab: 'launch' | 'fees' | 'payouts' | 'lookup' | 'how-it-works';
@@ -48,6 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [solBalance, setSolBalance] = useState<number | null>(null);
+  const [solPrice, setSolPrice] = useState<number>(110.65);
 
   useEffect(() => {
     let isMounted = true;
@@ -67,9 +69,25 @@ export const Header: React.FC<HeaderProps> = ({
 
     fetchBalance();
     const interval = setInterval(fetchBalance, 30000);
+
+    // Fetch and subscribe to live SOL price
+    fetchLiveSolPrice().then(p => {
+      if (isMounted && p > 0) setSolPrice(p);
+    });
+    const unsubPrice = subscribeToSolPrice(p => {
+      if (isMounted && p > 0) setSolPrice(p);
+    });
+    const pricePoll = setInterval(() => {
+      fetchLiveSolPrice().then(p => {
+        if (isMounted && p > 0) setSolPrice(p);
+      });
+    }, 15000);
+
     return () => {
       isMounted = false;
       clearInterval(interval);
+      clearInterval(pricePoll);
+      unsubPrice();
     };
   }, [treasuryConfig.solanaTreasuryAddress, treasuryConfig.solanaRpcUrl]);
 
@@ -100,6 +118,18 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              {/* Live SOL Market Price Pill */}
+              <div 
+                className="flex items-center gap-1.5 bg-zinc-900/90 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded text-zinc-300 border border-zinc-800 text-[11px]"
+                title="Live Solana (SOL) Market Price Oracle (Binance / CoinGecko / Kraken)"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="text-zinc-400 font-semibold text-[10px] sm:text-[11px]">SOL/USD:</span>
+                <span className="font-mono text-emerald-400 font-bold text-[10px] sm:text-[11px]">
+                  ${solPrice.toFixed(2)}
+                </span>
+              </div>
+
               {/* Solana Treasury Pill with live balance */}
               <div className="flex items-center gap-1.5 bg-zinc-900/90 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded text-zinc-300 border border-zinc-800 text-[11px]">
                 <span className="text-purple-400 font-bold text-[10px] sm:text-[11px]">SOL:</span>

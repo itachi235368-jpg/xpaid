@@ -22,7 +22,8 @@ import {
 } from 'lucide-react';
 import { LaunchPlatform, TokenLaunchData, TreasuryConfig } from '../types';
 import { PRESET_MEME_LOGOS, getXUserProfile, KNOWN_X_USERS } from '../data/mockData';
-import { deployPumpFunToken, getLiveSolBalance } from '../services/solanaLaunch';
+import { deployPumpFunToken, getLiveSolBalance, getSolanaProvider } from '../services/solanaLaunch';
+import { configurePumpFeeSharingOnChain } from '../services/pumpClaimService';
 
 interface TokenLaunchWizardProps {
   treasuryConfig: TreasuryConfig;
@@ -82,6 +83,57 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [onChainTxHash, setOnChainTxHash] = useState<string | null>(null);
+  const [isSigningTx2, setIsSigningTx2] = useState(false);
+  const [tx2StatusText, setTx2StatusText] = useState<string>('');
+  const [tx2Notice, setTx2Notice] = useState<string | null>(null);
+
+  const handleSignTransaction2 = async (tokenOverride?: TokenLaunchData) => {
+    const targetToken = tokenOverride || launchedToken;
+    if (!targetToken) return;
+
+    try {
+      setIsSigningTx2(true);
+      setErrorMsg(null);
+      setTx2StatusText('Connecting to wallet for Transaction 2 (PumpFees Royalty Binding)...');
+
+      const provider = getSolanaProvider();
+      if (!provider) {
+        throw new Error('Solana wallet not detected. Please install or connect Phantom or Solflare.');
+      }
+      if (!provider.isConnected) {
+        await provider.connect();
+      }
+
+      const creatorPubkey = provider.publicKey ? provider.publicKey.toString() : targetToken.creatorWallet;
+
+      const res = await configurePumpFeeSharingOnChain(
+        provider,
+        creatorPubkey,
+        targetToken.mintAddress,
+        treasuryConfig.solanaTreasuryAddress,
+        treasuryConfig.solanaRpcUrl,
+        (status) => setTx2StatusText(status)
+      );
+
+      if (res.success && res.txHash) {
+        const updated: TokenLaunchData = {
+          ...targetToken,
+          feeSharingTx: res.txHash,
+          feeSharingBound: true,
+        };
+        setLaunchedToken(updated);
+        onTokenLaunched(updated);
+        setTx2Notice(null);
+      } else {
+        throw new Error(res.error || 'Transaction 2 was not signed.');
+      }
+    } catch (err: any) {
+      console.error('Error signing Transaction 2:', err);
+      setErrorMsg(err?.message || 'Transaction 2 signing failed.');
+    } finally {
+      setIsSigningTx2(false);
+    }
+  };
 
   const activeWalletAddress = connectedWallet || '';
 
@@ -280,6 +332,9 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
       if (deployResult.feeSharingTx) {
         deployedFeeSharingTx = deployResult.feeSharingTx;
       }
+      if (deployResult.feeSharingError) {
+        setTx2Notice(deployResult.feeSharingError);
+      }
     } catch (err: any) {
       console.warn('Deploy pumpfun error:', err);
       setErrorMsg(err?.message || 'Failed to deploy on-chain. Please check your wallet connection and gas.');
@@ -446,6 +501,71 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
               <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-1">
                 Creator fees generated from every trade on Pump.fun are routed directly to Treasury Wallet (SOL) and will automatically disburse to <strong className="text-zinc-900 dark:text-zinc-200">{launchedToken.beneficiaryXHandle}</strong> via X Money.
               </p>
+
+              {/* Transaction 2 Status Callout: Prompts user if fee sharing is not bound yet */}
+              {!launchedToken.feeSharingBound ? (
+                <div className="mt-3.5 p-3.5 bg-amber-50 dark:bg-amber-950/60 border-2 border-amber-400/90 dark:border-amber-700 rounded-xl space-y-2">
+                  <div className="flex items-start gap-2.5">
+                    <span className="text-lg shrink-0">⚠️</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-xs text-amber-900 dark:text-amber-100">
+                          Step 2 of 2: Sign Royalty Binding Transaction
+                        </span>
+                        <span className="text-[10px] bg-amber-200 dark:bg-amber-900/80 text-amber-950 dark:text-amber-200 font-bold px-1.5 py-0.2 rounded uppercase">
+                          Action Required
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-amber-800 dark:text-amber-300 mt-0.5 leading-relaxed">
+                        Transaction 1 created your token on Pump.fun! To legally bind 100% of creator royalties to the Protocol Treasury on Solana, sign Transaction 2 in your wallet.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 pt-1 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => handleSignTransaction2()}
+                      disabled={isSigningTx2}
+                      className="px-4 py-2 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-60"
+                    >
+                      {isSigningTx2 ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>{tx2StatusText || 'Awaiting Signature 2 in Wallet...'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-3.5 h-3.5 text-amber-200" />
+                          <span>⚡ Sign Transaction 2 Now (PumpFees On-Chain Binding)</span>
+                        </>
+                      )}
+                    </button>
+                    <span className="text-[11px] text-amber-700 dark:text-amber-400 font-mono">
+                      Routes 100% to Protocol Treasury ({treasuryConfig.solanaTreasuryAddress.slice(0, 4)}...{treasuryConfig.solanaTreasuryAddress.slice(-4)})
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-3.5 p-3 bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 rounded-xl flex items-center justify-between gap-2 text-xs text-emerald-900 dark:text-emerald-200">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span className="font-semibold">
+                      Both Transactions Confirmed on Solana Mainnet: 100% Royalties Bound via PumpFees!
+                    </span>
+                  </div>
+                  {launchedToken.feeSharingTx && (
+                    <a
+                      href={`https://solscan.io/tx/${launchedToken.feeSharingTx}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold shrink-0"
+                    >
+                      <span>Tx 2 Proof</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+              )}
 
               {/* On-chain Details Box */}
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 bg-white dark:bg-zinc-900 p-3 sm:p-4 rounded-xl border border-emerald-200/80 dark:border-emerald-900/60 text-xs">
@@ -1403,6 +1523,44 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
           </div>
         </div>
 
+        {/* Two-Transaction On-Chain Architecture Notice */}
+        <div className="p-4 rounded-xl border border-purple-500/30 bg-purple-50/50 dark:bg-purple-950/20 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="font-bold text-xs text-purple-900 dark:text-purple-300 uppercase tracking-wide">
+                Two-Transaction Launch Architecture
+              </span>
+            </div>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/60 text-purple-800 dark:text-purple-300 font-semibold border border-purple-200 dark:border-purple-800/50">
+              Pump.fun + PumpFees
+            </span>
+          </div>
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+            To enforce 100% of trading fees to the Protocol Treasury on Solana, this launch prompts your wallet for <strong>two consecutive transactions</strong>:
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-purple-200/80 dark:border-purple-900/40">
+              <div className="flex items-center gap-1.5 font-bold text-zinc-900 dark:text-zinc-100">
+                <span className="w-4 h-4 rounded-full bg-purple-600 text-white text-[10px] flex items-center justify-center font-bold">1</span>
+                <span>Transaction 1: Create Token</span>
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
+                Deploys token mint & bonding curve on Pump.fun with IPFS metadata.
+              </p>
+            </div>
+            <div className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-purple-200/80 dark:border-purple-900/40">
+              <div className="flex items-center gap-1.5 font-bold text-zinc-900 dark:text-zinc-100">
+                <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-bold">2</span>
+                <span>Transaction 2: Bind Royalties</span>
+              </div>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
+                Initializes PumpFees <code>sharing-config</code> PDA routing 100% of trading fees to Treasury.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Error notification */}
         {errorMsg && (
           <div className="p-3 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-900/60 rounded-xl text-xs flex items-center gap-2">
@@ -1439,6 +1597,98 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
             Contract-enforced fee redirection • 100% of creator royalties route to Treasury and disburse via 𝕏 Money
           </p>
         </div>
+
+        {/* Live Launching Overlay Modal */}
+        {isLaunching && (
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-md w-full p-6 text-white shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <h3 className="text-sm font-bold tracking-tight text-zinc-100">
+                    Launching on Solana Mainnet
+                  </h3>
+                </div>
+                <span className="text-[10px] font-mono bg-purple-900/60 text-purple-300 px-2 py-0.5 rounded border border-purple-700/50">
+                  2-Step Protocol Flow
+                </span>
+              </div>
+
+              {/* Progress Steps */}
+              <div className="space-y-3">
+                {/* Step 1 */}
+                <div className={`p-3 rounded-xl border transition-all ${
+                  liveStatusText.includes('[Step 2') || liveStatusText.includes('[Launch Complete')
+                    ? 'bg-emerald-950/40 border-emerald-700/70 text-emerald-200'
+                    : 'bg-zinc-800/80 border-purple-500/50 text-zinc-100'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {liveStatusText.includes('[Step 2') || liveStatusText.includes('[Launch Complete') ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      ) : (
+                        <div className="w-4 h-4 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin shrink-0" />
+                      )}
+                      <span className="font-bold text-xs">Transaction 1: Create Token on Pump.fun</span>
+                    </div>
+                    <span className="text-[10px] font-mono font-semibold">
+                      {liveStatusText.includes('[Step 2') || liveStatusText.includes('[Launch Complete') ? '✓ Confirmed' : 'Signing / Broadcasting'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 mt-1 pl-6">
+                    Mints token, uploads IPFS metadata, and creates bonding curve.
+                  </p>
+                </div>
+
+                {/* Step 2 */}
+                <div className={`p-3 rounded-xl border transition-all ${
+                  liveStatusText.includes('[Launch Complete')
+                    ? 'bg-emerald-950/40 border-emerald-700/70 text-emerald-200'
+                    : liveStatusText.includes('[Step 2')
+                    ? 'bg-amber-950/50 border-amber-500 text-amber-100 animate-pulse'
+                    : 'bg-zinc-800/40 border-zinc-800 text-zinc-400'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {liveStatusText.includes('[Launch Complete') ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      ) : liveStatusText.includes('[Step 2') ? (
+                        <Zap className="w-4 h-4 text-amber-400 shrink-0 animate-bounce" />
+                      ) : (
+                        <div className="w-4 h-4 rounded-full border border-zinc-600 flex items-center justify-center text-[9px] shrink-0">
+                          2
+                        </div>
+                      )}
+                      <span className="font-bold text-xs">Transaction 2: Bind Royalties (PumpFees)</span>
+                    </div>
+                    <span className="text-[10px] font-mono font-semibold">
+                      {liveStatusText.includes('[Launch Complete')
+                        ? '✓ Confirmed'
+                        : liveStatusText.includes('[Step 2')
+                        ? 'Awaiting Wallet Signature'
+                        : 'Queued'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 mt-1 pl-6">
+                    Binds 10,000 BPS (100%) of trading fees directly to Protocol Treasury.
+                  </p>
+                </div>
+              </div>
+
+              {/* Status Message Box */}
+              <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800 text-xs font-mono space-y-1">
+                <span className="text-zinc-500 block text-[10px]">CURRENT ACTION:</span>
+                <p className="text-emerald-400 break-words font-medium">
+                  {liveStatusText || 'Waiting for on-chain confirmation...'}
+                </p>
+              </div>
+
+              <p className="text-[11px] text-zinc-400 text-center leading-relaxed">
+                Please approve both wallet popups. If your wallet closes, you can also sign Transaction 2 after launch.
+              </p>
+            </div>
+          </div>
+        )}
       </form>
     </div>
   );

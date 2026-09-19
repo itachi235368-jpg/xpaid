@@ -88,9 +88,12 @@ export interface XMoneyPayout {
   status: 'pending' | 'processing' | 'completed';
   timestamp: string;
   xMoneyReferenceId: string;
-  paymentMethod: 'X Money (USD Direct)' | 'X Escrow Wallet';
+  paymentMethod: 'Kraken USD ➔ 𝕏 Money' | 'Kraken Instant FedNow (USD)' | 'X Money (USD Direct)' | 'X Escrow Wallet';
   proofTweetText: string;
   blockchainRefTx: string;
+  krakenOrderId?: string;
+  krakenWithdrawalRef?: string;
+  fiatConversionRate?: number;
 }
 
 export interface TreasuryConfig {
@@ -104,5 +107,12 @@ export interface TreasuryConfig {
   protocolBuybackBurnPct: number; // 20%
   autoDisburseThresholdUsd: number; // e.g. $50
   autoDisburseEnabled: boolean;
+  autoClaimFeesEnabled?: boolean; // Autonomous fee harvest from all token bonding curves
+  autoClaimIntervalSeconds?: number; // Periodic harvest cycle
   activeNetwork: 'mainnet' | 'testnet';
+  fiatOffRampProvider?: 'kraken' | 'jupiter_usdc' | 'stripe';
+  krakenApiKey?: string;
+  krakenDepositSolAddress?: string;
+  krakenAutoSellToUsd?: boolean;
+  krakenPayoutRail?: 'fednow_instant' | 'ach_standard' | 'kraken_pay_p2p' | 'x_money_direct';
 }

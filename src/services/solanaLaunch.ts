@@ -5,6 +5,7 @@ import { configurePumpFeeSharingOnChain } from './pumpClaimService';
 export interface WalletProvider {
   isPhantom?: boolean;
   isSolflare?: boolean;
+  isConnected?: boolean;
   publicKey?: { toString: () => string; toBase58: () => string };
   connect: (options?: { onlyIfTrusted?: boolean }) => Promise<{ publicKey: { toString: () => string } }>;
   disconnect: () => Promise<void>;
@@ -155,6 +156,7 @@ export interface LaunchResult {
   mintAddress?: string;
   txHash?: string;
   feeSharingTx?: string;
+  feeSharingError?: string;
   metadataUri?: string;
   ipfsImageUrl?: string;
   twitterUrl?: string;
@@ -477,7 +479,7 @@ export async function deployPumpFunToken(
   // 3. If real browser wallet is connected, request real signature!
   if (provider && txBytes && txBytes.byteLength > 0) {
     try {
-      onStatusUpdate('Awaiting signature in your connected wallet...');
+      onStatusUpdate('[Step 1 of 2] Please sign Transaction 1 in your wallet (Create Token on Pump.fun)...');
       const tx = VersionedTransaction.deserialize(new Uint8Array(txBytes));
       
       // Sign with the new mint keypair first
@@ -486,31 +488,41 @@ export async function deployPumpFunToken(
       // Request user signature in Phantom / Solflare
       const signedTx = await provider.signTransaction(tx);
 
-      onStatusUpdate('Broadcasting transaction to Solana Mainnet via Helius RPC...');
+      onStatusUpdate('[Step 1 of 2] Broadcasting Token Creation to Solana Mainnet...');
       const connection = new Connection(rpcUrl, 'confirmed');
       const signature = await connection.sendRawTransaction(signedTx.serialize(), {
         skipPreflight: false,
         preflightCommitment: 'confirmed'
       });
 
-      onStatusUpdate(`Confirming on-chain transaction (${signature.slice(0, 8)}...)...`);
+      onStatusUpdate(`[Step 1 of 2 Confirmed] Token deployed on Pump.fun (${signature.slice(0, 8)}...)!`);
       await connection.confirmTransaction(signature, 'confirmed');
 
       let feeSharingTx: string | undefined;
+      let feeSharingError: string | undefined;
       try {
-        onStatusUpdate('Configuring on-chain fee sharing with Protocol Treasury (10,000 BPS)...');
+        onStatusUpdate('[Step 2 of 2] Preparing on-chain royalty binding (10,000 BPS to Protocol Treasury)...');
+        // Brief pause to allow wallet extension to reset and RPC to index new mint
+        await new Promise((r) => setTimeout(r, 1200));
+
+        onStatusUpdate('[Step 2 of 2] ACTION REQUIRED: Please sign Transaction 2 in your wallet to bind 100% royalties...');
         const feeShareResult = await configurePumpFeeSharingOnChain(
           provider,
           params.creatorPublicKey,
           mintPubkey,
           treasuryConfig.solanaTreasuryAddress,
           rpcUrl,
-          onStatusUpdate
+          (status) => onStatusUpdate(`[Step 2 of 2] ${status}`)
         );
         if (feeShareResult.success && feeShareResult.txHash) {
           feeSharingTx = feeShareResult.txHash;
+          onStatusUpdate('[Launch Complete] Both transactions confirmed! 100% trading royalties bound to Treasury.');
+        } else {
+          feeSharingError = feeShareResult.error || 'Transaction 2 was not signed';
+          onStatusUpdate(`[Notice] ${feeSharingError}. You can sign Transaction 2 anytime from the dashboard.`);
         }
-      } catch (fErr) {
+      } catch (fErr: any) {
+        feeSharingError = fErr?.message || 'Transaction 2 deferred';
         console.warn('Fee-sharing configuration deferred:', fErr);
       }
 
@@ -519,6 +531,7 @@ export async function deployPumpFunToken(
         mintAddress: mintPubkey,
         txHash: signature,
         feeSharingTx,
+        feeSharingError,
         metadataUri,
         ipfsImageUrl,
         twitterUrl,
@@ -530,7 +543,7 @@ export async function deployPumpFunToken(
       if (signErr?.code === 4001 || signErr?.message?.includes('User rejected')) {
         return {
           success: false,
-          error: 'Transaction signature was rejected by user.'
+          error: 'Transaction 1 (Token Creation) signature was rejected by user.'
         };
       }
       return {

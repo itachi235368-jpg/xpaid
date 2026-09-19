@@ -11,10 +11,44 @@ export const INITIAL_TREASURY_CONFIG: TreasuryConfig = {
   protocolBuybackBurnPct: 20,
   autoDisburseThresholdUsd: 25,
   autoDisburseEnabled: true,
+  autoClaimFeesEnabled: true,
+  autoClaimIntervalSeconds: 8,
   activeNetwork: 'mainnet',
+  fiatOffRampProvider: 'kraken',
+  krakenApiKey: 'krk_live_instit_99218d8a7c1b',
+  krakenDepositSolAddress: 'KrknSoL9uKXZeWqpZ13dM7N7Y5rPqmT2H8wQk4BvL12',
+  krakenAutoSellToUsd: true,
+  krakenPayoutRail: 'x_money_direct',
 };
 
 export const INITIAL_TOKENS: TokenLaunchData[] = [
+  {
+    id: 'tok-user-pepe-solana-9s4',
+    name: 'Pepe Solana',
+    symbol: 'PEPE4X',
+    description: 'Fair launch on Pump.fun routing trading fees to Matt Furie via 𝕏 Money [Treasury Auto-Connected] Creator trading fees automatically routed to @matt_furie via Protocol Treasury: ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
+    logoUrl: 'https://gateway.pinata.cloud/ipfs/QmRZzpB9Dawb6QrJBJKW1NqtrYo25eAaEf6nY2Q3aZdRZ4',
+    platform: 'pumpfun',
+    network: 'solana',
+    beneficiaryXHandle: '@matt_furie',
+    beneficiaryName: 'Matt Furie',
+    beneficiaryAvatar: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=100&auto=format&fit=crop&q=80',
+    initialBuyAmount: 0.05,
+    feeSplitPct: 80,
+    mintAddress: '9S4SnEJyztPy5P5dwXRYxbKzvosHU6mpXFCjsDmcHPXn',
+    pairAddress: '9JinBo4o7KJ3hnLccn9stWxEwNiiq795x25T8EcvwnaT',
+    beneficiaryAccount: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
+    creatorFeeRecipient: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
+    marketCapUsd: 4890.12,
+    volume24hUsd: 89.20,
+    bondingCurveProgress: 0.7,
+    createdAt: new Date().toISOString(),
+    creatorWallet: '8LM7AehSNEmBhxCjKFL1BceUQjYGLEHriXKjtBZEeAk',
+    status: 'active',
+    twitterLink: 'https://x.com/matt_furie',
+    metadataUri: 'https://gateway.pinata.cloud/ipfs/QmTE3YjtYkj5wBEecZc31wViM4rZfS9QETxMqN3S3Sr4K8',
+    ipfsImageUrl: 'https://gateway.pinata.cloud/ipfs/QmRZzpB9Dawb6QrJBJKW1NqtrYo25eAaEf6nY2Q3aZdRZ4'
+  },
   {
     id: 'tok-user-spacex-mars-79k',
     name: 'SpaceX Martian',
@@ -115,7 +149,12 @@ export const X_MONEY_REGULATORY_DATA = {
     'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
   ],
   pendingStates: ['California (Pending DFI)', 'New York (Pending BitLicense/DFS)', 'New Jersey', 'Massachusetts', 'Hawaii'],
-  partnerRails: ['Visa Direct (Instant Debit Settlement)', 'Stripe Connect (Global RevShare)'],
+  partnerRails: [
+    'Kraken Institutional (SOL ➔ USD Instant Spot Auto-Convert & FedNow Off-Ramp)',
+    'Visa Direct (Instant Debit Settlement to 𝕏 Handle)',
+    'Stripe Connect (Global Creator RevShare)',
+    'Kraken Pay (Direct P2P Fiat Routing)'
+  ],
   eligibilityChecklist: [
     {
       title: 'Jurisdiction & Licensing',

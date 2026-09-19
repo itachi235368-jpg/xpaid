@@ -52,7 +52,7 @@ export interface Shareholder {
 export function createFeeSharingConfigInstruction(
   creator: PublicKey,
   mint: PublicKey,
-  pool: PublicKey
+  pool: PublicKey | null
 ): TransactionInstruction {
   const eventAuthority = PublicKey.findProgramAddressSync([Buffer.from('__event_authority')], PUMP_FEE_PROGRAM_ID)[0];
   const global = PublicKey.findProgramAddressSync([Buffer.from('global')], PUMP_PROGRAM_ID)[0];
@@ -60,6 +60,9 @@ export function createFeeSharingConfigInstruction(
   const bondingCurve = PublicKey.findProgramAddressSync([Buffer.from('bonding-curve'), mint.toBuffer()], PUMP_PROGRAM_ID)[0];
   const pumpEventAuthority = PublicKey.findProgramAddressSync([Buffer.from('__event_authority')], PUMP_PROGRAM_ID)[0];
   const ammEventAuthority = PublicKey.findProgramAddressSync([Buffer.from('__event_authority')], PUMP_AMM_PROGRAM_ID)[0];
+
+  const poolKey = pool || PUMP_FEE_PROGRAM_ID;
+  const poolWritable = pool !== null;
 
   const keys = [
     { pubkey: eventAuthority, isSigner: false, isWritable: false },
@@ -72,7 +75,7 @@ export function createFeeSharingConfigInstruction(
     { pubkey: bondingCurve, isSigner: false, isWritable: true },
     { pubkey: PUMP_PROGRAM_ID, isSigner: false, isWritable: false },
     { pubkey: pumpEventAuthority, isSigner: false, isWritable: false },
-    { pubkey: pool, isSigner: false, isWritable: true },
+    { pubkey: poolKey, isSigner: false, isWritable: poolWritable },
     { pubkey: PUMP_AMM_PROGRAM_ID, isSigner: false, isWritable: false },
     { pubkey: ammEventAuthority, isSigner: false, isWritable: false },
   ];

@@ -23,6 +23,7 @@ interface XMoneyPayoutEngineProps {
   treasuryConfig: TreasuryConfig;
   onExecutePayout: (feeId: string) => void;
   onBatchPayoutAll: () => void;
+  onSimulateTradeAndAutoDisburse?: () => void;
 }
 
 export const XMoneyPayoutEngine: React.FC<XMoneyPayoutEngineProps> = ({
@@ -31,6 +32,7 @@ export const XMoneyPayoutEngine: React.FC<XMoneyPayoutEngineProps> = ({
   treasuryConfig,
   onExecutePayout,
   onBatchPayoutAll,
+  onSimulateTradeAndAutoDisburse,
 }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [processingFeeId, setProcessingFeeId] = useState<string | null>(null);
@@ -77,25 +79,39 @@ export const XMoneyPayoutEngine: React.FC<XMoneyPayoutEngineProps> = ({
           </p>
         </div>
 
-        {pendingFees.length > 0 && (
-          <button
-            onClick={handleBatchPayout}
-            disabled={isBatchProcessing}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-sm disabled:opacity-50 cursor-pointer"
-          >
-            {isBatchProcessing ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Running 𝕏 Money Auto-Disburse Daemon...</span>
-              </>
-            ) : (
-              <>
-                <Zap className="w-4 h-4" />
-                <span>Execute Auto-Disburse All (${totalPendingUsd.toFixed(2)} USD)</span>
-              </>
-            )}
-          </button>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {onSimulateTradeAndAutoDisburse && (
+            <button
+              type="button"
+              onClick={onSimulateTradeAndAutoDisburse}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-xs cursor-pointer active:scale-95"
+              title="Simulates an incoming trading fee and watches the autonomous daemon immediately sweep and push funds to the X creator"
+            >
+              <Zap className="w-4 h-4 fill-current" />
+              <span>Simulate Fee & Watch Auto-Disburse</span>
+            </button>
+          )}
+
+          {pendingFees.length > 0 && (
+            <button
+              onClick={handleBatchPayout}
+              disabled={isBatchProcessing}
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-sm disabled:opacity-50 cursor-pointer"
+            >
+              {isBatchProcessing ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Running 𝕏 Money Auto-Disburse Daemon...</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4" />
+                  <span>Execute Auto-Disburse All (${totalPendingUsd.toFixed(2)} USD)</span>
+                </>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Zero Claim Explainer Banner */}
@@ -281,16 +297,28 @@ export const XMoneyPayoutEngine: React.FC<XMoneyPayoutEngineProps> = ({
                       className="w-10 h-10 rounded-full object-cover border border-zinc-200 dark:border-zinc-700"
                     />
                     <div>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">{payout.recipientName}</span>
                         <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">{payout.recipientHandle}</span>
                         <span className="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 border border-emerald-300 dark:border-emerald-800">
                           <Zap className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                           AUTO-DEPOSITED (ZERO CLAIM)
                         </span>
+                        {payout.paymentMethod?.includes('Kraken') && (
+                          <span className="bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 border border-purple-300 dark:border-purple-800">
+                            KRAKEN USD OFF-RAMP
+                          </span>
+                        )}
                       </div>
                       <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
-                        Ref ID: <span className="font-mono text-zinc-600 dark:text-zinc-400">{payout.xMoneyReferenceId}</span> • From ${payout.sourceTokenSymbol} ({payout.sourcePlatform})
+                        Ref ID: <span className="font-mono text-zinc-600 dark:text-zinc-400">{payout.xMoneyReferenceId}</span>
+                        {payout.krakenOrderId && (
+                          <> • Kraken Order: <span className="font-mono text-purple-600 dark:text-purple-400">{payout.krakenOrderId}</span></>
+                        )}
+                        {payout.fiatConversionRate && (
+                          <> • Rate: <span className="font-mono">${payout.fiatConversionRate}/SOL</span></>
+                        )}
+                        {' '}• From ${payout.sourceTokenSymbol} ({payout.sourcePlatform})
                       </span>
                     </div>
                   </div>
