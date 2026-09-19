@@ -65,20 +65,19 @@ export default function App() {
 
   const [fees, setFees] = useState<FeeCollectionRecord[]>(() => {
     try {
-      const saved = localStorage.getItem('xpaid_fees_v2');
-      if (saved) {
-        const parsed: FeeCollectionRecord[] = JSON.parse(saved);
-        const existingIds = new Set(parsed.map(f => f.id));
-        const missing = INITIAL_FEES.filter(f => !existingIds.has(f.id));
-        return [...missing, ...parsed];
-      }
+      localStorage.removeItem('xpaid_fees_v2');
+      localStorage.removeItem('xpaid_fees');
+      const saved = localStorage.getItem('xpaid_fees_v3');
+      if (saved) return JSON.parse(saved);
     } catch (e) {}
     return INITIAL_FEES;
   });
 
   const [payouts, setPayouts] = useState<XMoneyPayout[]>(() => {
     try {
-      const saved = localStorage.getItem('xpaid_payouts_v2');
+      localStorage.removeItem('xpaid_payouts_v2');
+      localStorage.removeItem('xpaid_payouts');
+      const saved = localStorage.getItem('xpaid_payouts_v3');
       if (saved) return JSON.parse(saved);
     } catch (e) {}
     return INITIAL_PAYOUTS;
@@ -108,13 +107,13 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('xpaid_fees_v2', JSON.stringify(fees));
+      localStorage.setItem('xpaid_fees_v3', JSON.stringify(fees));
     } catch (e) {}
   }, [fees]);
 
   useEffect(() => {
     try {
-      localStorage.setItem('xpaid_payouts_v2', JSON.stringify(payouts));
+      localStorage.setItem('xpaid_payouts_v3', JSON.stringify(payouts));
     } catch (e) {}
   }, [payouts]);
 
@@ -149,70 +148,6 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Autonomous Engine: Periodically sweeps accrued fees and auto-deposits USD to 𝕏 Money
-  useEffect(() => {
-    if (!treasuryConfig.autoDisburseEnabled) return;
-
-    const interval = setInterval(() => {
-      setFees(currentFees => {
-        // Step 1: Check if any fee is accrued on curve, auto-sweep to treasury (simulating Helius Webhook)
-        const accruedIndex = currentFees.findIndex(f => f.status === 'accrued_on_curve');
-        if (accruedIndex !== -1) {
-          const fee = currentFees[accruedIndex];
-          const updated = [...currentFees];
-          updated[accruedIndex] = {
-            ...fee,
-            status: 'collected_in_treasury',
-            treasuryTransferTxHash: fee.network === 'solana' 
-              ? `tr_${Math.random().toString(36).slice(2, 9)}` 
-              : `0x${Math.random().toString(36).slice(2, 10)}`,
-          };
-          showToast(`⚡ Autonomous Sweep: +${fee.rawAmount} ${fee.currency} ($${fee.amountUsd.toFixed(2)}) auto-routed to Treasury`);
-          return updated;
-        }
-
-        // Step 2: Check if any fee in treasury is waiting to be disbursed to 𝕏 Money
-        const pendingPayoutIndex = currentFees.findIndex(f => f.status === 'collected_in_treasury');
-        if (pendingPayoutIndex !== -1) {
-          const fee = currentFees[pendingPayoutIndex];
-          const profile = getXUserProfile(fee.beneficiaryXHandle);
-          const payoutId = `xpay-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-          
-          const newPayout: XMoneyPayout = {
-            id: payoutId,
-            recipientHandle: fee.beneficiaryXHandle,
-            recipientName: profile.name,
-            recipientAvatar: profile.avatar,
-            amountUsd: fee.beneficiaryCutUsd,
-            sourceTokenSymbol: fee.tokenSymbol,
-            sourcePlatform: fee.platform,
-            status: 'completed',
-            timestamp: new Date().toISOString(),
-            xMoneyReferenceId: `XM-${Math.floor(10000000 + Math.random() * 90000000)}-${fee.currency}`,
-            paymentMethod: 'X Money (USD Direct)',
-            proofTweetText: `⚡ @Xpaid auto-deposited $${fee.beneficiaryCutUsd.toFixed(2)} USD directly to ${fee.beneficiaryXHandle} via 𝕏 Money from $${fee.tokenSymbol} trading fees on ${fee.platform.toUpperCase()}! (Zero claim needed). Ref: ${fee.sourceTxHash}`,
-            blockchainRefTx: fee.sourceTxHash,
-          };
-
-          setPayouts(prev => [newPayout, ...prev]);
-
-          const updated = [...currentFees];
-          updated[pendingPayoutIndex] = {
-            ...fee,
-            status: 'disbursed_x_money',
-            xMoneyPayoutId: payoutId
-          };
-          showToast(`⚡ 𝕏 Money Auto-Deposited: $${fee.beneficiaryCutUsd.toFixed(2)} USD pushed to ${fee.beneficiaryXHandle}'s account! (Zero claim required)`);
-          return updated;
-        }
-
-        return currentFees;
-      });
-    }, 4500);
-
-    return () => clearInterval(interval);
-  }, [treasuryConfig.autoDisburseEnabled]);
-
   const handleToggleWallet = () => {
     if (connectedWallet) {
       setConnectedWallet(null);
@@ -222,47 +157,38 @@ export default function App() {
     }
   };
 
-  // Handle new token launch
+  // Handle new token launch with automatic Treasury connection
   const handleTokenLaunched = (newToken: TokenLaunchData) => {
-    setTokens(prev => [newToken, ...prev]);
+    // Ensure Treasury addresses are automatically bound
+    const connectedToken: TokenLaunchData = {
+      ...newToken,
+      beneficiaryAccount: newToken.beneficiaryAccount || treasuryConfig.solanaTreasuryAddress,
+      creatorFeeRecipient: treasuryConfig.solanaTreasuryAddress
+    };
+    
+    setTokens(prev => [connectedToken, ...prev]);
 
-    // Automatically simulate initial trading volume & fee generation into treasury
-    const isSol = newToken.network === 'solana';
-    const isRH = newToken.network === 'robinhood';
-    const currency: FeeCurrency = isSol ? 'SOL' : isRH ? 'ETH' : 'BNB';
-    const rawFee = isSol ? 0.65 : isRH ? 0.045 : 0.25;
-    const feeUsd = isSol ? rawFee * 150 : isRH ? rawFee * 3400 : rawFee * 600;
-    const beneficiaryCut = (feeUsd * newToken.feeSplitPct) / 100;
-    const protocolCut = feeUsd - beneficiaryCut;
-
-    const initialFee: FeeCollectionRecord = {
-      id: `fee-${Date.now()}`,
-      tokenId: newToken.id,
-      tokenSymbol: newToken.symbol,
-      tokenName: newToken.name,
-      platform: newToken.platform,
-      network: newToken.network,
-      rawAmount: rawFee,
-      currency,
-      amountUsd: feeUsd,
-      beneficiaryXHandle: newToken.beneficiaryXHandle,
-      beneficiaryCutUsd: beneficiaryCut,
-      protocolCutUsd: protocolCut,
-      status: 'collected_in_treasury', // Directly in our treasury wallet!
+    // Create a live Treasury monitoring record for this token on Pump.fun
+    const initialTreasuryListenerRecord: FeeCollectionRecord = {
+      id: `fee-stream-${Date.now()}`,
+      tokenId: connectedToken.id,
+      tokenSymbol: connectedToken.symbol,
+      tokenName: connectedToken.name,
+      platform: connectedToken.platform,
+      network: connectedToken.network,
+      rawAmount: 0.0,
+      currency: 'SOL',
+      amountUsd: 0.0,
+      beneficiaryXHandle: connectedToken.beneficiaryXHandle,
+      beneficiaryCutUsd: 0.0,
+      protocolCutUsd: 0.0,
       timestamp: new Date().toISOString(),
-      sourceTxHash: isSol ? `tx_${Math.random().toString(36).slice(2, 9)}` : `0x${Math.random().toString(36).slice(2, 10)}`,
-      treasuryTransferTxHash: isSol ? `tr_${Math.random().toString(36).slice(2, 9)}` : `0x${Math.random().toString(36).slice(2, 10)}`,
+      sourceTxHash: connectedToken.mintAddress,
+      status: 'accrued_on_curve' // Actively monitoring on-chain bonding curve
     };
 
-    setFees(prev => [initialFee, ...prev]);
-    showToast(`Token ${newToken.name} launched! +$${feeUsd.toFixed(2)} creator fees collected into Treasury Wallet.`);
-
-    // Auto-payout to X user without needing to claim!
-    if (treasuryConfig.autoDisburseEnabled) {
-      setTimeout(() => {
-        executeAutoPayoutForFee(initialFee);
-      }, 1200);
-    }
+    setFees(prev => [initialTreasuryListenerRecord, ...prev]);
+    showToast(`Token $${connectedToken.symbol} launched! Protocol Treasury (${treasuryConfig.solanaTreasuryAddress.slice(0, 4)}...${treasuryConfig.solanaTreasuryAddress.slice(-4)}) automatically connected.`);
   };
 
   // Link an existing Solana mint (e.g. launched on Pump.fun) to Treasury & Fee Collector
@@ -402,52 +328,6 @@ export default function App() {
     showToast(`⚡ Auto-Disbursed ${newPayoutsList.length} creator payouts via 𝕏 Money! (Zero claim needed)`);
   };
 
-  // Simulate new trading volume
-  const handleSimulateTradeFees = () => {
-    if (tokens.length === 0) return;
-    const randomToken = tokens[Math.floor(Math.random() * tokens.length)];
-    const isSol = randomToken.network === 'solana';
-    const isRH = randomToken.network === 'robinhood';
-    const currency: FeeCurrency = isSol ? 'SOL' : isRH ? 'ETH' : 'BNB';
-    const amount = isSol 
-      ? +(0.3 + Math.random() * 0.8).toFixed(2) 
-      : isRH 
-      ? +(0.015 + Math.random() * 0.05).toFixed(3)
-      : +(0.1 + Math.random() * 0.3).toFixed(2);
-    const usdVal = isSol ? amount * 150 : isRH ? amount * 3400 : amount * 600;
-    const beneficiaryCut = (usdVal * randomToken.feeSplitPct) / 100;
-    const protocolCut = usdVal - beneficiaryCut;
-
-    const newFee: FeeCollectionRecord = {
-      id: `fee-${Date.now()}`,
-      tokenId: randomToken.id,
-      tokenSymbol: randomToken.symbol,
-      tokenName: randomToken.name,
-      platform: randomToken.platform,
-      network: randomToken.network,
-      rawAmount: amount,
-      currency,
-      amountUsd: usdVal,
-      beneficiaryXHandle: randomToken.beneficiaryXHandle,
-      beneficiaryCutUsd: beneficiaryCut,
-      protocolCutUsd: protocolCut,
-      status: 'collected_in_treasury',
-      timestamp: new Date().toISOString(),
-      sourceTxHash: isSol ? `tx_${Math.random().toString(36).slice(2, 9)}` : `0x${Math.random().toString(36).slice(2, 10)}`,
-      treasuryTransferTxHash: isSol ? `tr_${Math.random().toString(36).slice(2, 9)}` : `0x${Math.random().toString(36).slice(2, 10)}`,
-    };
-
-    setFees(prev => [newFee, ...prev]);
-    showToast(`Incoming trade on $${randomToken.symbol}! +$${usdVal.toFixed(2)} fees collected in Treasury Wallet.`);
-
-    // Auto-disburse directly to X user's X Money account
-    if (treasuryConfig.autoDisburseEnabled) {
-      setTimeout(() => {
-        executeAutoPayoutForFee(newFee);
-      }, 1400);
-    }
-  };
-
   // Calculations for header
   const totalCollectedUsd = fees
     .filter(f => f.status === 'collected_in_treasury' || f.status === 'disbursed_x_money')
@@ -502,7 +382,6 @@ export default function App() {
             fees={fees}
             treasuryConfig={treasuryConfig}
             onHarvestFees={handleHarvestFees}
-            onSimulateTradeFees={handleSimulateTradeFees}
             onNavigateToPayouts={() => setActiveTab('payouts')}
             onLinkExistingToken={handleLinkExistingToken}
             onOpenProofBadge={(mint) => {

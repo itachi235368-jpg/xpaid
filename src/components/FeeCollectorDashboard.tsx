@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Coins, 
   Wallet, 
@@ -22,13 +22,13 @@ import {
   X
 } from 'lucide-react';
 import { TokenLaunchData, FeeCollectionRecord, TreasuryConfig, LaunchPlatform } from '../types';
+import { getLiveSolBalance } from '../services/solanaLaunch';
 
 interface FeeCollectorDashboardProps {
   tokens: TokenLaunchData[];
   fees: FeeCollectionRecord[];
   treasuryConfig: TreasuryConfig;
   onHarvestFees: (feeId: string) => void;
-  onSimulateTradeFees: () => void;
   onNavigateToPayouts: () => void;
   onLinkExistingToken?: (mintAddress: string, beneficiaryXHandle: string, name?: string, symbol?: string) => void;
   onOpenProofBadge?: (tokenMint?: string) => void;
@@ -39,13 +39,44 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
   fees,
   treasuryConfig,
   onHarvestFees,
-  onSimulateTradeFees,
   onNavigateToPayouts,
   onLinkExistingToken,
   onOpenProofBadge,
 }) => {
   const [platformFilter, setPlatformFilter] = useState<'all' | LaunchPlatform>('all');
-  const [isSimulating, setIsSimulating] = useState(false);
+  const [liveSolBalance, setLiveSolBalance] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchBalance = async () => {
+      try {
+        const bal = await getLiveSolBalance(
+          treasuryConfig.solanaTreasuryAddress,
+          treasuryConfig.solanaRpcUrl
+        );
+        if (isMounted && typeof bal === 'number') {
+          setLiveSolBalance(bal);
+        }
+      } catch {}
+    };
+    fetchBalance();
+    return () => { isMounted = false; };
+  }, [treasuryConfig.solanaTreasuryAddress, treasuryConfig.solanaRpcUrl]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const bal = await getLiveSolBalance(
+        treasuryConfig.solanaTreasuryAddress,
+        treasuryConfig.solanaRpcUrl
+      );
+      if (typeof bal === 'number') {
+        setLiveSolBalance(bal);
+      }
+    } catch {}
+    setTimeout(() => setIsRefreshing(false), 600);
+  };
 
   // Calculate balances
   const solFeesCollected = fees
@@ -79,12 +110,6 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
   const filteredFees = platformFilter === 'all'
     ? fees
     : fees.filter(f => f.platform === platformFilter);
-
-  const handleSimulate = () => {
-    setIsSimulating(true);
-    onSimulateTradeFees();
-    setTimeout(() => setIsSimulating(false), 800);
-  };
 
   const getPlatformBadge = (p: LaunchPlatform) => {
     switch (p) {
@@ -140,12 +165,13 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
           </div>
 
           <button
-            onClick={handleSimulate}
-            disabled={isSimulating}
+            onClick={handleRefresh}
+            disabled={isRefreshing}
             className="flex items-center justify-center gap-2 px-3.5 py-2.5 sm:py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold rounded-xl border border-zinc-300 dark:border-zinc-700 transition-colors shadow-2xs min-h-[42px] cursor-pointer"
+            title="Refresh live on-chain balances directly from Solana Mainnet"
           >
-            <Zap className={`w-3.5 h-3.5 text-amber-500 ${isSimulating ? 'animate-bounce' : ''}`} />
-            <span>Simulate Trading Volume & Spike</span>
+            <RefreshCw className={`w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>{isRefreshing ? 'Checking On-Chain...' : 'Refresh On-Chain'}</span>
           </button>
 
           <button
@@ -241,12 +267,23 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
             <span className="px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold text-[10px] border border-purple-200 dark:border-purple-800">SOL</span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 font-mono">{solFeesCollected.toFixed(2)}</span>
+            <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 font-mono">
+              {liveSolBalance !== null ? liveSolBalance.toFixed(4) : (solFeesCollected > 0 ? solFeesCollected.toFixed(4) : '0.0000')}
+            </span>
             <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">SOL</span>
           </div>
           <div className="mt-2 text-xs text-zinc-500 dark:text-zinc-400 flex items-center justify-between">
-            <span>≈ ${(solFeesCollected * 150).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</span>
-            <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Pump.fun Active</span>
+            <span>≈ ${(((liveSolBalance ?? solFeesCollected)) * 150).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</span>
+            <a 
+              href={`https://solscan.io/account/${treasuryConfig.solanaTreasuryAddress}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-[10px] text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-0.5"
+              title="View on Solscan"
+            >
+              <span>On-Chain</span>
+              <ExternalLink className="w-2.5 h-2.5" />
+            </a>
           </div>
         </div>
 
@@ -532,18 +569,23 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
                     </div>
 
                     <div className="flex items-center justify-between bg-emerald-50/80 dark:bg-emerald-950/30 px-2.5 py-1.5 rounded-lg border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-900 dark:text-emerald-300">
-                      <div className="flex items-center gap-1">
-                        <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                        <span className="font-semibold text-[10px] uppercase tracking-wider">Beneficiary Account:</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="font-mono font-bold text-[10px]" title={token.beneficiaryAccount || token.creatorFeeRecipient || treasuryConfig.solanaTreasuryAddress}>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="font-bold text-[10px] uppercase tracking-wider">Treasury:</span>
+                        <a
+                          href={`https://solscan.io/account/${token.beneficiaryAccount || token.creatorFeeRecipient || treasuryConfig.solanaTreasuryAddress}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-mono font-bold text-[10px] hover:underline inline-flex items-center gap-0.5"
+                          title="View Treasury Wallet on Solscan"
+                        >
                           {(token.beneficiaryAccount || token.creatorFeeRecipient || treasuryConfig.solanaTreasuryAddress).slice(0, 4)}...{(token.beneficiaryAccount || token.creatorFeeRecipient || treasuryConfig.solanaTreasuryAddress).slice(-4)}
-                        </span>
-                        <span className="text-[9px] bg-emerald-200 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 px-1 rounded font-semibold">
-                          Treasury
-                        </span>
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
                       </div>
+                      <span className="text-[9px] bg-emerald-200 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                        Auto-Connected
+                      </span>
                     </div>
                   </div>
                 )}
@@ -579,11 +621,17 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
       <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-xs">
         <div className="p-4 sm:p-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between flex-wrap gap-2 sm:gap-3">
           <div>
-            <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100">
-              Live Fee Inflows to Treasury Wallet
-            </h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100">
+                Live Fee Inflows to Protocol Treasury Wallet
+              </h3>
+              <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                AUTOMATICALLY CONNECTED
+              </span>
+            </div>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              Trading royalties harvested directly from token pairs on Pump.fun bonding curves.
+              Trading royalties harvested directly into Treasury <span className="font-mono font-semibold text-zinc-700 dark:text-zinc-300">({treasuryConfig.solanaTreasuryAddress.slice(0, 6)}...{treasuryConfig.solanaTreasuryAddress.slice(-6)})</span> from Pump.fun bonding curves.
             </p>
           </div>
           <span className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
@@ -605,88 +653,123 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {filteredFees.map((fee) => (
-                <tr key={fee.id} className="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors">
-                  <td className="px-4 sm:px-5 py-3.5">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-zinc-900 dark:text-zinc-100">${fee.tokenSymbol}</span>
-                      {getPlatformBadge(fee.platform)}
+              {filteredFees.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-zinc-500 dark:text-zinc-400">
+                    <div className="max-w-md mx-auto space-y-2">
+                      <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+                        <ShieldCheck className="w-5 h-5" />
+                      </div>
+                      <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                        Protocol Treasury is Connected & Listening
+                      </p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                        Every token launched on this site is automatically bound to the Treasury wallet (<span className="font-mono">{treasuryConfig.solanaTreasuryAddress.slice(0, 6)}...{treasuryConfig.solanaTreasuryAddress.slice(-6)}</span>). As trading volume occurs on Pump.fun, fees will appear here in real time.
+                      </p>
                     </div>
-                    <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500 block mt-0.5">{fee.sourceTxHash}</span>
-                  </td>
-
-                  <td className="px-4 sm:px-5 py-3.5 font-mono font-semibold text-zinc-900 dark:text-zinc-100">
-                    +{fee.rawAmount} {fee.currency}
-                  </td>
-
-                  <td className="px-4 sm:px-5 py-3.5 font-mono font-bold text-zinc-900 dark:text-zinc-100">
-                    ${fee.amountUsd.toFixed(2)} USD
-                  </td>
-
-                  <td className="px-4 sm:px-5 py-3.5">
-                    <span className="font-semibold text-blue-600 dark:text-blue-400 block">{fee.beneficiaryXHandle}</span>
-                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400">80% cut: ${fee.beneficiaryCutUsd.toFixed(2)}</span>
-                  </td>
-
-                  <td className="px-4 sm:px-5 py-3.5">
-                    {fee.status === 'accrued_on_curve' && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-[11px] font-medium border border-amber-200 dark:border-amber-800">
-                        <Clock className="w-3 h-3" />
-                        Accrued on Curve
-                      </span>
-                    )}
-                    {fee.status === 'collected_in_treasury' && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-[11px] font-medium border border-blue-200 dark:border-blue-900">
-                        <Wallet className="w-3 h-3" />
-                        In Treasury Wallet
-                      </span>
-                    )}
-                    {fee.status === 'disbursed_x_money' && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[11px] font-medium border border-emerald-200 dark:border-emerald-800">
-                        <CheckCircle2 className="w-3 h-3" />
-                        Disbursed via 𝕏 Money
-                      </span>
-                    )}
-                  </td>
-
-                  <td className="px-4 sm:px-5 py-3.5 text-right">
-                    {fee.status === 'accrued_on_curve' ? (
-                      <div className="flex items-center justify-end gap-2">
-                        <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 px-2 py-1 rounded-md inline-flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
-                          Auto-Sweeping...
-                        </span>
-                        <button
-                          onClick={() => onHarvestFees(fee.id)}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-2xs cursor-pointer"
-                          title="Instant manual sweep override"
-                        >
-                          Collect Now
-                        </button>
-                      </div>
-                    ) : fee.status === 'collected_in_treasury' ? (
-                      <div className="flex items-center justify-end gap-2">
-                        <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 px-2 py-1 rounded-md inline-flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-                          Auto-Depositing...
-                        </span>
-                        <button
-                          onClick={onNavigateToPayouts}
-                          className="px-2.5 py-1 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 rounded-lg text-xs font-semibold transition-colors shadow-2xs cursor-pointer"
-                          title="View in X Money Queue"
-                        >
-                          Disburse to 𝕏 →
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-1 rounded-md inline-flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                        Auto-Deposited to 𝕏
-                      </span>
-                    )}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredFees.map((fee) => (
+                  <tr key={fee.id} className="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors">
+                    <td className="px-4 sm:px-5 py-3.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-zinc-900 dark:text-zinc-100">${fee.tokenSymbol}</span>
+                        {getPlatformBadge(fee.platform)}
+                      </div>
+                      <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500 block mt-0.5">{fee.sourceTxHash}</span>
+                    </td>
+
+                    <td className="px-4 sm:px-5 py-3.5 font-mono font-semibold text-zinc-900 dark:text-zinc-100">
+                      +{fee.rawAmount.toFixed(4)} {fee.currency}
+                    </td>
+
+                    <td className="px-4 sm:px-5 py-3.5 font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                      ${fee.amountUsd.toFixed(2)} USD
+                    </td>
+
+                    <td className="px-4 sm:px-5 py-3.5">
+                      <span className="font-semibold text-blue-600 dark:text-blue-400 block">{fee.beneficiaryXHandle}</span>
+                      <span className="text-[10px] text-zinc-500 dark:text-zinc-400">80% cut: ${fee.beneficiaryCutUsd.toFixed(2)}</span>
+                    </td>
+
+                    <td className="px-4 sm:px-5 py-3.5">
+                      {fee.rawAmount === 0 ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[11px] font-medium border border-emerald-200 dark:border-emerald-800">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Treasury Connected & Listening
+                        </span>
+                      ) : fee.status === 'accrued_on_curve' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-[11px] font-medium border border-amber-200 dark:border-amber-800">
+                          <Clock className="w-3 h-3" />
+                          Accrued on Curve
+                        </span>
+                      ) : fee.status === 'collected_in_treasury' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-[11px] font-medium border border-blue-200 dark:border-blue-900">
+                          <Wallet className="w-3 h-3" />
+                          In Treasury Wallet
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[11px] font-medium border border-emerald-200 dark:border-emerald-800">
+                          <CheckCircle2 className="w-3 h-3" />
+                          Disbursed via 𝕏 Money
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="px-4 sm:px-5 py-3.5 text-right">
+                      {fee.rawAmount === 0 ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-1 rounded-md inline-flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Auto-Harvest Ready
+                          </span>
+                          <button
+                            onClick={handleRefresh}
+                            className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                            title="Check on-chain transactions"
+                          >
+                            Sync
+                          </button>
+                        </div>
+                      ) : fee.status === 'accrued_on_curve' ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 px-2 py-1 rounded-md inline-flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                            Auto-Sweeping...
+                          </span>
+                          <button
+                            onClick={() => onHarvestFees(fee.id)}
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-2xs cursor-pointer"
+                            title="Instant manual sweep override"
+                          >
+                            Collect Now
+                          </button>
+                        </div>
+                      ) : fee.status === 'collected_in_treasury' ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 px-2 py-1 rounded-md inline-flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                            Auto-Depositing...
+                          </span>
+                          <button
+                            onClick={onNavigateToPayouts}
+                            className="px-2.5 py-1 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 rounded-lg text-xs font-semibold transition-colors shadow-2xs cursor-pointer"
+                            title="View in X Money Queue"
+                          >
+                            Disburse to 𝕏 →
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-1 rounded-md inline-flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                          Auto-Deposited to 𝕏
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

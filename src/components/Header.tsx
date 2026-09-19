@@ -47,7 +47,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProofBadge,
 }) => {
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
-  const [solBalance, setSolBalance] = useState<number | null>(0.10);
+  const [solBalance, setSolBalance] = useState<number | null>(null);
 
   useEffect(() => {
     let isMounted = true;

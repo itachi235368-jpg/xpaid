@@ -259,74 +259,82 @@ export const XMoneyPayoutEngine: React.FC<XMoneyPayoutEngineProps> = ({
           </div>
         </div>
 
-        <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-          {payouts.map((payout) => (
-            <div key={payout.id} className="p-5 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 transition-colors">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={payout.recipientAvatar}
-                    alt={payout.recipientName}
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(payout.recipientHandle)}`;
-                    }}
-                    className="w-10 h-10 rounded-full object-cover border border-zinc-200 dark:border-zinc-700"
-                  />
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">{payout.recipientName}</span>
-                      <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">{payout.recipientHandle}</span>
-                      <span className="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 border border-emerald-300 dark:border-emerald-800">
-                        <Zap className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                        AUTO-DEPOSITED (ZERO CLAIM)
+        {payouts.length === 0 ? (
+          <div className="p-12 text-center text-zinc-500 dark:text-zinc-400">
+            <DollarSign className="w-10 h-10 mx-auto text-zinc-400 mb-2 opacity-50" />
+            <p className="font-semibold text-sm text-zinc-700 dark:text-zinc-300">No Disbursements Yet</p>
+            <p className="text-xs mt-1">Real trading fees collected on-chain will queue here and disburse directly to creators' 𝕏 accounts.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+            {payouts.map((payout) => (
+              <div key={payout.id} className="p-5 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 transition-colors">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={payout.recipientAvatar}
+                      alt={payout.recipientName}
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(payout.recipientHandle)}`;
+                      }}
+                      className="w-10 h-10 rounded-full object-cover border border-zinc-200 dark:border-zinc-700"
+                    />
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">{payout.recipientName}</span>
+                        <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">{payout.recipientHandle}</span>
+                        <span className="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 border border-emerald-300 dark:border-emerald-800">
+                          <Zap className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                          AUTO-DEPOSITED (ZERO CLAIM)
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
+                        Ref ID: <span className="font-mono text-zinc-600 dark:text-zinc-400">{payout.xMoneyReferenceId}</span> • From ${payout.sourceTokenSymbol} ({payout.sourcePlatform})
                       </span>
                     </div>
+                  </div>
+
+                  <div className="text-right flex sm:flex-col items-center sm:items-end justify-between">
+                    <span className="text-base font-bold text-emerald-600 dark:text-emerald-400 font-mono">+${payout.amountUsd.toFixed(2)} USD</span>
                     <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
-                      Ref ID: <span className="font-mono text-zinc-600 dark:text-zinc-400">{payout.xMoneyReferenceId}</span> • From ${payout.sourceTokenSymbol} ({payout.sourcePlatform})
+                      {new Date(payout.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} UTC
                     </span>
                   </div>
                 </div>
 
-                <div className="text-right flex sm:flex-col items-center sm:items-end justify-between">
-                  <span className="text-base font-bold text-emerald-600 dark:text-emerald-400 font-mono">+${payout.amountUsd.toFixed(2)} USD</span>
-                  <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
-                    {new Date(payout.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} UTC
-                  </span>
+                {/* Public Tweet Proof Card */}
+                <div className="mt-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/80 rounded-xl p-3 text-xs">
+                  <div className="flex items-center justify-between mb-1.5 text-zinc-400 dark:text-zinc-500 text-[11px]">
+                    <span className="flex items-center gap-1 font-semibold text-zinc-600 dark:text-zinc-300">
+                      <Share2 className="w-3 h-3 text-blue-500" />
+                      Public Confirmation Tweet Proof
+                    </span>
+                    <button
+                      onClick={() => handleCopyProof(payout.proofTweetText, payout.id)}
+                      className="flex items-center gap-1 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white font-medium"
+                    >
+                      {copiedId === payout.id ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                          <span className="text-emerald-600 dark:text-emerald-400">Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copy Tweet</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-zinc-800 dark:text-zinc-200 font-mono text-[11px] bg-white dark:bg-zinc-900 p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800">
+                    {payout.proofTweetText}
+                  </p>
                 </div>
               </div>
-
-              {/* Public Tweet Proof Card */}
-              <div className="mt-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/80 rounded-xl p-3 text-xs">
-                <div className="flex items-center justify-between mb-1.5 text-zinc-400 dark:text-zinc-500 text-[11px]">
-                  <span className="flex items-center gap-1 font-semibold text-zinc-600 dark:text-zinc-300">
-                    <Share2 className="w-3 h-3 text-blue-500" />
-                    Public Confirmation Tweet Proof
-                  </span>
-                  <button
-                    onClick={() => handleCopyProof(payout.proofTweetText, payout.id)}
-                    className="flex items-center gap-1 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white font-medium"
-                  >
-                    {copiedId === payout.id ? (
-                      <>
-                        <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                        <span className="text-emerald-600 dark:text-emerald-400">Copied</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3 h-3" />
-                        <span>Copy Tweet</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-                <p className="text-zinc-800 dark:text-zinc-200 font-mono text-[11px] bg-white dark:bg-zinc-900 p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-800">
-                  {payout.proofTweetText}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

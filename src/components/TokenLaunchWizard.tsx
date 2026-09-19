@@ -75,7 +75,6 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
   }, [treasuryConfig.solanaTreasuryAddress, isCustomBeneficiaryAccount]);
 
   // Execution rail
-  const [launchMode, setLaunchMode] = useState<'real_wallet' | 'simulation'>('real_wallet');
   const [isLaunching, setIsLaunching] = useState(false);
   const [launchStep, setLaunchStep] = useState<number>(0);
   const [liveStatusText, setLiveStatusText] = useState<string>('');
@@ -223,76 +222,66 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
     let deployedIpfsImageUrl: string | undefined;
     let deployedTwitterUrl: string | undefined;
 
-    const effectiveBeneficiaryAccount = beneficiaryAccount.trim() || treasuryConfig.solanaTreasuryAddress;
+    const effectiveBeneficiaryAccount = treasuryConfig.solanaTreasuryAddress;
 
-    if (platform === 'pumpfun' && launchMode === 'real_wallet') {
-      if (!connectedWallet) {
-        setErrorMsg('Please connect your Solana wallet (e.g. Phantom or Solflare) to sign the on-chain launch.');
-        onOpenWalletModal?.();
+    if (!connectedWallet) {
+      setErrorMsg('Please connect your Solana wallet (e.g. Phantom or Solflare) to sign the on-chain launch.');
+      onOpenWalletModal?.();
+      setIsLaunching(false);
+      setLaunchStep(0);
+      return;
+    }
+
+    try {
+      setLaunchStep(2);
+      const deployResult = await deployPumpFunToken(
+        {
+          name: name.trim(),
+          symbol: symbol.toUpperCase().replace('$', ''),
+          description: description || `Community token launched on Pump.fun (Solana). Creator fees routed to ${beneficiaryHandle} via X Money.`,
+          imageUrl: logoUrl,
+          imageFile: customImageFile,
+          twitterHandle: beneficiaryHandle,
+          twitterLink: twitterLink.trim() || undefined,
+          telegramLink: telegramLink.trim() || undefined,
+          websiteLink: websiteLink.trim() || undefined,
+          initialBuySol: parseFloat(initialBuy) || 0,
+          creatorPublicKey: connectedWallet,
+          beneficiaryAccount: effectiveBeneficiaryAccount
+        },
+        treasuryConfig,
+        (status) => setLiveStatusText(status)
+      );
+
+      if (!deployResult.success && deployResult.error) {
+        setErrorMsg(deployResult.error);
         setIsLaunching(false);
         setLaunchStep(0);
         return;
       }
 
-      try {
-        setLaunchStep(2);
-        const deployResult = await deployPumpFunToken(
-          {
-            name: name.trim(),
-            symbol: symbol.toUpperCase().replace('$', ''),
-            description: description || `Community token launched on Pump.fun (Solana). Creator fees routed to ${beneficiaryHandle} via X Money.`,
-            imageUrl: logoUrl,
-            imageFile: customImageFile,
-            twitterHandle: beneficiaryHandle,
-            twitterLink: twitterLink.trim() || undefined,
-            telegramLink: telegramLink.trim() || undefined,
-            websiteLink: websiteLink.trim() || undefined,
-            initialBuySol: parseFloat(initialBuy) || 0,
-            creatorPublicKey: connectedWallet,
-            beneficiaryAccount: effectiveBeneficiaryAccount
-          },
-          treasuryConfig,
-          (status) => setLiveStatusText(status)
-        );
-
-        if (!deployResult.success && deployResult.error) {
-          setErrorMsg(deployResult.error);
-          setIsLaunching(false);
-          setLaunchStep(0);
-          return;
-        }
-
-        if (deployResult.mintAddress) {
-          finalMintAddr = deployResult.mintAddress;
-        }
-        if (deployResult.txHash) {
-          finalTxHash = deployResult.txHash;
-          setOnChainTxHash(deployResult.txHash);
-        }
-        if (deployResult.metadataUri) {
-          deployedMetadataUri = deployResult.metadataUri;
-        }
-        if (deployResult.ipfsImageUrl) {
-          deployedIpfsImageUrl = deployResult.ipfsImageUrl;
-        }
-        if (deployResult.twitterUrl) {
-          deployedTwitterUrl = deployResult.twitterUrl;
-        }
-      } catch (err: any) {
-        console.warn('Deploy pumpfun error:', err);
+      if (deployResult.mintAddress) {
+        finalMintAddr = deployResult.mintAddress;
       }
-    } else {
-      // Simulation mode
-      await new Promise(r => setTimeout(r, 800));
-      setLaunchStep(2);
-      setLiveStatusText(`Binding beneficiary account (${effectiveBeneficiaryAccount.slice(0, 4)}...${effectiveBeneficiaryAccount.slice(-4)}) to Treasury...`);
-      await new Promise(r => setTimeout(r, 900));
-      setLaunchStep(3);
-      setLiveStatusText('Deploying bonding curve contract on Pump.fun...');
-      await new Promise(r => setTimeout(r, 900));
-      setLaunchStep(4);
-      setLiveStatusText('Registering in Helius webhook fee collector...');
-      await new Promise(r => setTimeout(r, 700));
+      if (deployResult.txHash) {
+        finalTxHash = deployResult.txHash;
+        setOnChainTxHash(deployResult.txHash);
+      }
+      if (deployResult.metadataUri) {
+        deployedMetadataUri = deployResult.metadataUri;
+      }
+      if (deployResult.ipfsImageUrl) {
+        deployedIpfsImageUrl = deployResult.ipfsImageUrl;
+      }
+      if (deployResult.twitterUrl) {
+        deployedTwitterUrl = deployResult.twitterUrl;
+      }
+    } catch (err: any) {
+      console.warn('Deploy pumpfun error:', err);
+      setErrorMsg(err?.message || 'Failed to deploy on-chain. Please check your wallet connection and gas.');
+      setIsLaunching(false);
+      setLaunchStep(0);
+      return;
     }
 
     // Generate token record
@@ -317,11 +306,11 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
       mintAddress: mintAddr,
       pairAddress: pairAddr,
       creatorFeeRecipient: effectiveBeneficiaryAccount,
-      marketCapUsd: 18000 + Math.floor(Math.random() * 25000),
-      volume24hUsd: 9500 + Math.floor(Math.random() * 14000),
-      bondingCurveProgress: 12 + Math.floor(Math.random() * 15),
+      marketCapUsd: 0,
+      volume24hUsd: 0,
+      bondingCurveProgress: 0,
       createdAt: new Date().toISOString(),
-      creatorWallet: connectedWallet || 'Simulated-Creator-Wallet',
+      creatorWallet: connectedWallet || treasuryConfig.solanaTreasuryAddress,
       status: 'active',
       twitterLink: deployedTwitterUrl || twitterLink.trim() || (beneficiaryHandle ? `https://x.com/${beneficiaryHandle.replace('@', '')}` : undefined),
       telegramLink: telegramLink.trim() || undefined,
@@ -463,13 +452,14 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                   <span className="font-mono text-zinc-800 dark:text-zinc-200 break-all font-semibold">{launchedToken.creatorWallet}</span>
                 </div>
                 <div>
-                  <span className="text-zinc-400 dark:text-zinc-500 block font-medium">Beneficiary Account (Solana):</span>
+                  <span className="text-zinc-400 dark:text-zinc-500 block font-medium">Beneficiary Account (Solana Treasury):</span>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="font-mono text-emerald-700 dark:text-emerald-400 break-all font-semibold">
                       {launchedToken.beneficiaryAccount || launchedToken.creatorFeeRecipient}
                     </span>
-                    <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold px-1.5 py-0.2 rounded border border-emerald-300 dark:border-emerald-800">
-                      {(launchedToken.beneficiaryAccount || launchedToken.creatorFeeRecipient) === treasuryConfig.solanaTreasuryAddress ? 'Treasury Default' : 'Custom'}
+                    <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      {(launchedToken.beneficiaryAccount || launchedToken.creatorFeeRecipient) === treasuryConfig.solanaTreasuryAddress ? 'Protocol Treasury Connected' : 'Custom'}
                     </span>
                   </div>
                 </div>
@@ -1176,50 +1166,47 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                 </div>
               </div>
 
-              {/* Beneficiary Account (Solana Address) - Treasury Wallet Default */}
+              {/* Protocol Treasury Connection - Added to Every New Launch on Our Site */}
               <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800">
-                <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
-                  <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span>Beneficiary Account (Solana Wallet)</span>
-                    <span className="text-red-500">*</span>
-                  </label>
+                <div className="flex items-center justify-between mb-2 flex-wrap gap-1">
+                  <div className="flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                      Our Treasury Address (Automated Royalty Recipient)
+                    </span>
+                  </div>
                   <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full font-bold border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Treasury Wallet (Default)
+                    ADDED TO THIS LAUNCH
                   </span>
                 </div>
 
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={beneficiaryAccount}
-                    onChange={(e) => {
-                      setBeneficiaryAccount(e.target.value);
-                      setIsCustomBeneficiaryAccount(true);
-                    }}
-                    placeholder={treasuryConfig.solanaTreasuryAddress}
-                    className="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-mono text-xs focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
-                    required
-                  />
-                </div>
-
-                <div className="mt-1.5 flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400 flex-wrap gap-1">
-                  <span>
-                    Linked on-chain to receive token royalties. Defaults to Protocol Treasury for automatic conversion to {beneficiaryHandle}.
-                  </span>
-                  {beneficiaryAccount !== treasuryConfig.solanaTreasuryAddress && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setBeneficiaryAccount(treasuryConfig.solanaTreasuryAddress);
-                        setIsCustomBeneficiaryAccount(false);
-                      }}
-                      className="text-emerald-600 dark:text-emerald-400 hover:underline font-semibold cursor-pointer"
+                {/* Treasury Address Card */}
+                <div className="p-3.5 bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold uppercase text-emerald-900 dark:text-emerald-300 tracking-wider">
+                      Solana Protocol Treasury (Pump.fun Fee Vault)
+                    </span>
+                    <a
+                      href={`https://solscan.io/account/${treasuryConfig.solanaTreasuryAddress}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-0.5 font-semibold"
                     >
-                      Reset to Treasury Default
-                    </button>
-                  )}
+                      <span>View on Solscan</span>
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  </div>
+                  
+                  <div className="flex items-center justify-between bg-white dark:bg-zinc-900 px-3 py-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800 font-mono text-xs text-zinc-900 dark:text-zinc-100">
+                    <span className="break-all font-semibold select-all text-emerald-900 dark:text-emerald-300">
+                      {treasuryConfig.solanaTreasuryAddress}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    ✨ <strong>Automated fee flow:</strong> Our treasury address above is automatically bound to this new token on-chain. All trading royalties generated on the Pump.fun bonding curve are collected into this vault and autonomously disbursed in USD to <strong className="text-zinc-900 dark:text-zinc-200">{beneficiaryHandle}</strong>'s 𝕏 Money account.
+                  </p>
                 </div>
               </div>
             </div>
@@ -1357,49 +1344,20 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
             </div>
           )}
 
-          {/* Deployment Mode Selection */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 pt-1 sm:pt-2">
-            <button
-              type="button"
-              onClick={() => setLaunchMode('real_wallet')}
-              className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                launchMode === 'real_wallet'
-                  ? 'bg-purple-950/40 border-purple-500/80 text-white'
-                  : 'bg-zinc-950/40 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-bold text-xs flex items-center gap-1.5 text-purple-300">
-                  <Zap className="w-3.5 h-3.5" />
-                  Real On-Chain Launch
-                </span>
-                {launchMode === 'real_wallet' && <Check className="w-3.5 h-3.5 text-purple-400" />}
-              </div>
-              <p className="text-[11px] text-zinc-400 leading-relaxed">
-                Signs the transaction using your connected wallet and broadcasts directly to Solana Mainnet.
-              </p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setLaunchMode('simulation')}
-              className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                launchMode === 'simulation'
-                  ? 'bg-emerald-950/40 border-emerald-500/80 text-white'
-                  : 'bg-zinc-950/40 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-bold text-xs flex items-center gap-1.5 text-emerald-300">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Instant Simulation Mode
-                </span>
-                {launchMode === 'simulation' && <Check className="w-3.5 h-3.5 text-emerald-400" />}
-              </div>
-              <p className="text-[11px] text-zinc-400 leading-relaxed">
-                Simulates bonding curve creation and fee pipeline without spending SOL gas.
-              </p>
-            </button>
+          {/* Deployment Mode Card */}
+          <div className="p-3.5 rounded-xl border border-purple-500/40 bg-purple-950/20 text-white">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="font-bold text-xs flex items-center gap-1.5 text-purple-300">
+                <Zap className="w-3.5 h-3.5 text-purple-400" />
+                Real On-Chain Solana Mainnet Launch
+              </span>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-purple-900/60 text-purple-300 border border-purple-700/50">
+                Pump.fun Live
+              </span>
+            </div>
+            <p className="text-[11px] text-zinc-400 leading-relaxed">
+              Broadcasts and creates the bonding curve on Solana Mainnet. Your wallet signs the transaction and all creator trading royalties route automatically to the treasury and 𝕏 Money.
+            </p>
           </div>
 
           {/* Initial Dev Buy field */}
@@ -1449,9 +1407,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
               <>
                 <Rocket className="w-5 h-5 shrink-0" />
                 <span className="truncate">
-                  {launchMode === 'real_wallet' 
-                    ? `Launch ${symbol ? `$${symbol}` : 'Token'} & Enable 𝕏 Money`
-                    : 'Simulate Launch & Enable 𝕏 Money'}
+                  {`Launch ${symbol ? `$${symbol}` : 'Token'} On-Chain & Enable 𝕏 Money`}
                 </span>
               </>
             )}
