@@ -12,7 +12,6 @@ import {
   Search,
   Moon,
   Sun,
-  SlidersHorizontal,
   HelpCircle,
   Compass
 } from 'lucide-react';
@@ -29,7 +28,6 @@ interface HeaderProps {
   totalDisbursedUsd: number;
   connectedWallet: string | null;
   onToggleWallet: () => void;
-  onOpenSettings?: () => void;
   isDarkMode?: boolean;
   onToggleTheme?: () => void;
   onOpenProofBadge?: () => void;
@@ -43,7 +41,6 @@ export const Header: React.FC<HeaderProps> = ({
   totalDisbursedUsd,
   connectedWallet,
   onToggleWallet,
-  onOpenSettings,
   isDarkMode = true,
   onToggleTheme,
   onOpenProofBadge,
@@ -225,18 +222,6 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                   <span>Proofs</span>
-                </button>
-              )}
-
-              {/* Settings Button */}
-              {onOpenSettings && (
-                <button
-                  type="button"
-                  onClick={onOpenSettings}
-                  className="p-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg transition-colors"
-                  title="Treasury & Off-Ramp Settings"
-                >
-                  <SlidersHorizontal className="w-4 h-4" />
                 </button>
               )}
 

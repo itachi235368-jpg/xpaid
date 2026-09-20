@@ -5,7 +5,6 @@ import { FeeCollectorDashboard } from './components/FeeCollectorDashboard';
 import { XMoneyPayoutEngine } from './components/XMoneyPayoutEngine';
 import { XUserLookupPortal } from './components/XUserLookupPortal';
 import { HowThingsWork } from './components/HowThingsWork';
-import { TreasurySettingsModal } from './components/TreasurySettingsModal';
 import { WalletConnectModal } from './components/WalletConnectModal';
 import { TransparencyProofModal } from './components/TransparencyProofModal';
 import { FloatingCoinsBackground } from './components/FloatingCoinsBackground';
@@ -25,7 +24,13 @@ import {
   FeeCurrency
 } from './types';
 import { Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
-import { fetchLiveSolPrice, subscribeToSolPrice, getCurrentSolPrice } from './services/solPriceService';
+import { 
+  fetchLiveSolPrice, 
+  subscribeToSolPrice, 
+  getCurrentSolPrice, 
+  calculatePumpFunMarketCap, 
+  fetchDexScreenerTokenData 
+} from './services/solPriceService';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'launch' | 'fees' | 'payouts' | 'lookup' | 'how-it-works'>('home');
@@ -57,11 +62,59 @@ export default function App() {
       const saved = localStorage.getItem('xpaid_user_launched_tokens_v1');
       if (saved) {
         const parsed: TokenLaunchData[] = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch (e) {}
-    return [];
+    return INITIAL_TOKENS;
   });
+
+  // Synchronize live market caps for all registered tokens using DexScreener & Bonding Curve mathematics
+  useEffect(() => {
+    let isCancelled = false;
+
+    const syncMarketCaps = async () => {
+      const currentPrice = solPrice || getCurrentSolPrice() || 180;
+      
+      for (const token of tokens) {
+        if (!token.mintAddress) continue;
+        try {
+          const dexData = await fetchDexScreenerTokenData(token.mintAddress);
+          if (isCancelled) return;
+          if (dexData && dexData.marketCapUsd && dexData.marketCapUsd > 0) {
+            setTokens(prev => prev.map(t => t.id === token.id ? {
+              ...t,
+              marketCapUsd: dexData.marketCapUsd!,
+              volume24hUsd: dexData.volume24hUsd !== undefined ? dexData.volume24hUsd : t.volume24hUsd,
+            } : t));
+          } else {
+            // Recompute exact market cap based on current SOL price and bonding curve progress
+            const { marketCapUsd } = calculatePumpFunMarketCap(
+              token.initialBuyAmount || 0,
+              token.bondingCurveProgress || 0,
+              currentPrice
+            );
+            if (marketCapUsd > 0) {
+              setTokens(prev => prev.map(t => {
+                if (t.id === token.id && (t.marketCapUsd === 0 || Math.abs(t.marketCapUsd - marketCapUsd) > 2)) {
+                  return { ...t, marketCapUsd };
+                }
+                return t;
+              }));
+            }
+          }
+        } catch {
+          // Ignore network errors
+        }
+      }
+    };
+
+    syncMarketCaps();
+    const interval = setInterval(syncMarketCaps, 20_000);
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, [solPrice, tokens.length]);
 
   const [fees, setFees] = useState<FeeCollectionRecord[]>(() => {
     try {
@@ -91,6 +144,9 @@ export default function App() {
         return {
           ...INITIAL_TREASURY_CONFIG,
           ...parsed,
+          autoDisburseThresholdSol: 0.01,
+          autoDisburseThresholdUsd: 1.80,
+          autoClaimFeesEnabled: true,
           pinataJwt: parsed.pinataJwt || INITIAL_TREASURY_CONFIG.pinataJwt,
           solanaTreasuryAddress: INITIAL_TREASURY_CONFIG.solanaTreasuryAddress
         };
@@ -122,7 +178,6 @@ export default function App() {
       localStorage.setItem('xpaid_treasury_config_v2', JSON.stringify(treasuryConfig));
     } catch (e) {}
   }, [treasuryConfig]);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isProofModalOpen, setIsProofModalOpen] = useState(false);
   const [selectedProofTokenMint, setSelectedProofTokenMint] = useState<string | undefined>(undefined);
   const [connectedWallet, setConnectedWallet] = useState<string | null>(null);
@@ -221,6 +276,9 @@ export default function App() {
     const name = customName?.trim() || (isCyberDog ? 'CyberDog' : `Solana Token ${cleanMint.slice(0, 4)}`);
     const symbol = customSymbol?.trim().toUpperCase() || (isCyberDog ? 'CYBERDOG' : `TKN${cleanMint.slice(0, 3).toUpperCase()}`);
 
+    const currentSolPrice = solPrice || getCurrentSolPrice() || 180;
+    const { marketCapUsd: calculatedMcap } = calculatePumpFunMarketCap(0.1, 0.2, currentSolPrice);
+
     const newToken: TokenLaunchData = {
       id: `tok-linked-${Date.now()}`,
       name,
@@ -239,9 +297,9 @@ export default function App() {
       mintAddress: cleanMint,
       pairAddress: 'TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM',
       creatorFeeRecipient: treasuryConfig.solanaTreasuryAddress,
-      marketCapUsd: 14500,
-      volume24hUsd: 4900,
-      bondingCurveProgress: 21,
+      marketCapUsd: calculatedMcap || 5066.23,
+      volume24hUsd: 18.00,
+      bondingCurveProgress: 0.2,
       createdAt: new Date().toISOString(),
       creatorWallet: treasuryConfig.solanaTreasuryAddress,
       status: 'active',
@@ -250,6 +308,17 @@ export default function App() {
 
     handleTokenLaunched(newToken);
     showToast(`✅ Linked mint ${cleanMint.slice(0, 8)}... to Treasury Wallet for Fee Flow!`);
+
+    // Asynchronously check if DexScreener has active liquidity metrics
+    fetchDexScreenerTokenData(cleanMint).then(dexData => {
+      if (dexData && dexData.marketCapUsd) {
+        setTokens(prev => prev.map(t => t.mintAddress?.toLowerCase() === cleanMint.toLowerCase() ? {
+          ...t,
+          marketCapUsd: dexData.marketCapUsd!,
+          volume24hUsd: dexData.volume24hUsd || t.volume24hUsd,
+        } : t));
+      }
+    });
   };
 
   // Autonomous Daemon 1: Auto-Claims and sweeps fees from launched token bonding curves into Treasury Wallet
@@ -358,8 +427,8 @@ export default function App() {
     if (!targetToken) return;
 
     const currentLivePrice = solPrice > 0 ? solPrice : getCurrentSolPrice();
-    // Default to 0.2 SOL fee if requested or standard trade fee
-    const feeSol = customFeeSol !== undefined ? customFeeSol : (treasuryConfig.autoDisburseThresholdSol || 0.2);
+    // Default to 0.01 SOL fee if requested or standard trade fee
+    const feeSol = customFeeSol !== undefined ? customFeeSol : (treasuryConfig.autoDisburseThresholdSol || 0.01);
     const feeUsd = Number((feeSol * currentLivePrice).toFixed(2));
     const beneficiaryCut = Number((feeUsd * (targetToken.feeSplitPct / 100)).toFixed(2));
     const protocolCut = Number((feeUsd - beneficiaryCut).toFixed(2));
@@ -499,7 +568,6 @@ export default function App() {
         treasuryConfig={treasuryConfig}
         totalCollectedUsd={totalCollectedUsd}
         totalDisbursedUsd={totalDisbursedUsd}
-        onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenProofBadge={() => {
           setSelectedProofTokenMint(undefined);
           setIsProofModalOpen(true);
@@ -598,17 +666,6 @@ export default function App() {
         tokens={tokens}
         treasuryConfig={treasuryConfig}
         selectedTokenId={selectedProofTokenMint}
-      />
-
-      {/* Treasury Settings Modal */}
-      <TreasurySettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        config={treasuryConfig}
-        onSaveConfig={(cfg) => {
-          setTreasuryConfig(cfg);
-          showToast('Treasury configuration updated');
-        }}
       />
 
       {/* Wallet Connect Modal */}

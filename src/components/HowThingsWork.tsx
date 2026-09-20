@@ -67,7 +67,7 @@ export const HowThingsWork: React.FC<HowThingsWorkProps> = ({
       const feeSol = (simTradeAmountSol * 0.01).toFixed(3);
       setSimLogs(prev => [
         ...prev,
-        `[T+0.8s] ⚡ 1% Creator Royalty generated: +${feeSol} SOL ($${(Number(feeSol) * solPrice).toFixed(2)} USD @ $${solPrice.toFixed(2)}/SOL).`
+        `[T+0.8s] ⚡ 1% Trading Royalty generated: +${feeSol} SOL ($${(Number(feeSol) * solPrice).toFixed(2)} USD @ $${solPrice.toFixed(2)}/SOL).`
       ]);
     }, 1000);
 
@@ -75,16 +75,16 @@ export const HowThingsWork: React.FC<HowThingsWorkProps> = ({
       setSimStep(3);
       setSimLogs(prev => [
         ...prev,
-        `[T+1.8s] 🏦 Helius RPC Webhook triggered: Fee routed directly to Protocol Treasury (${treasuryConfig.solanaTreasuryAddress.slice(0, 4)}...${treasuryConfig.solanaTreasuryAddress.slice(-4)}).`
+        `[T+1.8s] 🏦 Protocol Webhook triggered: Fee routed directly to Protocol Treasury (${treasuryConfig.solanaTreasuryAddress.slice(0, 4)}...${treasuryConfig.solanaTreasuryAddress.slice(-4)}).`
       ]);
     }, 2200);
 
     setTimeout(() => {
       setSimStep(4);
-      const creatorUsd = ((simTradeAmountSol * 0.01 * solPrice) * 0.8).toFixed(2);
+      const xUserUsd = ((simTradeAmountSol * 0.01 * solPrice) * 0.95).toFixed(2);
       setSimLogs(prev => [
         ...prev,
-        `[T+3.0s] 💰 𝕏 Money API called: $${creatorUsd} USD auto-deposited directly to ${simHandle} with zero claim needed!`
+        `[T+3.0s] 💰 𝕏 Money API called: $${xUserUsd} USD (95%) auto-deposited directly to 𝕏 User ${simHandle} with zero claim needed! (Token creator gets 0%).`
       ]);
       setSimRunning(false);
     }, 3500);
@@ -109,10 +109,10 @@ export const HowThingsWork: React.FC<HowThingsWorkProps> = ({
             Zero-Friction Tokenomics Architecture
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mb-4">
-            How Xpaid Bridges Pump.fun Creator Fees Directly into 𝕏 Money
+            How Xpaid Bridges Pump.fun Fees Directly to 𝕏 Users
           </h2>
           <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-            Xpaid allows anyone to launch a Solana meme token on Pump.fun, embed community links, and automatically route 1% creator trading fees into real USD deposits for any 𝕏 (Twitter) user—<strong className="text-emerald-400 font-semibold">without the recipient ever needing a crypto wallet or claiming tokens</strong>.
+            Xpaid allows anyone to launch a Solana meme token on Pump.fun, and automatically route 95% of trading fees into real USD deposits for any designated 𝕏 User—<strong className="text-emerald-400 font-semibold">we pay the 𝕏 User, not the token creator</strong>.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">

@@ -485,7 +485,7 @@ export const XUserLookupPortal: React.FC<XUserLookupPortalProps> = ({
                           </span>
                         </div>
                         <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                          Fee Split: <span className="font-semibold text-emerald-600 dark:text-emerald-400">{token.feeSplitPct}% auto-deposit</span> • Market Cap: ${token.marketCapUsd.toLocaleString()}
+                          Fee Split: <span className="font-semibold text-emerald-600 dark:text-emerald-400">{token.feeSplitPct}% auto-deposit</span> • Market Cap: ${(token.marketCapUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </p>
                       </div>
                     </div>

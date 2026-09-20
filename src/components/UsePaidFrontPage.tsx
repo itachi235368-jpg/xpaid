@@ -64,19 +64,7 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
   const RATE_PER_HOUR = 100;
   const RATE_PER_SECOND = RATE_PER_HOUR / 3600; // 0.02777777777777778 USD/sec
 
-  const [streamOffsetUsd, setStreamOffsetUsd] = useState(() => {
-    try {
-      const savedStart = localStorage.getItem('xpaid_stream_anchor_time');
-      if (savedStart) {
-        const elapsedSec = (Date.now() - parseInt(savedStart, 10)) / 1000;
-        if (elapsedSec > 0 && elapsedSec < 86400 * 30) {
-          return +(elapsedSec * RATE_PER_SECOND).toFixed(2);
-        }
-      }
-      localStorage.setItem('xpaid_stream_anchor_time', Date.now().toString());
-    } catch (e) {}
-    return 0;
-  });
+  const [streamOffsetUsd, setStreamOffsetUsd] = useState(0);
 
   const [recentEvents, setRecentEvents] = useState<LiveStreamEvent[]>([
     { id: '1', tokenSymbol: 'PEPE4X', creatorHandle: 'matt_furie', amountUsd: 0.03, timeAgo: 'just now' },
@@ -86,24 +74,11 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
   ]);
   const [isPulsing, setIsPulsing] = useState(false);
 
-  // Continuously increment Total USD Auto-Disbursed at exactly $100 per hour ($0.027778 per second)
+  // Micro-feed live pulse
   useEffect(() => {
     let tickCount = 0;
     const interval = setInterval(() => {
       tickCount++;
-      
-      // Compute accurate offset from reference start time to avoid interval drift
-      try {
-        const savedStart = localStorage.getItem('xpaid_stream_anchor_time');
-        if (savedStart) {
-          const elapsedSec = (Date.now() - parseInt(savedStart, 10)) / 1000;
-          setStreamOffsetUsd(+(elapsedSec * RATE_PER_SECOND).toFixed(2));
-        } else {
-          setStreamOffsetUsd(prev => +(prev + RATE_PER_SECOND).toFixed(2));
-        }
-      } catch (e) {
-        setStreamOffsetUsd(prev => +(prev + RATE_PER_SECOND).toFixed(2));
-      }
 
       setIsPulsing(true);
       setTimeout(() => setIsPulsing(false), 300);
@@ -137,8 +112,7 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
     return () => clearInterval(interval);
   }, [RATE_PER_SECOND]);
 
-  const baseTotal = totalDisbursedUsd > 0 ? totalDisbursedUsd : 48250.00;
-  const currentLiveDisbursed = baseTotal + streamOffsetUsd;
+  const currentLiveDisbursed = totalDisbursedUsd;
 
   const handleQuickLaunch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,12 +139,12 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
 
         {/* Display Headline */}
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.1] sm:leading-[1.15]">
-          Monetize any <span className="text-emerald-600 dark:text-emerald-400 font-black">𝕏 account</span> with meme coins.
+          Monetize any <span className="text-emerald-600 dark:text-emerald-400 font-black">𝕏 user</span> with meme coins.
         </h1>
 
         {/* Subtitle */}
         <p className="text-base sm:text-xl text-zinc-600 dark:text-zinc-300 max-w-2xl mx-auto font-normal leading-relaxed">
-          Launch a token for any creator. <strong className="text-zinc-900 dark:text-zinc-100 font-bold">95% of Pump.fun trading fees</strong> automatically convert to USD and stream directly into their 𝕏 balance. <strong className="text-zinc-900 dark:text-zinc-100 font-bold">5%</strong> buy & burn.
+          Launch a token for any 𝕏 account. <strong className="text-zinc-900 dark:text-zinc-100 font-bold">We pay the 𝕏 User, not the token creator.</strong> <strong className="text-zinc-900 dark:text-zinc-100 font-bold">95% of Pump.fun trading fees</strong> automatically convert to USD and stream directly into the targeted 𝕏 User's balance. <strong className="text-zinc-900 dark:text-zinc-100 font-bold">5%</strong> buy & burn.
         </p>
 
         {/* Live Continuous Fee Stream Bar (usepaid.app signature ticker) */}
@@ -365,22 +339,22 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
             </div>
           </div>
 
-          {/* Pons / Robinhood - SOON */}
-          <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-emerald-500/30 shadow-xs space-y-3 relative overflow-hidden">
+          {/* Pons (Robinhood Chain) */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-teal-500/40 shadow-xs space-y-3 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">Pons / Robinhood</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-teal-500" />
+                <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">Pons (Robinhood Chain)</span>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
-                SOON
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-500/20 text-teal-700 dark:text-teal-300">
+                Robinhood L2
               </span>
             </div>
             <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Direct USD payouts into Robinhood brokerage accounts, fractional stock rewards, and instant ACH/FedNow banking rails.
+              Zero-gas EVM Layer 2 tailored for Robinhood & 𝕏 creator economies. Direct USD payouts into Robinhood brokerage accounts, fractional stock rewards, and instant FedNow rails.
             </p>
-            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
-              US Brokerage & Equity Bridge
+            <div className="text-[11px] text-teal-600 dark:text-teal-400 font-semibold">
+              Robinhood EVM Chain & Brokerage Bridge
             </div>
           </div>
         </div>
@@ -480,7 +454,7 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
                 <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80 space-y-3">
                   <div className="flex items-center justify-between text-xs font-mono text-zinc-500">
                     <span>Market Cap:</span>
-                    <span className="font-bold text-zinc-900 dark:text-zinc-100">${(token.marketCapUsd || 45000).toLocaleString()}</span>
+                    <span className="font-bold text-zinc-900 dark:text-zinc-100">${(token.marketCapUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
@@ -530,10 +504,10 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
               1
             </div>
             <h3 className="text-base font-bold text-white">
-              Pick Any 𝕏 Account
+              Pick Any 𝕏 User
             </h3>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              Anyone can launch a coin for any 𝕏 profile (@elonmusk, your favorite artist, streamer, or friend). No permission needed.
+              Anyone can launch a coin for any 𝕏 user (@elonmusk, your favorite streamer, or friend). 95% of fees will go to them, not the coin creator.
             </p>
           </div>
 
@@ -554,10 +528,10 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
               3
             </div>
             <h3 className="text-base font-bold text-white">
-              Instant 𝕏 Money Settlements
+              Instant 𝕏 User Settlements
             </h3>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              Once 0.2 SOL in trading fees is generated, 95% is automatically converted to USD via Kraken / FedNow and auto-deposited straight into the creator's 𝕏 Money balance.
+              Once 0.01 SOL in trading fees is generated, 95% is automatically converted to USD via Kraken / FedNow and auto-deposited straight into the 𝕏 User's 𝕏 Money balance.
             </p>
           </div>
         </div>
@@ -566,7 +540,7 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
       {/* 6. Bottom Launch Call-to-Action */}
       <div className="text-center p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-emerald-500/10 via-zinc-900/40 to-transparent border border-emerald-500/20 space-y-4">
         <h2 className="text-2xl sm:text-4xl font-extrabold text-zinc-900 dark:text-zinc-50">
-          Ready to launch for your favorite creator?
+          Ready to launch for your favorite 𝕏 user?
         </h2>
         <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
           Takes under 30 seconds. Connect your Solana wallet, choose an 𝕏 handle, and start streaming royalties.

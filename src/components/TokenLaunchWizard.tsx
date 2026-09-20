@@ -25,7 +25,7 @@ import { LaunchPlatform, TokenLaunchData, TreasuryConfig } from '../types';
 import { PRESET_MEME_LOGOS, getXUserProfile, KNOWN_X_USERS } from '../data/mockData';
 import { deployPumpFunToken, getLiveSolBalance, getSolanaProvider } from '../services/solanaLaunch';
 import { configurePumpFeeSharingOnChain } from '../services/pumpClaimService';
-import { getCurrentSolPrice } from '../services/solPriceService';
+import { getCurrentSolPrice, calculatePumpFunMarketCap } from '../services/solPriceService';
 
 interface TokenLaunchWizardProps {
   treasuryConfig: TreasuryConfig;
@@ -267,26 +267,33 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
     const randomHex = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
     const mintAddr = finalMintAddr || `${randomHex.toUpperCase()}pump`;
 
+    const parsedInitialBuy = parseFloat(initialBuy) || 0;
+    const solPrice = getCurrentSolPrice() || 180;
+    const calculatedBondingProgress = parsedInitialBuy > 0 
+      ? Math.min(100, Number(((parsedInitialBuy / 85) * 100).toFixed(2)))
+      : 0;
+    const { marketCapUsd } = calculatePumpFunMarketCap(parsedInitialBuy, calculatedBondingProgress, solPrice);
+
     const tokenData: TokenLaunchData = {
       id: `tok-${Date.now()}`,
       name: name.trim(),
       symbol: symbol.toUpperCase().replace('$', ''),
       description: description || `Community token launched for ${beneficiaryHandle}. 95% fees convert to USD via 𝕏 Money.`,
       logoUrl: deployedIpfsImageUrl || logoUrl,
-      platform: 'pumpfun',
-      network: 'solana',
+      platform: platform,
+      network: platform === 'pons' ? 'robinhood' : platform === 'fourmeme' ? 'bsc' : 'solana',
       beneficiaryXHandle: beneficiaryHandle,
       beneficiaryName,
       beneficiaryAvatar: currentXProfile.avatar || `https://unavatar.io/x/${beneficiaryHandle.replace('@', '')}`,
       beneficiaryAccount: effectiveBeneficiaryAccount,
-      initialBuyAmount: parseFloat(initialBuy) || 0,
+      initialBuyAmount: parsedInitialBuy,
       feeSplitPct: feeSplit,
       mintAddress: mintAddr,
       pairAddress: 'TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM',
       creatorFeeRecipient: effectiveBeneficiaryAccount,
-      marketCapUsd: 0,
-      volume24hUsd: 0,
-      bondingCurveProgress: 0,
+      marketCapUsd: marketCapUsd,
+      volume24hUsd: parsedInitialBuy > 0 ? Number((parsedInitialBuy * solPrice).toFixed(2)) : 0,
+      bondingCurveProgress: calculatedBondingProgress,
       createdAt: new Date().toISOString(),
       creatorWallet: connectedWallet || treasuryConfig.solanaTreasuryAddress,
       status: 'active',
@@ -554,27 +561,27 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                 </div>
               </button>
 
-              {/* Pons / Robinhood - Coming Soon */}
+              {/* Pons (Robinhood Chain) */}
               <button
                 type="button"
                 onClick={() => setPlatform('pons')}
                 className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                   platform === 'pons'
-                    ? 'border-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10 ring-2 ring-emerald-500/20'
+                    ? 'border-teal-500 bg-teal-500/10 dark:bg-teal-500/15 ring-2 ring-teal-500/20'
                     : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-950/50'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100">Pons / Robinhood</span>
+                    <span className="w-2 h-2 rounded-full bg-teal-500" />
+                    <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100">Pons (Robinhood Chain)</span>
                   </div>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                    SOON
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-500/15 text-teal-600 dark:text-teal-400">
+                    Robinhood L2
                   </span>
                 </div>
                 <div className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                  Direct USD & Equity Payouts
+                  Robinhood EVM • Direct USD & Equity
                 </div>
               </button>
             </div>
@@ -603,38 +610,39 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
               </div>
             )}
 
-            {/* Coming Soon Notice when Pons / Robinhood is chosen */}
+            {/* Active Chain Information when Pons (Robinhood Chain) is chosen */}
             {platform === 'pons' && (
-              <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-900 dark:text-emerald-200 space-y-1.5 animate-fade-in">
+              <div className="p-3.5 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-xs text-teal-900 dark:text-teal-200 space-y-1.5 animate-fade-in">
                 <div className="flex items-center justify-between">
                   <span className="font-bold flex items-center gap-1.5">
-                    <span>🟢</span> Pons & Robinhood USD Rail Bridge
+                    <span>🟢</span> Pons (Robinhood Chain L2) Active Deployment
                   </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
-                    Coming Soon
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-700 dark:text-teal-300">
+                    Robinhood Chain L2
                   </span>
                 </div>
-                <p className="text-[11px] text-emerald-800 dark:text-emerald-300 leading-relaxed">
-                  Pons protocol off-ramps will enable direct USD transfers to Robinhood brokerage accounts, fractional stock rewards, and instant FedNow / ACH payouts.
+                <p className="text-[11px] text-teal-800 dark:text-teal-300 leading-relaxed">
+                  Launching on <strong>Pons (Robinhood Chain)</strong> creates a zero-gas EVM contract with direct bridge settlement into <strong>Robinhood brokerage accounts & 𝕏 Money USD balances</strong>.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setPlatform('pumpfun')}
-                  className="mt-1 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
-                >
-                  Switch to Pump.fun (Solana Live) →
-                </button>
               </div>
             )}
           </div>
           
           <form onSubmit={handleLaunch} className="space-y-6">
             
-            {/* 1. Target 𝕏 Handle */}
+            {/* 1. Target 𝕏 User */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                1. Target 𝕏 Account
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  1. Beneficiary 𝕏 User (Recipient)
+                </label>
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                  We Pay The 𝕏 User • Not The Creator
+                </span>
+              </div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Enter the 𝕏 handle (@username) of the person who will receive 95% of all trading royalties directly in 𝕏 Money. The token launcher does not receive the fees — the targeted 𝕏 user gets paid directly.
+              </p>
               
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-zinc-400 dark:text-zinc-500 text-sm">
@@ -644,7 +652,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                   type="text"
                   value={beneficiaryHandle.replace(/^@/, '')}
                   onChange={(e) => handleHandleChange(e.target.value)}
-                  placeholder="elonmusk, matt_furie, creator..."
+                  placeholder="elonmusk, matt_furie, vitalikbuterin..."
                   className="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-semibold text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-all"
                   required
                 />
@@ -652,7 +660,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
 
               {/* Quick Pick Pills */}
               <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                <span className="text-[11px] text-zinc-400">Popular:</span>
+                <span className="text-[11px] text-zinc-400">Popular 𝕏 Users:</span>
                 {POPULAR_HANDLES.map(p => (
                   <button
                     key={p.handle}
@@ -683,17 +691,17 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                       {currentXProfile.name}
                     </span>
                     {(currentXProfile.verificationBadge !== 'none' || currentXProfile.kycVerified) && (
-                      <span className="text-blue-500 font-bold text-xs" title="Verified 𝕏 Creator">✓</span>
+                      <span className="text-blue-500 font-bold text-xs" title="Verified 𝕏 User">✓</span>
                     )}
                   </div>
                   <span className="text-zinc-500 dark:text-zinc-400 font-mono text-[11px] block">
-                    {beneficiaryHandle}
+                    {beneficiaryHandle} • Beneficiary 𝕏 User
                   </span>
                 </div>
                 <div className="text-right text-[11px]">
                   <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
                     <DollarSign className="w-3 h-3" />
-                    <span>95% USD Royalties</span>
+                    <span>95% USD Direct to 𝕏 User</span>
                   </span>
                 </div>
               </div>

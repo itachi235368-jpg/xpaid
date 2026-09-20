@@ -105,8 +105,8 @@ export interface TreasuryConfig {
   pinataJwt?: string;
   defaultFeeSplitToXUser: number; // 95%
   protocolBuybackBurnPct: number; // 5%
-  autoDisburseThresholdSol: number; // e.g. 0.2 SOL threshold to trigger payout
-  autoDisburseThresholdUsd: number; // e.g. $36 (0.2 SOL equivalent)
+  autoDisburseThresholdSol: number; // e.g. 0.01 SOL threshold to trigger payout
+  autoDisburseThresholdUsd: number; // e.g. $1.80 (0.01 SOL equivalent)
   autoDisburseEnabled: boolean;
   autoClaimFeesEnabled?: boolean; // Autonomous fee harvest from all token bonding curves
   autoClaimIntervalSeconds?: number; // Periodic harvest cycle

@@ -97,22 +97,22 @@ export const FrontLandingPage: React.FC<FrontLandingPageProps> = ({
         {/* Top Status Eyebrow Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-800 dark:text-zinc-200 shadow-xs">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Pump.fun Automated Creator Royalty Bridge</span>
+          <span>Pump.fun Automated 𝕏 User Royalty Bridge</span>
           <span className="text-zinc-300 dark:text-zinc-700">|</span>
-          <span className="text-emerald-600 dark:text-emerald-400 font-bold">95% to 𝕏 Users</span>
+          <span className="text-emerald-600 dark:text-emerald-400 font-bold">95% to 𝕏 User (Not Creator)</span>
         </div>
 
         {/* Display Headline */}
         <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.1]">
           Create a memecoin for <br className="hidden sm:inline" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-500 dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-400">
-            any 𝕏 account.
+            any 𝕏 user.
           </span>
         </h1>
 
         {/* Value Proposition Subtitle */}
         <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-300 max-w-2xl mx-auto leading-relaxed">
-          <strong className="text-zinc-900 dark:text-zinc-100 font-semibold">95% of all trading fees</strong> are collected and automatically converted to USD deposited into the creator&apos;s 𝕏 account. <strong className="text-zinc-900 dark:text-zinc-100 font-semibold">5%</strong> is bought & burned.
+          <strong className="text-zinc-900 dark:text-zinc-100 font-semibold">We pay the 𝕏 User, not the creator.</strong> <strong className="text-zinc-900 dark:text-zinc-100 font-semibold">95% of all trading fees</strong> are collected and automatically converted to USD deposited straight into the targeted 𝕏 user&apos;s account. <strong className="text-zinc-900 dark:text-zinc-100 font-semibold">5%</strong> is bought & burned.
         </p>
 
         {/* Core Interactive Action Bar (Search & Launch) */}
@@ -291,22 +291,22 @@ export const FrontLandingPage: React.FC<FrontLandingPageProps> = ({
             </div>
           </div>
 
-          {/* Pons / Robinhood - SOON */}
-          <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-emerald-500/30 shadow-xs space-y-3 relative overflow-hidden">
+          {/* Pons (Robinhood Chain) */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border border-teal-500/40 shadow-xs space-y-3 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">Pons / Robinhood</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-teal-500" />
+                <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">Pons (Robinhood Chain)</span>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
-                SOON
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-500/20 text-teal-700 dark:text-teal-300">
+                Robinhood L2
               </span>
             </div>
             <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Direct USD payouts into Robinhood brokerage accounts, fractional stock rewards, and instant ACH/FedNow banking rails.
+              Zero-gas EVM Layer 2 tailored for Robinhood & 𝕏 creator economies. Direct USD payouts into Robinhood brokerage accounts, fractional stock rewards, and instant FedNow rails.
             </p>
-            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
-              US Brokerage & Equity Bridge
+            <div className="text-[11px] text-teal-600 dark:text-teal-400 font-semibold">
+              Robinhood EVM Chain & Brokerage Bridge
             </div>
           </div>
 
@@ -448,13 +448,13 @@ export const FrontLandingPage: React.FC<FrontLandingPageProps> = ({
                   <div>
                     <span className="text-[10px] text-zinc-400 block">Market Cap</span>
                     <span className="font-mono font-bold text-zinc-800 dark:text-zinc-200">
-                      ${(tok.marketCapUsd || 42000).toLocaleString()}
+                      ${(tok.marketCapUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                   <div>
                     <span className="text-[10px] text-zinc-400 block">Curve Progress</span>
                     <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                      {tok.bondingCurveProgress || 35}%
+                      {(tok.bondingCurveProgress ?? 0)}%
                     </span>
                   </div>
                 </div>
@@ -529,7 +529,7 @@ export const FrontLandingPage: React.FC<FrontLandingPageProps> = ({
               Instant 𝕏 Money Settlement
             </h3>
             <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Once 0.2 SOL in trading royalties is generated, 95% is automatically converted from SOL to USD and deposited directly into the creator&apos;s 𝕏 Money balance with zero gas or claiming required.
+              Once 0.01 SOL in trading royalties is generated, 95% is automatically converted from SOL to USD and deposited directly into the creator&apos;s 𝕏 Money balance with zero gas or claiming required.
             </p>
           </div>
 

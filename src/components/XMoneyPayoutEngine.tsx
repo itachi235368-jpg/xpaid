@@ -72,10 +72,10 @@ export const XMoneyPayoutEngine: React.FC<XMoneyPayoutEngineProps> = ({
             <span>X Money Autonomous Payout Engine • Zero-Claim Architecture</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
-            Automated 𝕏 Money Settlement Queue
+            Automated 𝕏 User Settlement Queue
           </h2>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-            Trading fees gathered in our protocol treasury are automatically converted and deposited straight into creators' 𝕏 accounts. <strong>No manual claiming required.</strong>
+            Trading fees gathered in our protocol treasury are automatically converted and deposited straight into the targeted 𝕏 User's account (@handle). <strong>We pay the 𝕏 User directly, not the token launcher.</strong>
           </p>
         </div>
 
@@ -109,9 +109,9 @@ export const XMoneyPayoutEngine: React.FC<XMoneyPayoutEngineProps> = ({
             ✓
           </div>
           <div>
-            <span className="font-bold text-emerald-950 dark:text-emerald-200 block">Autonomous Push Payments (Zero Claim)</span>
+            <span className="font-bold text-emerald-950 dark:text-emerald-200 block">Direct 𝕏 User Payments (We Pay The 𝕏 User, Not The Token Creator)</span>
             <p className="text-emerald-800 dark:text-emerald-300 mt-0.5">
-              Unlike traditional crypto platforms where creators must connect web3 wallets and claim tokens manually, our system pushes USD directly into the creator's 𝕏 Money account via 𝕏's automated payment rail.
+              Unlike traditional platforms where deployers take the royalties, our system pushes 95% of USD directly into the designated 𝕏 User's 𝕏 Money balance via 𝕏's automated payment rail.
             </p>
           </div>
         </div>
@@ -127,14 +127,14 @@ export const XMoneyPayoutEngine: React.FC<XMoneyPayoutEngineProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs">
           <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 dark:text-zinc-500 block mb-1">
-            Pending X Money Queue
+            Pending 𝕏 User Payouts Queue
           </span>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 font-mono">${totalPendingUsd.toFixed(2)}</span>
             <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">USD</span>
           </div>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            {pendingFees.length} creator payouts awaiting X Money distribution
+            {pendingFees.length} 𝕏 user payouts awaiting 𝕏 Money distribution
           </p>
         </div>
 
