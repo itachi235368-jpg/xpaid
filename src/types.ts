@@ -1,8 +1,27 @@
 export type LaunchPlatform = 'pumpfun' | 'fourmeme' | 'pons';
 export type BlockchainNetwork = 'solana' | 'bsc' | 'robinhood';
 export type FeeCurrency = 'SOL' | 'BNB' | 'ETH';
+export type StreamerPlatform = 'tiktok' | 'twitch' | 'kick';
 
 export type XMoneyFeatureStatus = 'active' | 'beta' | 'pending_setup' | 'unsupported_region';
+
+export interface StreamerAccount {
+  id: string;
+  platform: StreamerPlatform;
+  username: string;
+  displayName: string;
+  avatarUrl: string;
+  followersCount: string;
+  isLive: boolean;
+  streamTitle?: string;
+  connectedTokenMint?: string;
+  tokenSymbol?: string;
+  tokenName?: string;
+  totalFeesCollectedSol: number;
+  totalFeesCollectedUsd: number;
+  payoutAddress: string;
+  autoClaimEnabled: boolean;
+}
 
 export interface XUserProfile {
   handle: string;

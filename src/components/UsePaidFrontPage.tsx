@@ -16,7 +16,8 @@ import {
   Lock,
   ArrowUpRight,
   Layers,
-  Activity
+  Activity,
+  Tv
 } from 'lucide-react';
 import { TokenLaunchData, FeeCollectionRecord, XMoneyPayout } from '../types';
 
@@ -29,6 +30,7 @@ interface UsePaidFrontPageProps {
   onLaunchClick: (prefilledHandle?: string) => void;
   onExploreFeesClick: () => void;
   onExplorePayoutsClick: () => void;
+  onExploreStreamersClick: () => void;
   onSelectToken: (token: TokenLaunchData) => void;
 }
 
@@ -56,6 +58,7 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
   onLaunchClick,
   onExploreFeesClick,
   onExplorePayoutsClick,
+  onExploreStreamersClick,
   onSelectToken,
 }) => {
   const [inputHandle, setInputHandle] = useState('');
@@ -218,7 +221,7 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
         </div>
 
         {/* Secondary CTAs */}
-        <div className="flex items-center justify-center gap-4 pt-2">
+        <div className="flex items-center justify-center gap-4 flex-wrap pt-2">
           <button
             type="button"
             onClick={() => onLaunchClick()}
@@ -227,6 +230,16 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
             <Rocket className="w-4 h-4" />
             <span>Open Launch Studio</span>
           </button>
+
+          <button
+            type="button"
+            onClick={onExploreStreamersClick}
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 hover:opacity-95 text-white text-xs sm:text-sm font-bold shadow-md transition-all cursor-pointer flex items-center gap-2"
+          >
+            <Tv className="w-4 h-4 text-cyan-300 animate-pulse" />
+            <span>Streamers (TikTok / Twitch / Kick)</span>
+          </button>
+
           <button
             type="button"
             onClick={onExploreFeesClick}

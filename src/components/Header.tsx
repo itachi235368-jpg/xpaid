@@ -21,8 +21,8 @@ import { getLiveSolBalance } from '../services/solanaLaunch';
 import { fetchLiveSolPrice, subscribeToSolPrice } from '../services/solPriceService';
 
 interface HeaderProps {
-  activeTab: 'home' | 'launch' | 'fees' | 'payouts' | 'lookup' | 'how-it-works';
-  setActiveTab: (tab: 'home' | 'launch' | 'fees' | 'payouts' | 'lookup' | 'how-it-works') => void;
+  activeTab: 'home' | 'launch' | 'fees' | 'payouts' | 'lookup' | 'how-it-works' | 'streamers';
+  setActiveTab: (tab: 'home' | 'launch' | 'fees' | 'payouts' | 'lookup' | 'how-it-works' | 'streamers') => void;
   treasuryConfig: TreasuryConfig;
   totalCollectedUsd: number;
   totalDisbursedUsd: number;
@@ -183,6 +183,19 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <Search className="w-3.5 h-3.5" />
                 <span>Directory</span>
+              </button>
+
+              <button
+                id="tab-streamers"
+                onClick={() => setActiveTab('streamers')}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all ${
+                  activeTab === 'streamers'
+                    ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-xs font-semibold'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                <span>Streamers</span>
               </button>
 
               <button

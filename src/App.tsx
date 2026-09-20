@@ -5,6 +5,7 @@ import { FeeCollectorDashboard } from './components/FeeCollectorDashboard';
 import { XMoneyPayoutEngine } from './components/XMoneyPayoutEngine';
 import { XUserLookupPortal } from './components/XUserLookupPortal';
 import { HowThingsWork } from './components/HowThingsWork';
+import { StreamerHub } from './components/StreamerHub';
 import { WalletConnectModal } from './components/WalletConnectModal';
 import { TransparencyProofModal } from './components/TransparencyProofModal';
 import { FloatingCoinsBackground } from './components/FloatingCoinsBackground';
@@ -33,7 +34,7 @@ import {
 } from './services/solPriceService';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'home' | 'launch' | 'fees' | 'payouts' | 'lookup' | 'how-it-works'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'launch' | 'fees' | 'payouts' | 'lookup' | 'how-it-works' | 'streamers'>('home');
   const [prefilledLaunchHandle, setPrefilledLaunchHandle] = useState<string | undefined>(undefined);
   const [solPrice, setSolPrice] = useState<number>(() => getCurrentSolPrice());
 
@@ -593,6 +594,7 @@ export default function App() {
             }}
             onExploreFeesClick={() => setActiveTab('fees')}
             onExplorePayoutsClick={() => setActiveTab('payouts')}
+            onExploreStreamersClick={() => setActiveTab('streamers')}
             onSelectToken={(token) => {
               setActiveTab('fees');
             }}
@@ -655,6 +657,15 @@ export default function App() {
             onNavigateToLaunch={() => setActiveTab('launch')}
             onNavigateToFees={() => setActiveTab('fees')}
             onNavigateToPayouts={() => setActiveTab('payouts')}
+          />
+        )}
+
+        {activeTab === 'streamers' && (
+          <StreamerHub
+            tokens={tokens}
+            solPrice={solPrice}
+            onSuccessMessage={showToast}
+            onErrorMessage={showToast}
           />
         )}
       </main>

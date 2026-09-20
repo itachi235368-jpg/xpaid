@@ -29,6 +29,7 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
 }) => {
   const [hasPhantom, setHasPhantom] = useState(false);
   const [hasSolflare, setHasSolflare] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [liveBalance, setLiveBalance] = useState<number | null>(null);
@@ -38,6 +39,8 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
       const phantom = (window as any).phantom?.solana || (window as any).solana;
       setHasPhantom(Boolean(phantom?.isPhantom));
       setHasSolflare(Boolean((window as any).solflare));
+      const mobileCheck = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobileCheck);
     }
   }, [isOpen]);
 
@@ -55,11 +58,28 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
     setIsConnecting(true);
     setError(null);
     try {
+      const phantom = (window as any).phantom?.solana || (window as any).solana;
+      if (!phantom && isMobile) {
+        // Use Phantom Universal Connect Link / Browse Link
+        const currentUrl = window.location.href;
+        const appUrl = window.location.origin;
+        const phantomConnectUrl = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(appUrl)}&redirect_link=${encodeURIComponent(currentUrl)}&cluster=mainnet-beta`;
+        window.location.href = phantomConnectUrl;
+        return;
+      }
+
       const result = await connectRealWallet('phantom');
       onConnect(result.address);
       onClose();
     } catch (err: any) {
       console.error('Phantom connection error:', err);
+      // If mobile extension missing, fallback to deep link
+      if (isMobile) {
+        const currentUrl = window.location.href;
+        const appUrl = window.location.origin;
+        window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(currentUrl)}?ref=${encodeURIComponent(appUrl)}`;
+        return;
+      }
       setError(err?.message || 'Could not connect to Phantom.');
     } finally {
       setIsConnecting(false);
@@ -82,17 +102,22 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs animate-fade-in">
-      <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="bg-zinc-950 border border-zinc-800/90 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Wallet className="w-5 h-5 text-purple-400" />
-            <h3 className="font-bold text-zinc-100 text-base">Connect Solana Wallet</h3>
+        <div className="px-6 py-5 border-b border-zinc-800/80 flex items-center justify-between bg-zinc-900/40">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <Wallet className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-bold text-zinc-100 text-base font-['Outfit'] tracking-tight">Connect Web3 Wallet</h3>
+              <p className="text-[11px] text-zinc-400">Select your preferred Solana connection</p>
+            </div>
           </div>
           <button 
             onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-100 p-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
+            className="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-zinc-800/80 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -101,20 +126,20 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
         <div className="p-6 space-y-4">
           {/* Current Connected Status if already connected */}
           {currentConnectedAddress && (
-            <div className="p-3.5 bg-zinc-800/80 rounded-xl border border-zinc-700 space-y-2">
+            <div className="p-4 bg-zinc-900/80 rounded-2xl border border-zinc-800 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-zinc-400 font-medium">Currently Connected</span>
-                <span className="text-[10px] bg-emerald-950 text-emerald-300 font-bold px-2 py-0.5 rounded border border-emerald-700/60 flex items-center gap-1">
+                <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Connected Wallet</span>
+                <span className="text-[10px] bg-emerald-950/80 text-emerald-300 font-bold px-2.5 py-0.5 rounded-full border border-emerald-700/60 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  ACTIVE
+                  Active Session
                 </span>
               </div>
-              <div className="flex items-center justify-between font-mono text-xs text-zinc-200">
-                <span title={currentConnectedAddress} className="truncate max-w-[200px]">
+              <div className="flex items-center justify-between font-mono text-xs text-zinc-200 bg-zinc-950/60 px-3 py-2.5 rounded-xl border border-zinc-800">
+                <span title={currentConnectedAddress} className="truncate max-w-[210px] text-zinc-300">
                   {currentConnectedAddress}
                 </span>
                 {liveBalance !== null && (
-                  <span className="text-emerald-400 font-semibold">{liveBalance.toFixed(2)} SOL</span>
+                  <span className="text-emerald-400 font-bold">{liveBalance.toFixed(3)} SOL</span>
                 )}
               </div>
               {onDisconnect && (
@@ -124,7 +149,7 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
                     onDisconnect();
                     onClose();
                   }}
-                  className="w-full py-1.5 text-xs text-red-400 hover:text-red-300 bg-red-950/40 hover:bg-red-950/70 border border-red-800/50 rounded-lg transition-colors font-medium"
+                  className="w-full py-2 text-xs text-red-400 hover:text-red-300 bg-red-950/30 hover:bg-red-950/60 border border-red-900/50 rounded-xl transition-colors font-semibold cursor-pointer"
                 >
                   Disconnect Wallet
                 </button>
@@ -133,51 +158,49 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
           )}
 
           {error && (
-            <div className="p-3 bg-red-950/60 border border-red-800/80 rounded-xl text-xs text-red-300 space-y-2">
-              <div className="flex items-start gap-2">
+            <div className="p-3.5 bg-red-950/50 border border-red-800/80 rounded-2xl text-xs text-red-200 space-y-2">
+              <div className="flex items-start gap-2.5">
                 <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-red-200">Notice</p>
-                  <p>{error}</p>
+                  <p className="font-bold text-red-100">Connection Notice</p>
+                  <p className="text-red-300 text-[11px] mt-0.5">{error}</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => window.open(window.location.href, '_blank')}
-                className="w-full mt-1.5 py-1.5 px-3 bg-red-900/50 hover:bg-red-900 border border-red-700/60 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-colors"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                Open App in New Tab (Direct Browser Window)
-              </button>
             </div>
           )}
 
           {/* Wallet Options */}
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {/* Phantom */}
             <button
               onClick={handleConnectPhantom}
               disabled={isConnecting}
-              className="w-full flex items-center justify-between p-3.5 rounded-xl border border-purple-500/30 bg-purple-950/20 hover:bg-purple-900/30 transition-all text-left group"
+              className="w-full flex items-center justify-between p-4 rounded-2xl border border-zinc-800 hover:border-purple-500/50 bg-zinc-900/50 hover:bg-purple-950/20 transition-all text-group cursor-pointer group"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-600/30 border border-purple-500/40 flex items-center justify-center text-xl">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-xl shadow-inner">
                   👻
                 </div>
-                <div>
-                  <div className="font-semibold text-sm text-zinc-100 flex items-center gap-2">
+                <div className="text-left">
+                  <div className="font-bold text-sm text-zinc-100 flex items-center gap-2 group-hover:text-purple-300 transition-colors">
                     Phantom Wallet
                     {hasPhantom ? (
-                      <span className="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-700/60 px-1.5 py-0.2 rounded font-bold">
-                        DETECTED
+                      <span className="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-700/60 px-2 py-0.5 rounded-full font-bold">
+                        Detected
+                      </span>
+                    ) : isMobile ? (
+                      <span className="text-[10px] bg-purple-900 text-purple-200 border border-purple-600/60 px-2 py-0.5 rounded-full font-bold">
+                        Mobile App
                       </span>
                     ) : (
-                      <span className="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.2 rounded">
-                        EXTENSION
+                      <span className="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full font-medium">
+                        Extension
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-zinc-400">Connect real browser wallet to sign launches</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    {isMobile && !hasPhantom ? 'Open securely in Phantom Mobile Browser' : 'Connect official Solana browser extension'}
+                  </p>
                 </div>
               </div>
               <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-purple-400 transition-colors" />
@@ -187,22 +210,22 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
             <button
               onClick={handleConnectSolflare}
               disabled={isConnecting}
-              className="w-full flex items-center justify-between p-3.5 rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800/50 transition-all text-left group"
+              className="w-full flex items-center justify-between p-4 rounded-2xl border border-zinc-800 hover:border-amber-500/50 bg-zinc-900/50 hover:bg-amber-950/20 transition-all text-group cursor-pointer group"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-600/20 border border-amber-500/30 flex items-center justify-center text-xl">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-amber-600/20 border border-amber-500/30 flex items-center justify-center text-xl shadow-inner">
                   ☀️
                 </div>
-                <div>
-                  <div className="font-semibold text-sm text-zinc-100 flex items-center gap-2">
+                <div className="text-left">
+                  <div className="font-bold text-sm text-zinc-100 flex items-center gap-2 group-hover:text-amber-300 transition-colors">
                     Solflare Wallet
                     {hasSolflare && (
-                      <span className="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-700/60 px-1.5 py-0.2 rounded font-bold">
-                        DETECTED
+                      <span className="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-700/60 px-2 py-0.5 rounded-full font-bold">
+                        Detected
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-zinc-400">Solana web & mobile wallet</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">Secure Solana web & mobile wallet</p>
                 </div>
               </div>
               <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-amber-400 transition-colors" />
@@ -211,16 +234,16 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
         </div>
 
         {/* Footer info */}
-        <div className="p-4 bg-zinc-950/60 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-400">
-          <span className="flex items-center gap-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
+        <div className="px-6 py-4 bg-zinc-900/60 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-400">
+          <span className="flex items-center gap-1.5 font-medium">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
             Verified Helius RPC Node
           </span>
           <a
             href="https://phantom.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-purple-400 hover:underline flex items-center gap-0.5"
+            className="text-emerald-400 hover:underline flex items-center gap-1 font-semibold"
           >
             Get Phantom <ExternalLink className="w-2.5 h-2.5" />
           </a>
