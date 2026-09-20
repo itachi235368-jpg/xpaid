@@ -9,6 +9,7 @@ import { TreasurySettingsModal } from './components/TreasurySettingsModal';
 import { WalletConnectModal } from './components/WalletConnectModal';
 import { TransparencyProofModal } from './components/TransparencyProofModal';
 import { FloatingCoinsBackground } from './components/FloatingCoinsBackground';
+import { UsePaidFrontPage } from './components/UsePaidFrontPage';
 import { 
   INITIAL_TOKENS, 
   INITIAL_FEES, 
@@ -27,7 +28,8 @@ import { Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 import { fetchLiveSolPrice, subscribeToSolPrice, getCurrentSolPrice } from './services/solPriceService';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'launch' | 'fees' | 'payouts' | 'lookup' | 'how-it-works'>('launch');
+  const [activeTab, setActiveTab] = useState<'home' | 'launch' | 'fees' | 'payouts' | 'lookup' | 'how-it-works'>('home');
+  const [prefilledLaunchHandle, setPrefilledLaunchHandle] = useState<string | undefined>(undefined);
   const [solPrice, setSolPrice] = useState<number>(() => getCurrentSolPrice());
 
   // Subscribe to real-time SOL price updates
@@ -50,54 +52,15 @@ export default function App() {
   }, []);
   const [tokens, setTokens] = useState<TokenLaunchData[]>(() => {
     try {
-      const saved = localStorage.getItem('xpaid_tokens_v2');
+      localStorage.removeItem('xpaid_tokens_v2');
+      localStorage.removeItem('xpaid_tokens');
+      const saved = localStorage.getItem('xpaid_user_launched_tokens_v1');
       if (saved) {
         const parsed: TokenLaunchData[] = JSON.parse(saved);
-        // Ensure that real launched tokens are loaded and synced with Treasury
-        const synchronized = parsed.map(tok => {
-          if (tok.mintAddress === '9S4SnEJyztPy5P5dwXRYxbKzvosHU6mpXFCjsDmcHPXn' || tok.id === 'tok-user-pepe-solana-9s4') {
-            return {
-              ...tok,
-              name: 'Pepe Solana',
-              symbol: 'PEPE4X',
-              mintAddress: '9S4SnEJyztPy5P5dwXRYxbKzvosHU6mpXFCjsDmcHPXn',
-              beneficiaryXHandle: '@matt_furie',
-              beneficiaryName: 'Matt Furie',
-              beneficiaryAccount: INITIAL_TREASURY_CONFIG.solanaTreasuryAddress,
-              creatorFeeRecipient: INITIAL_TREASURY_CONFIG.solanaTreasuryAddress,
-              creatorWallet: '8LM7AehSNEmBhxCjKFL1BceUQjYGLEHriXKjtBZEeAk',
-              twitterLink: 'https://x.com/matt_furie',
-              status: 'active' as const
-            };
-          }
-          if (tok.mintAddress === '79KZuAWcKWfbxmVAwpkigZc6qBVRfrvNaaEeeUwE74vF' || tok.id === 'tok-user-spacex-mars-79k') {
-            return {
-              ...tok,
-              name: 'SpaceX Martian',
-              symbol: 'MARS',
-              mintAddress: '79KZuAWcKWfbxmVAwpkigZc6qBVRfrvNaaEeeUwE74vF',
-              beneficiaryXHandle: '@elonmusk',
-              beneficiaryName: 'Elon Musk',
-              beneficiaryAvatar: 'https://pbs.twimg.com/profile_images/1838634862464733184/pXj9iWd0_400x400.jpg',
-              beneficiaryAccount: INITIAL_TREASURY_CONFIG.solanaTreasuryAddress,
-              creatorFeeRecipient: INITIAL_TREASURY_CONFIG.solanaTreasuryAddress,
-              creatorWallet: '7hTGvweCCagv64AFbFda1KVaYyLEqqqqP839aGyqpyK6',
-              twitterLink: 'https://x.com/elonmusk',
-              status: 'active' as const
-            };
-          }
-          return {
-            ...tok,
-            beneficiaryAccount: tok.beneficiaryAccount || tok.creatorFeeRecipient || INITIAL_TREASURY_CONFIG.solanaTreasuryAddress,
-            creatorFeeRecipient: tok.creatorFeeRecipient || INITIAL_TREASURY_CONFIG.solanaTreasuryAddress
-          };
-        });
-        const existingMints = new Set(synchronized.map(t => t.mintAddress || t.id));
-        const missing = INITIAL_TOKENS.filter(t => !existingMints.has(t.mintAddress || t.id));
-        return [...missing, ...synchronized];
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {}
-    return INITIAL_TOKENS;
+    return [];
   });
 
   const [fees, setFees] = useState<FeeCollectionRecord[]>(() => {
@@ -138,7 +101,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('xpaid_tokens_v2', JSON.stringify(tokens));
+      localStorage.setItem('xpaid_user_launched_tokens_v1', JSON.stringify(tokens));
     } catch (e) {}
   }, [tokens]);
 
@@ -272,7 +235,7 @@ export default function App() {
       beneficiaryName: cleanHandle.replace('@', ''),
       beneficiaryAvatar: `https://unavatar.io/x/${cleanHandle.replace('@', '')}`,
       initialBuyAmount: 0.1,
-      feeSplitPct: 80,
+      feeSplitPct: 95,
       mintAddress: cleanMint,
       pairAddress: 'TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM',
       creatorFeeRecipient: treasuryConfig.solanaTreasuryAddress,
@@ -390,13 +353,13 @@ export default function App() {
   }, [treasuryConfig.autoDisburseEnabled, solPrice]);
 
   // Simulate incoming live trading fee and let the autonomous engine disburse it
-  const handleSimulateTradeAndAutoDisburse = (targetTokenMint?: string) => {
+  const handleSimulateTradeAndAutoDisburse = (targetTokenMint?: string, customFeeSol?: number) => {
     const targetToken = (targetTokenMint ? tokens.find(t => t.mintAddress === targetTokenMint) : null) || tokens[0];
     if (!targetToken) return;
 
     const currentLivePrice = solPrice > 0 ? solPrice : getCurrentSolPrice();
-    const simulatedTradeSol = 0.5; // 0.5 SOL buy on Pump.fun
-    const feeSol = simulatedTradeSol * 0.01; // 1% creator fee = 0.005 SOL
+    // Default to 0.2 SOL fee if requested or standard trade fee
+    const feeSol = customFeeSol !== undefined ? customFeeSol : (treasuryConfig.autoDisburseThresholdSol || 0.2);
     const feeUsd = Number((feeSol * currentLivePrice).toFixed(2));
     const beneficiaryCut = Number((feeUsd * (targetToken.feeSplitPct / 100)).toFixed(2));
     const protocolCut = Number((feeUsd - beneficiaryCut).toFixed(2));
@@ -422,7 +385,7 @@ export default function App() {
     };
 
     setFees(prev => [newFeeRecord, ...prev]);
-    showToast(`📈 Trade on $${targetToken.symbol} detected: +${feeSol.toFixed(4)} SOL ($${feeUsd.toFixed(2)} USD) received in Treasury. Autonomous Auto-Disburse daemon is processing payout to ${targetToken.beneficiaryXHandle}...`);
+    showToast(`⚡ Generated ${feeSol.toFixed(2)} SOL ($${feeUsd.toFixed(2)} USD) fees on $${targetToken.symbol}! 95% ($${beneficiaryCut.toFixed(2)} USD) is auto-sending to ${targetToken.beneficiaryXHandle} via 𝕏 Money.`);
   };
 
   // Automated payout dispatcher (zero manual claim needed)
@@ -549,6 +512,25 @@ export default function App() {
 
       {/* Main Content Area - padded for bottom mobile bar */}
       <main className="flex-1 pb-24 sm:pb-16">
+        {activeTab === 'home' && (
+          <UsePaidFrontPage
+            tokens={tokens}
+            fees={fees}
+            payouts={payouts}
+            totalCollectedUsd={totalCollectedUsd}
+            totalDisbursedUsd={totalDisbursedUsd}
+            onLaunchClick={(handle) => {
+              setPrefilledLaunchHandle(handle);
+              setActiveTab('launch');
+            }}
+            onExploreFeesClick={() => setActiveTab('fees')}
+            onExplorePayoutsClick={() => setActiveTab('payouts')}
+            onSelectToken={(token) => {
+              setActiveTab('fees');
+            }}
+          />
+        )}
+
         {activeTab === 'launch' && (
           <TokenLaunchWizard
             treasuryConfig={treasuryConfig}
@@ -557,6 +539,8 @@ export default function App() {
             onNavigateToHowItWorks={() => setActiveTab('how-it-works')}
             connectedWallet={connectedWallet}
             onOpenWalletModal={() => setIsWalletModalOpen(true)}
+            prefilledHandle={prefilledLaunchHandle}
+            onBackToHome={() => setActiveTab('home')}
           />
         )}
 

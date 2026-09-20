@@ -21,7 +21,8 @@ export const TreasurySettingsModal: React.FC<TreasurySettingsModalProps> = ({
   const [pinataJwt, setPinataJwt] = useState(config.pinataJwt || '');
   const [bnbAddr, setBnbAddr] = useState(config.bnbTreasuryAddress);
   const [rhAddr, setRhAddr] = useState(config.robinhoodTreasuryAddress);
-  const [splitPct, setSplitPct] = useState(config.defaultFeeSplitToXUser);
+  const [splitPct, setSplitPct] = useState(config.defaultFeeSplitToXUser || 95);
+  const [thresholdSol, setThresholdSol] = useState(config.autoDisburseThresholdSol || 0.2);
   const [network, setNetwork] = useState(config.activeNetwork);
   const [autoDisburse, setAutoDisburse] = useState(config.autoDisburseEnabled);
   const [fiatProvider, setFiatProvider] = useState<'kraken' | 'jupiter_usdc' | 'stripe'>(config.fiatOffRampProvider || 'kraken');
@@ -43,6 +44,8 @@ export const TreasurySettingsModal: React.FC<TreasurySettingsModalProps> = ({
       robinhoodTreasuryAddress: rhAddr.trim(),
       defaultFeeSplitToXUser: splitPct,
       protocolBuybackBurnPct: 100 - splitPct,
+      autoDisburseThresholdSol: Number(thresholdSol) || 0.2,
+      autoDisburseThresholdUsd: Number(((Number(thresholdSol) || 0.2) * 180).toFixed(2)),
       activeNetwork: network,
       autoDisburseEnabled: autoDisburse,
       fiatOffRampProvider: fiatProvider,
@@ -61,7 +64,8 @@ export const TreasurySettingsModal: React.FC<TreasurySettingsModalProps> = ({
     setPinataJwt('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJmYjVjZDAzZi1kYTFhLTQ3YzctODFhOC1hMzQ4MzIxZjg5MjgiLCJlbWFpbCI6Iml0YWNoaTIzNTM2OEBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiYzBjYWE2YWQwMWMzNWE5NTIxYmEiLCJzY29wZWRLZXlTZWNyZXQiOiI3ODhhZDA3NjY5YzJlOGQ1MTcyMjQzMDFiZjUzMDZlMGEzMDYzNTA3NTY2MWU1ZGVhZDNjODcyZjYzODg2YzVmIiwiZXhwIjoxODIxMjQ1MTQzfQ.EP68R_zNSt3CUcgAkWnnu9uVvKwKo1o41wDwEEARBFk');
     setBnbAddr('0x94A720C92f69D67f57f68c783B095aB3C3973eB1');
     setRhAddr('0x2B9c89280F33DbE1A616B88981e4b47B58BdB241');
-    setSplitPct(80);
+    setSplitPct(95);
+    setThresholdSol(0.2);
     setNetwork('mainnet');
     setAutoDisburse(true);
     setFiatProvider('kraken');
@@ -240,6 +244,31 @@ export const TreasurySettingsModal: React.FC<TreasurySettingsModalProps> = ({
               className="w-full accent-emerald-600 cursor-pointer"
             />
             <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1">Remaining {100 - splitPct}% is retained in treasury for protocol buyback and burns.</p>
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="font-semibold text-zinc-700 dark:text-zinc-300">
+                Creator Fee Payout Trigger Threshold (SOL):
+              </label>
+              <span className="font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/80 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800 font-mono">
+                {thresholdSol} SOL (≈ ${(Number(thresholdSol) * 180).toFixed(2)} USD)
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step="0.05"
+                min="0.05"
+                max="5.0"
+                value={thresholdSol}
+                onChange={(e) => setThresholdSol(parseFloat(e.target.value) || 0.2)}
+                className="w-full px-3 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-mono text-xs focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-500"
+              />
+            </div>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
+              ⚡ As soon as <strong>{thresholdSol} SOL</strong> in trading fees are generated on a coin, the protocol automatically converts the SOL to USD via Kraken and dispatches the 95% payout to the creator's 𝕏 Money account.
+            </p>
           </div>
 
           {/* Kraken Institutional USD Off-Ramp Card */}

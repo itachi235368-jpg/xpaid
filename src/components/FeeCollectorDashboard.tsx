@@ -43,7 +43,7 @@ interface FeeCollectorDashboardProps {
   onExecutePayout?: (feeId: string) => void;
   onLinkExistingToken?: (mintAddress: string, beneficiaryXHandle: string, name?: string, symbol?: string) => void;
   onOpenProofBadge?: (tokenMint?: string) => void;
-  onSimulateTradeAndAutoDisburse?: (targetTokenMint?: string) => void;
+  onSimulateTradeAndAutoDisburse?: (targetTokenMint?: string, customFeeSol?: number) => void;
 }
 
 export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
@@ -397,17 +397,6 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>Auto-Disburse Daemon: <strong>ACTIVE</strong></span>
             </div>
-            {onSimulateTradeAndAutoDisburse && (
-              <button
-                type="button"
-                onClick={() => onSimulateTradeAndAutoDisburse(selectedTokenMint)}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-zinc-950 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
-                title="Simulates an on-chain buy trade on this token and watches the autonomous daemon immediately sweep and disburse royalties to the creator via X Money"
-              >
-                <Zap className="w-3.5 h-3.5 fill-current" />
-                <span>Test Live Auto-Disbursal</span>
-              </button>
-            )}
           </div>
         </div>
 
@@ -569,6 +558,16 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
           </div>
 
           <div className="flex items-center gap-2 flex-wrap self-start lg:self-auto">
+            {onSimulateTradeAndAutoDisburse && (
+              <button
+                onClick={() => onSimulateTradeAndAutoDisburse(undefined, treasuryConfig.autoDisburseThresholdSol || 0.2)}
+                className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+                title="Generate 0.2 SOL in trading fees and trigger automatic conversion & payout to creator"
+              >
+                <Zap className="w-3.5 h-3.5 text-amber-300" />
+                <span>Simulate 0.2 SOL Fee & Auto-Payout</span>
+              </button>
+            )}
             <a
               href={`https://solscan.io/account/${treasuryConfig.solanaTreasuryAddress}`}
               target="_blank"
@@ -581,8 +580,8 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
           </div>
         </div>
 
-        {/* 3 Autonomous Workflow Indicators */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* 4 Autonomous Workflow Indicators */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="bg-zinc-50 dark:bg-zinc-950/60 p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800">
             <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 mb-1">
               <span className="font-semibold text-[11px] uppercase tracking-wider">Monitored Token Feeds</span>
@@ -601,7 +600,26 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
 
           <div className="bg-zinc-50 dark:bg-zinc-950/60 p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800">
             <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 mb-1">
-              <span className="font-semibold text-[11px] uppercase tracking-wider">Auto-Sweep Daemon Cycle</span>
+              <span className="font-semibold text-[11px] uppercase tracking-wider">Auto-Payout Trigger</span>
+              <span className="font-bold text-blue-600 dark:text-blue-400 text-[10px]">THRESHOLD</span>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xl font-bold font-mono text-blue-600 dark:text-blue-400">
+                {treasuryConfig.autoDisburseThresholdSol || 0.2} SOL
+              </span>
+              <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
+                (≈ ${((treasuryConfig.autoDisburseThresholdSol || 0.2) * 180).toFixed(0)})
+              </span>
+            </div>
+            <div className="mt-2 text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+              <Zap className="w-3 h-3 text-blue-500" />
+              <span>Auto-sends to creator at {treasuryConfig.autoDisburseThresholdSol || 0.2} SOL</span>
+            </div>
+          </div>
+
+          <div className="bg-zinc-50 dark:bg-zinc-950/60 p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800">
+            <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 mb-1">
+              <span className="font-semibold text-[11px] uppercase tracking-wider">Auto-Sweep Daemon</span>
               <span className="font-bold text-purple-600 dark:text-purple-400 text-[10px]">CONTINUOUS</span>
             </div>
             <div className="flex items-baseline gap-1.5">
@@ -622,7 +640,7 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
             </div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400">
-                80% Creator / 20% Protocol
+                95% Creator / 5% Protocol
               </span>
             </div>
             <div className="mt-2 text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
@@ -894,6 +912,36 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
                   <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">${totalEarnedForToken.toFixed(2)}</span>
                 </div>
 
+                {/* 0.2 SOL Threshold Trigger Progress */}
+                <div className="mt-2 bg-blue-50/60 dark:bg-blue-950/30 p-2 rounded-lg border border-blue-200/50 dark:border-blue-900/40">
+                  <div className="flex items-center justify-between text-[10px] mb-1">
+                    <span className="text-blue-900 dark:text-blue-300 font-semibold flex items-center gap-1">
+                      <Zap className="w-3 h-3 text-amber-500" />
+                      Auto-Send Threshold
+                    </span>
+                    <span className="font-mono font-bold text-blue-700 dark:text-blue-400">
+                      {(tokenFees.reduce((a, f) => a + f.rawAmount, 0) % (treasuryConfig.autoDisburseThresholdSol || 0.2)).toFixed(3)} / {(treasuryConfig.autoDisburseThresholdSol || 0.2).toFixed(2)} SOL
+                    </span>
+                  </div>
+                  <div className="w-full bg-blue-100 dark:bg-blue-900/50 rounded-full h-1.5 overflow-hidden">
+                    <div 
+                      className="bg-blue-500 h-full rounded-full transition-all"
+                      style={{ width: `${Math.min(100, ((tokenFees.reduce((a, f) => a + f.rawAmount, 0) % (treasuryConfig.autoDisburseThresholdSol || 0.2)) / (treasuryConfig.autoDisburseThresholdSol || 0.2)) * 100)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[9px] text-zinc-500 dark:text-zinc-400 mt-1">
+                    <span>95% Auto-disbursed at {treasuryConfig.autoDisburseThresholdSol || 0.2} SOL</span>
+                    {onSimulateTradeAndAutoDisburse && (
+                      <button
+                        onClick={() => onSimulateTradeAndAutoDisburse(token.mintAddress, treasuryConfig.autoDisburseThresholdSol || 0.2)}
+                        className="text-blue-600 dark:text-blue-400 hover:underline font-bold cursor-pointer"
+                      >
+                        +0.2 SOL Trigger ➔
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 <div className="mt-2 py-1.5 px-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-semibold flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -990,7 +1038,7 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
 
                     <td className="px-4 sm:px-5 py-3.5">
                       <span className="font-semibold text-blue-600 dark:text-blue-400 block">{fee.beneficiaryXHandle}</span>
-                      <span className="text-[10px] text-zinc-500 dark:text-zinc-400">80% cut: ${fee.beneficiaryCutUsd.toFixed(2)}</span>
+                      <span className="text-[10px] text-zinc-500 dark:text-zinc-400">95% cut: ${fee.beneficiaryCutUsd.toFixed(2)}</span>
                     </td>
 
                     <td className="px-4 sm:px-5 py-3.5">

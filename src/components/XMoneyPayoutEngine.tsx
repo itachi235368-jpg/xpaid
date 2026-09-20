@@ -80,18 +80,6 @@ export const XMoneyPayoutEngine: React.FC<XMoneyPayoutEngineProps> = ({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {onSimulateTradeAndAutoDisburse && (
-            <button
-              type="button"
-              onClick={onSimulateTradeAndAutoDisburse}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-xs cursor-pointer active:scale-95"
-              title="Simulates an incoming trading fee and watches the autonomous daemon immediately sweep and push funds to the X creator"
-            >
-              <Zap className="w-4 h-4 fill-current" />
-              <span>Simulate Fee & Watch Auto-Disburse</span>
-            </button>
-          )}
-
           {pendingFees.length > 0 && (
             <button
               onClick={handleBatchPayout}
@@ -232,7 +220,7 @@ export const XMoneyPayoutEngine: React.FC<XMoneyPayoutEngineProps> = ({
 
                   <div className="flex items-center justify-between sm:justify-end gap-4">
                     <div className="text-right">
-                      <span className="text-[10px] text-zinc-400 dark:text-zinc-500 block uppercase font-bold">Auto-Payout (80%)</span>
+                      <span className="text-[10px] text-zinc-400 dark:text-zinc-500 block uppercase font-bold">Auto-Payout (95%)</span>
                       <span className="text-base font-bold text-emerald-600 dark:text-emerald-400 font-mono">${fee.beneficiaryCutUsd.toFixed(2)} USD</span>
                     </div>
 

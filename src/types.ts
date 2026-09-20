@@ -38,7 +38,7 @@ export interface TokenLaunchData {
   beneficiaryAvatar?: string;
   beneficiaryAccount?: string; // Solana beneficiary/treasury account (defaults to Protocol Treasury wallet)
   initialBuyAmount: number;
-  feeSplitPct: number; // e.g. 80 means 80% to X user, 20% to protocol
+  feeSplitPct: number; // e.g. 95 means 95% to X user, 5% to protocol
   mintAddress: string;
   pairAddress: string;
   creatorFeeRecipient: string; // Our treasury wallet
@@ -103,9 +103,10 @@ export interface TreasuryConfig {
   solanaRpcUrl: string;
   heliusWebhookId?: string;
   pinataJwt?: string;
-  defaultFeeSplitToXUser: number; // 80%
-  protocolBuybackBurnPct: number; // 20%
-  autoDisburseThresholdUsd: number; // e.g. $50
+  defaultFeeSplitToXUser: number; // 95%
+  protocolBuybackBurnPct: number; // 5%
+  autoDisburseThresholdSol: number; // e.g. 0.2 SOL threshold to trigger payout
+  autoDisburseThresholdUsd: number; // e.g. $36 (0.2 SOL equivalent)
   autoDisburseEnabled: boolean;
   autoClaimFeesEnabled?: boolean; // Autonomous fee harvest from all token bonding curves
   autoClaimIntervalSeconds?: number; // Periodic harvest cycle

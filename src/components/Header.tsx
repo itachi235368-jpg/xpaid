@@ -13,7 +13,8 @@ import {
   Moon,
   Sun,
   SlidersHorizontal,
-  HelpCircle
+  HelpCircle,
+  Compass
 } from 'lucide-react';
 import { TreasuryConfig } from '../types';
 import { XpaidLogo } from './XpaidLogo';
@@ -21,8 +22,8 @@ import { getLiveSolBalance } from '../services/solanaLaunch';
 import { fetchLiveSolPrice, subscribeToSolPrice } from '../services/solPriceService';
 
 interface HeaderProps {
-  activeTab: 'launch' | 'fees' | 'payouts' | 'lookup' | 'how-it-works';
-  setActiveTab: (tab: 'launch' | 'fees' | 'payouts' | 'lookup' | 'how-it-works') => void;
+  activeTab: 'home' | 'launch' | 'fees' | 'payouts' | 'lookup' | 'how-it-works';
+  setActiveTab: (tab: 'home' | 'launch' | 'fees' | 'payouts' | 'lookup' | 'how-it-works') => void;
   treasuryConfig: TreasuryConfig;
   totalCollectedUsd: number;
   totalDisbursedUsd: number;
@@ -107,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Logo & Brand */}
             <div 
               className="flex items-center gap-3 cursor-pointer select-none group"
-              onClick={() => setActiveTab('launch')}
+              onClick={() => setActiveTab('home')}
             >
               <XpaidLogo className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 transition-transform group-hover:scale-105" />
               <div className="flex items-center gap-2">
@@ -122,6 +123,19 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Desktop Navigation Tabs - Sleek Apple/Linear style pills */}
             <nav className="hidden md:flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900/90 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800/80 text-xs font-medium">
+              <button
+                id="tab-home"
+                onClick={() => setActiveTab('home')}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all ${
+                  activeTab === 'home'
+                    ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-xs font-semibold'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                }`}
+              >
+                <Compass className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Explore</span>
+              </button>
+
               <button
                 id="tab-launch"
                 onClick={() => setActiveTab('launch')}
@@ -264,6 +278,19 @@ export const Header: React.FC<HeaderProps> = ({
         className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border-t border-zinc-200 dark:border-zinc-800 px-3 py-2 shadow-lg"
       >
         <div className="flex items-center justify-around max-w-md mx-auto">
+          <button
+            id="mobile-nav-home"
+            onClick={() => setActiveTab('home')}
+            className={`flex flex-col items-center justify-center flex-1 py-1 px-2 rounded-xl transition-all ${
+              activeTab === 'home'
+                ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                : 'text-zinc-400 dark:text-zinc-500'
+            }`}
+          >
+            <Compass className="w-4 h-4 mb-0.5" />
+            <span className="text-[10px]">Explore</span>
+          </button>
+
           <button
             id="mobile-nav-launch"
             onClick={() => setActiveTab('launch')}
