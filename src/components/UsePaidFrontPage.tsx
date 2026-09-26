@@ -62,7 +62,51 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
   const RATE_PER_HOUR = 100;
   const RATE_PER_SECOND = RATE_PER_HOUR / 3600;
 
-  const [recentEvents, setRecentEvents] = useState<LiveStreamEvent[]>([]);
+  const [recentEvents, setRecentEvents] = useState<LiveStreamEvent[]>(() => {
+    if (tokens && tokens.length > 0) {
+      return tokens.slice(0, 4).map((t, idx) => ({
+        id: `init-${t.id || t.mintAddress}-${idx}`,
+        tokenSymbol: t.symbol,
+        creatorHandle: (t.beneficiaryXHandle || '').replace(/^@/, ''),
+        amountUsd: Number((0.14 + idx * 0.05).toFixed(2)),
+        timeAgo: `${(idx + 1) * 3}s ago`,
+      }));
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    if (tokens.length > 0) {
+      // Whenever tokens are loaded or a new one is added, make sure stream events reflect all launched tokens
+      setRecentEvents(prev => {
+        if (prev.length === 0) {
+          return tokens.slice(0, 4).map((t, idx) => ({
+            id: `init-${t.id || t.mintAddress}-${idx}`,
+            tokenSymbol: t.symbol,
+            creatorHandle: (t.beneficiaryXHandle || '').replace(/^@/, ''),
+            amountUsd: Number((0.14 + idx * 0.05).toFixed(2)),
+            timeAgo: `${(idx + 1) * 3}s ago`,
+          }));
+        }
+        // If the newest token is not represented at the top, prepend it
+        const latestToken = tokens[0];
+        const hasLatest = prev.slice(0, 2).some(e => e.tokenSymbol === latestToken.symbol);
+        if (!hasLatest) {
+          return [
+            {
+              id: `launch-live-${Date.now()}`,
+              tokenSymbol: latestToken.symbol,
+              creatorHandle: (latestToken.beneficiaryXHandle || '').replace(/^@/, ''),
+              amountUsd: 0.18,
+              timeAgo: 'just now',
+            },
+            ...prev.slice(0, 3)
+          ];
+        }
+        return prev;
+      });
+    }
+  }, [tokens]);
 
   useEffect(() => {
     if (tokens.length === 0) {
@@ -377,7 +421,7 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {tokens.slice(0, 6).map((token) => (
+            {tokens.slice(0, 24).map((token) => (
               <div
                 key={token.id}
                 className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/90 hover:border-cyan-500/40 shadow-xs hover:shadow-md transition-all space-y-3.5 group flex flex-col justify-between"

@@ -24,7 +24,7 @@ import {
   TreasuryConfig,
   FeeCurrency
 } from './types';
-import { Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Sparkles, CheckCircle2, ArrowRight, ExternalLink } from 'lucide-react';
 import { 
   fetchLiveSolPrice, 
   subscribeToSolPrice, 
@@ -56,9 +56,23 @@ export default function App() {
       unsub();
     };
   }, []);
-  const [tokens, setTokens] = useState<TokenLaunchData[]>([]);
+  const [tokens, setTokens] = useState<TokenLaunchData[]>(() => {
+    try {
+      const saved = localStorage.getItem('tipped_launched_tokens_v1');
+      if (saved) {
+        const parsed: TokenLaunchData[] = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const map = new Map<string, TokenLaunchData>();
+          INITIAL_TOKENS.forEach(t => map.set(t.mintAddress || t.id, t));
+          parsed.forEach(t => map.set(t.mintAddress || t.id, t));
+          return Array.from(map.values());
+        }
+      }
+    } catch (e) {}
+    return INITIAL_TOKENS;
+  });
 
-  // 1. Live Global Synchronization with Server (all visitors see ONLY real coins launched on this site)
+  // 1. Live Global Synchronization with Server (all visitors see coins launched by anyone)
   useEffect(() => {
     let isCancelled = false;
 
@@ -67,9 +81,29 @@ export default function App() {
         const res = await fetch('/api/tokens');
         if (res.ok) {
           const data = await res.json();
-          if (data.success && Array.isArray(data.tokens)) {
+          if (data.success && Array.isArray(data.tokens) && data.tokens.length > 0) {
             if (isCancelled) return;
-            setTokens(data.tokens);
+            setTokens(prev => {
+              const map = new Map<string, TokenLaunchData>();
+              // Put default initial tokens first
+              INITIAL_TOKENS.forEach(t => map.set(t.mintAddress || t.id, t));
+              // Put server tokens
+              data.tokens.forEach((t: TokenLaunchData) => {
+                map.set(t.mintAddress || t.id, t);
+              });
+              // Keep any existing local custom tokens
+              prev.forEach(t => {
+                const key = t.mintAddress || t.id;
+                if (!map.has(key)) {
+                  map.set(key, t);
+                }
+              });
+              const merged = Array.from(map.values());
+              try {
+                localStorage.setItem('tipped_launched_tokens_v1', JSON.stringify(merged));
+              } catch (e) {}
+              return merged;
+            });
           }
         }
       } catch (err) {}
@@ -95,17 +129,32 @@ export default function App() {
         ]);
         if (feesRes.ok) {
           const fData = await feesRes.json();
-          if (fData.success && Array.isArray(fData.fees)) {
+          if (fData.success && Array.isArray(fData.fees) && fData.fees.length > 0) {
             if (!isCancelled) {
-              setFees(fData.fees);
+              setFees(prev => {
+                const map = new Map<string, FeeCollectionRecord>();
+                INITIAL_FEES.forEach(f => map.set(f.id, f));
+                fData.fees.forEach((f: FeeCollectionRecord) => map.set(f.id, f));
+                prev.forEach(f => {
+                  if (!map.has(f.id)) map.set(f.id, f);
+                });
+                return Array.from(map.values()).slice(0, 100);
+              });
             }
           }
         }
         if (payoutsRes.ok) {
           const pData = await payoutsRes.json();
-          if (pData.success && Array.isArray(pData.payouts)) {
+          if (pData.success && Array.isArray(pData.payouts) && pData.payouts.length > 0) {
             if (!isCancelled) {
-              setPayouts(pData.payouts);
+              setPayouts(prev => {
+                const map = new Map<string, XMoneyPayout>();
+                pData.payouts.forEach((p: XMoneyPayout) => map.set(p.id, p));
+                prev.forEach(p => {
+                  if (!map.has(p.id)) map.set(p.id, p);
+                });
+                return Array.from(map.values()).slice(0, 100);
+              });
             }
           }
         }
@@ -763,19 +812,38 @@ export default function App() {
       />
 
       {/* Footer */}
-      <footer className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-6 px-4 text-center text-xs text-zinc-500 dark:text-zinc-400 mb-20 sm:mb-0 transition-colors">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-zinc-800 dark:text-zinc-200">TIPPED Protocol</span>
-            <span>•</span>
-            <span>Fee & Tip Bridge for Pump.fun (Solana Active • 𝕏 Money Settlement)</span>
+      <footer className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-8 px-4 text-xs text-zinc-500 dark:text-zinc-400 mb-20 sm:mb-0 transition-colors">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm font-['Outfit']">TIPPED Protocol</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                Solana Mainnet
+              </span>
+            </div>
+            <span className="hidden sm:inline text-zinc-300 dark:text-zinc-700">•</span>
+            <span>Fee & Tip Bridge for Pump.fun (95% Creator Royalties • 𝕏 Money Settlement)</span>
           </div>
-          <div className="flex items-center gap-4 text-zinc-500 dark:text-zinc-400">
-            <span>Creator Royalty Router</span>
-            <span>•</span>
-            <span>𝕏 Money Settlement API</span>
-            <span>•</span>
-            <span>Solana Mainnet</span>
+
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <a
+              href="https://x.com/usetipped?s=11"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-white dark:text-zinc-100 font-semibold text-xs transition-all border border-zinc-700/60 shadow-xs hover:scale-105 active:scale-95 group"
+            >
+              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 24.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              <span>Follow @usetipped on 𝕏</span>
+              <ExternalLink className="w-3 h-3 text-zinc-400 group-hover:text-white transition-colors" />
+            </a>
+
+            <div className="flex items-center gap-3 text-zinc-400 text-xs">
+              <span>Creator Royalty Router</span>
+              <span>•</span>
+              <span>𝕏 Money Settlement</span>
+            </div>
           </div>
         </div>
       </footer>

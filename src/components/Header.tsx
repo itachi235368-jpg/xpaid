@@ -252,6 +252,20 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               )}
 
+              {/* Official X / Twitter Link */}
+              <a
+                href="https://x.com/usetipped?s=11"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 transition-colors"
+                title="Follow @usetipped on 𝕏"
+              >
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 24.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+                <span>@usetipped</span>
+              </a>
+
               {/* Theme Toggle */}
               {onToggleTheme && (
                 <button
