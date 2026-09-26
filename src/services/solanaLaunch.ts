@@ -153,9 +153,11 @@ export interface LaunchParams {
 
 export interface LaunchResult {
   success: boolean;
+  isUserRejected?: boolean;
   mintAddress?: string;
   txHash?: string;
   feeSharingTx?: string;
+  feeSharingBound?: boolean;
   feeSharingError?: string;
   metadataUri?: string;
   ipfsImageUrl?: string;
@@ -517,10 +519,10 @@ export async function deployPumpFunToken(
       let feeSharingError: string | undefined;
 
       try {
-        onStatusUpdate('[Step 2 of 2] Preparing on-chain royalty binding (10,000 BPS to Protocol Treasury)...');
-        await new Promise((r) => setTimeout(r, 1200));
+        onStatusUpdate(`[Step 2 of 2] Preparing on-chain creator fee connection to Protocol Treasury (${treasuryConfig.solanaTreasuryAddress.slice(0, 6)}...)...`);
+        await new Promise((r) => setTimeout(r, 1000));
 
-        onStatusUpdate('[Step 2 of 2] ACTION REQUIRED: Please sign Transaction 2 in your wallet to bind 100% royalties...');
+        onStatusUpdate('[Step 2 of 2] ACTION REQUIRED: Please sign Transaction 2 in your wallet to connect creator fees to Protocol Treasury...');
         const feeShareResult = await configurePumpFeeSharingOnChain(
           provider,
           params.creatorPublicKey,
@@ -531,10 +533,10 @@ export async function deployPumpFunToken(
         );
         if (feeShareResult.success && feeShareResult.txHash) {
           feeSharingTx = feeShareResult.txHash;
-          onStatusUpdate('[Launch Complete] Both transactions confirmed! 100% trading royalties bound to Treasury.');
+          onStatusUpdate('[Launch Complete] Both transactions confirmed on-chain! Creator trading fees connected to Treasury.');
         } else {
           feeSharingError = feeShareResult.error || 'Transaction 2 was not signed';
-          onStatusUpdate(`[Notice] ${feeSharingError}. You can sign Transaction 2 anytime from the dashboard.`);
+          onStatusUpdate(`[Notice] ${feeSharingError}. You can sign Transaction 2 at any time.`);
         }
       } catch (fErr: any) {
         feeSharingError = fErr?.message || 'Transaction 2 deferred';
@@ -546,6 +548,7 @@ export async function deployPumpFunToken(
         mintAddress: mintPubkey,
         txHash: signature,
         feeSharingTx,
+        feeSharingBound: !!feeSharingTx,
         feeSharingError,
         metadataUri,
         ipfsImageUrl,
@@ -554,11 +557,15 @@ export async function deployPumpFunToken(
         pumpFunUrl: `https://pump.fun/coin/${mintPubkey}`
       };
     } catch (signErr: any) {
-      console.error('Wallet signing error:', signErr);
-      if (signErr?.code === 4001 || signErr?.message?.includes('User rejected')) {
+      const isRejected = signErr?.code === 4001 || 
+        signErr?.message?.includes('User rejected') || 
+        signErr?.message?.includes('rejected by user') ||
+        signErr?.message?.includes('cancelled');
+      if (isRejected) {
         return {
           success: false,
-          error: 'Transaction 1 (Token Creation) signature was rejected by user.'
+          isUserRejected: true,
+          error: 'Transaction signature was cancelled in your wallet.'
         };
       }
       return {

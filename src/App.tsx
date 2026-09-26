@@ -709,6 +709,7 @@ export default function App() {
             onExecutePayout={handleExecutePayout}
             onLinkExistingToken={handleLinkExistingToken}
             onSimulateTradeAndAutoDisburse={handleSimulateTradeAndAutoDisburse}
+            onUpdateToken={handleTokenLaunched}
             onOpenProofBadge={(mint) => {
               setSelectedProofTokenMint(mint);
               setIsProofModalOpen(true);

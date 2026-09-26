@@ -44,6 +44,7 @@ interface FeeCollectorDashboardProps {
   onLinkExistingToken?: (mintAddress: string, beneficiaryXHandle: string, name?: string, symbol?: string) => void;
   onOpenProofBadge?: (tokenMint?: string) => void;
   onSimulateTradeAndAutoDisburse?: (targetTokenMint?: string, customFeeSol?: number) => void;
+  onUpdateToken?: (updatedToken: TokenLaunchData) => void;
 }
 
 export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
@@ -55,6 +56,7 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
   onExecutePayout,
   onLinkExistingToken,
   onOpenProofBadge,
+  onUpdateToken,
 }) => {
   const [platformFilter, setPlatformFilter] = useState<'all' | LaunchPlatform>('all');
   const [liveSolBalance, setLiveSolBalance] = useState<number | null>(null);
@@ -172,6 +174,14 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
           feeSharingSuccessTx: res.txHash,
         }));
         setIsSharingConfigActive(true);
+        if (targetToken) {
+          const updatedToken: TokenLaunchData = {
+            ...targetToken,
+            feeSharingTx: res.txHash,
+            feeSharingBound: true
+          };
+          onUpdateToken?.(updatedToken);
+        }
         pollOnChainFees(mint);
       } else {
         throw new Error(res.error || 'Failed to bind fee sharing on-chain');
@@ -799,16 +809,28 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
                           <ExternalLink className="w-2.5 h-2.5" />
                         </a>
                         <span>•</span>
-                        <a
-                          href={`https://solscan.io/tx/${token.feeSharingTx || token.creatorFeeRecipient || treasuryConfig.solanaTreasuryAddress}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-cyan-600 dark:text-cyan-400 hover:underline inline-flex items-center gap-0.5 font-bold"
-                          title="Verify Tx 2 (PumpFees Royalty Binding) on Solscan"
-                        >
-                          <span>Tx 2 (PumpFees)</span>
-                          <ExternalLink className="w-2.5 h-2.5" />
-                        </a>
+                        {token.feeSharingBound && token.feeSharingTx ? (
+                          <a
+                            href={`https://solscan.io/tx/${token.feeSharingTx}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-cyan-600 dark:text-cyan-400 hover:underline inline-flex items-center gap-0.5 font-bold"
+                            title="Verify Tx 2 (Creator Fees Connected to Treasury) on Solscan"
+                          >
+                            <span>Tx 2 (Treasury Bound)</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleBindFeeSharing(token.mintAddress)}
+                            className="text-amber-500 hover:text-amber-400 font-bold underline inline-flex items-center gap-0.5 cursor-pointer"
+                            title="Sign Transaction 2 to connect creator fees to Protocol Treasury"
+                          >
+                            <span>Sign Tx 2 (Connect Fees)</span>
+                            <Zap className="w-2.5 h-2.5" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

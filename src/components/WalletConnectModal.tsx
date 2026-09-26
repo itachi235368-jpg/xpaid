@@ -72,15 +72,17 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
       onConnect(result.address);
       onClose();
     } catch (err: any) {
-      console.error('Phantom connection error:', err);
+      const isRejected = err?.code === 4001 || 
+        err?.message?.includes('User rejected') || 
+        err?.message?.includes('rejected by user');
       // If mobile extension missing, fallback to deep link
-      if (isMobile) {
+      if (isMobile && !isRejected) {
         const currentUrl = window.location.href;
         const appUrl = window.location.origin;
         window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(currentUrl)}?ref=${encodeURIComponent(appUrl)}`;
         return;
       }
-      setError(err?.message || 'Could not connect to Phantom.');
+      setError(isRejected ? 'Connection cancelled in wallet.' : (err?.message || 'Could not connect to Phantom.'));
     } finally {
       setIsConnecting(false);
     }
@@ -94,8 +96,10 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({
       onConnect(result.address);
       onClose();
     } catch (err: any) {
-      console.error('Solflare connection error:', err);
-      setError(err?.message || 'Could not connect to Solflare.');
+      const isRejected = err?.code === 4001 || 
+        err?.message?.includes('User rejected') || 
+        err?.message?.includes('rejected by user');
+      setError(isRejected ? 'Connection cancelled in wallet.' : (err?.message || 'Could not connect to Solflare.'));
     } finally {
       setIsConnecting(false);
     }

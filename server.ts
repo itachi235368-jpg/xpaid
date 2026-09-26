@@ -211,6 +211,78 @@ app.post('/api/pump/trade-local', async (req, res) => {
   }
 });
 
+// Endpoint to build on-chain Transaction 2 for connecting token creator fees to protocol treasury
+app.post('/api/pump/fee-sharing-tx', async (req, res) => {
+  try {
+    const { creator, mint, treasury, rpcUrl } = req.body;
+    if (!creator || !mint) {
+      return res.status(400).json({ error: 'creator and mint addresses are required' });
+    }
+
+    const treasuryAddress = treasury || 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8';
+    const rpc = rpcUrl || 'https://api.mainnet-beta.solana.com';
+
+    const { createRequire } = await import('module');
+    const cjsRequire = createRequire(import.meta.url);
+    const { PUMP_SDK, feeSharingConfigPda } = cjsRequire('@pump-fun/pump-sdk');
+    const { PublicKey, Transaction, Connection } = await import('@solana/web3.js');
+
+    const creatorKey = new PublicKey(creator);
+    const mintKey = new PublicKey(mint);
+    const treasuryKey = new PublicKey(treasuryAddress);
+
+    const connection = new Connection(rpc, 'confirmed');
+
+    // Check if fee sharing config PDA already exists on-chain
+    const sharingConfigPdaAddr = feeSharingConfigPda(mintKey);
+    let sharingConfigAccount = null;
+    try {
+      sharingConfigAccount = await connection.getAccountInfo(sharingConfigPdaAddr);
+    } catch (e) {
+      console.warn('RPC check for sharing config failed, assuming not created yet:', e);
+    }
+
+    const tx = new Transaction();
+
+    // If config doesn't exist yet, add createFeeSharingConfig instruction
+    if (!sharingConfigAccount) {
+      const ix1 = await PUMP_SDK.createFeeSharingConfig({
+        creator: creatorKey,
+        mint: mintKey,
+        pool: null
+      });
+      tx.add(ix1);
+    }
+
+    // Add updateFeeShares instruction (10,000 BPS = 100% to our Protocol Treasury)
+    const ix2 = await PUMP_SDK.updateFeeShares({
+      authority: creatorKey,
+      mint: mintKey,
+      currentShareholders: [creatorKey],
+      newShareholders: [{ address: treasuryKey, shareBps: 10000 }]
+    });
+    tx.add(ix2);
+
+    tx.feePayer = creatorKey;
+    const { blockhash } = await connection.getLatestBlockhash('confirmed');
+    tx.recentBlockhash = blockhash;
+
+    const serialized = tx.serialize({ requireAllSignatures: false, verifySignatures: false });
+    const transactionBase64 = Buffer.from(serialized).toString('base64');
+
+    res.json({
+      success: true,
+      transactionBase64,
+      treasuryAddress,
+      sharingConfigPda: sharingConfigPdaAddr.toBase58(),
+      instructionsCount: tx.instructions.length
+    });
+  } catch (err: any) {
+    console.error('Failed to build fee sharing transaction:', err);
+    res.status(500).json({ error: err?.message || 'Failed to generate fee sharing transaction' });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
