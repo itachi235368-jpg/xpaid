@@ -397,8 +397,8 @@ export default function App() {
               xMoneyReferenceId: `XM-${Math.floor(10000000 + Math.random() * 90000000)}-${f.currency}`,
               paymentMethod: isKraken ? 'Kraken USD ➔ 𝕏 Money' : 'X Money (USD Direct)',
               proofTweetText: isKraken
-                ? `⚡ @Xpaid auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via Kraken Off-Ramp ➔ 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`
-                : `⚡ @Xpaid auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`,
+                ? `⚡ @Tipped auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via Kraken Off-Ramp ➔ 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`
+                : `⚡ @Tipped auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`,
               blockchainRefTx: f.sourceTxHash,
               krakenOrderId: isKraken ? `KRK-${Math.floor(1000000 + Math.random() * 9000000)}` : undefined,
               krakenWithdrawalRef: isKraken ? `W-${Math.floor(10000000 + Math.random() * 90000000)}` : undefined,
@@ -474,7 +474,7 @@ export default function App() {
       timestamp: new Date().toISOString(),
       xMoneyReferenceId: `XM-${Math.floor(10000000 + Math.random() * 90000000)}-${fee.currency}`,
       paymentMethod: 'X Money (USD Direct)',
-      proofTweetText: `⚡ @Xpaid auto-deposited $${fee.beneficiaryCutUsd.toFixed(2)} USD directly to ${fee.beneficiaryXHandle} via 𝕏 Money from $${fee.tokenSymbol} trading fees on ${fee.platform.toUpperCase()}! (Zero claim needed). Ref: ${fee.sourceTxHash}`,
+      proofTweetText: `⚡ @Tipped auto-deposited $${fee.beneficiaryCutUsd.toFixed(2)} USD directly to ${fee.beneficiaryXHandle} via 𝕏 Money from $${fee.tokenSymbol} trading fees on ${fee.platform.toUpperCase()}! (Zero claim needed). Ref: ${fee.sourceTxHash}`,
       blockchainRefTx: fee.sourceTxHash,
     };
 
@@ -529,7 +529,7 @@ export default function App() {
           timestamp: new Date().toISOString(),
           xMoneyReferenceId: `XM-${Math.floor(10000000 + Math.random() * 90000000)}-${f.currency}`,
           paymentMethod: 'X Money (USD Direct)',
-          proofTweetText: `⚡ @Xpaid auto-deposited $${f.beneficiaryCutUsd.toFixed(2)} USD to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} fees on ${f.platform.toUpperCase()}! (Zero claim needed)`,
+          proofTweetText: `⚡ @Tipped auto-deposited $${f.beneficiaryCutUsd.toFixed(2)} USD to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} fees on ${f.platform.toUpperCase()}! (Zero claim needed)`,
           blockchainRefTx: f.sourceTxHash,
         });
         return { ...f, status: 'disbursed_x_money' as const, xMoneyPayoutId: pId };
@@ -698,9 +698,9 @@ export default function App() {
       <footer className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-6 px-4 text-center text-xs text-zinc-500 dark:text-zinc-400 mb-16 sm:mb-0 transition-colors">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-zinc-800 dark:text-zinc-200">Xpaid Protocol</span>
+            <span className="font-bold text-zinc-800 dark:text-zinc-200">TIPPED Protocol</span>
             <span>•</span>
-            <span>Fee Bridge for Pump.fun (Solana Active • 𝕏 Money Settlement)</span>
+            <span>Fee & Tip Bridge for Pump.fun (Solana Active • 𝕏 Money Settlement)</span>
           </div>
           <div className="flex items-center gap-4 text-zinc-500 dark:text-zinc-400">
             <span>Creator Royalty Router</span>

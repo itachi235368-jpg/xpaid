@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="100%" height="100%">
   <defs>
+    <!-- Background Gradient matching the user's uploaded image -->
     <radialGradient id="tippedBg" cx="80%" cy="85%" r="90%">
       <stop offset="0%" stop-color="#05c2d6" />
       <stop offset="25%" stop-color="#028d9f" />
@@ -7,11 +8,20 @@
       <stop offset="85%" stop-color="#16272e" />
       <stop offset="100%" stop-color="#131c21" />
     </radialGradient>
+
+    <!-- Clip path for rounded badge if needed -->
+    <clipPath id="badgeClip">
+      <rect width="1024" height="1024" rx="220" />
+    </clipPath>
   </defs>
 
+  <!-- Background -->
   <rect width="1024" height="1024" fill="url(#tippedBg)" />
 
+  <!-- The TIPPED 3D Isometric Speech Bubble Emblem -->
   <g id="tipped-emblem">
+    <!-- Outer 3D Extrusion Shadow (Deep Black) -->
+    <!-- Extrudes to the left and bottom, with speech tail pointing down-left -->
     <path 
       d="
         M 346 172 
@@ -27,6 +37,8 @@
       fill="#000000" 
     />
 
+    <!-- Front Face Black Shell -->
+    <!-- Sits on top-right, creating the 3D beveled illusion -->
     <path 
       d="
         M 346 172 
@@ -39,6 +51,7 @@
       fill="#000000" 
     />
 
+    <!-- White Inner Chat Box with speech tail and 45-degree chamfer -->
     <path 
       d="
         M 386 226 
@@ -53,6 +66,7 @@
       fill="#FFFFFF" 
     />
 
+    <!-- Bold Black Letter 'T' with collegiate/slab serifs -->
     <path 
       d="
         M 424 258 

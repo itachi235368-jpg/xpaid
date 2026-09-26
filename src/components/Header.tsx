@@ -16,7 +16,7 @@ import {
   Compass
 } from 'lucide-react';
 import { TreasuryConfig } from '../types';
-import { XpaidLogo } from './XpaidLogo';
+import { TippedLogo } from './TippedLogo';
 import { getLiveSolBalance } from '../services/solanaLaunch';
 import { fetchLiveSolPrice, subscribeToSolPrice } from '../services/solPriceService';
 
@@ -107,13 +107,13 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-3 cursor-pointer select-none group"
               onClick={() => setActiveTab('home')}
             >
-              <XpaidLogo className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 transition-transform group-hover:scale-105" />
+              <TippedLogo className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 transition-transform group-hover:scale-105" />
               <div className="flex items-center gap-2">
-                <span className="text-base sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-                  Xpaid
+                <span className="text-base sm:text-lg font-black tracking-tight text-zinc-900 dark:text-zinc-50 font-['Outfit']">
+                  TIPPED
                 </span>
-                <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700/60">
-                  𝕏 Money Bridge
+                <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-500/10 text-cyan-500 dark:text-cyan-400 border border-cyan-500/20">
+                  Creator Tip Rails
                 </span>
               </div>
             </div>

@@ -131,10 +131,10 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
         
         {/* Protocol Live Badge with real-time heartbeat */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/90 dark:bg-zinc-800/90 border border-zinc-700/80 dark:border-zinc-700 text-white text-xs font-semibold shadow-lg backdrop-blur-md">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span className="tracking-wide text-zinc-200">PAID PROTOCOL</span>
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+          <span className="tracking-wide text-zinc-200">TIPPED PROTOCOL</span>
           <span className="text-zinc-500">•</span>
-          <span className="text-emerald-400 font-bold flex items-center gap-1">
+          <span className="text-cyan-400 font-bold flex items-center gap-1">
             <span>95% Creator Royalties Live</span>
             <Activity className="w-3 h-3 animate-pulse" />
           </span>
@@ -142,12 +142,12 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
 
         {/* Display Headline */}
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.1] sm:leading-[1.15]">
-          Monetize any <span className="text-emerald-600 dark:text-emerald-400 font-black">𝕏 user</span> with meme coins.
+          Monetize any <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-emerald-400 font-black">𝕏 user & streamer</span> with meme coins.
         </h1>
 
         {/* Subtitle */}
         <p className="text-base sm:text-xl text-zinc-600 dark:text-zinc-300 max-w-2xl mx-auto font-normal leading-relaxed">
-          Launch a token for any 𝕏 account. <strong className="text-zinc-900 dark:text-zinc-100 font-bold">We pay the 𝕏 User, not the token creator.</strong> <strong className="text-zinc-900 dark:text-zinc-100 font-bold">95% of Pump.fun trading fees</strong> automatically convert to USD and stream directly into the targeted 𝕏 User's balance. <strong className="text-zinc-900 dark:text-zinc-100 font-bold">5%</strong> buy & burn.
+          Launch a token for any 𝕏 account or live creator. <strong className="text-zinc-900 dark:text-zinc-100 font-bold">We tip the target Creator, not the token deployer.</strong> <strong className="text-zinc-900 dark:text-zinc-100 font-bold">95% of Pump.fun trading fees</strong> automatically convert to USD and stream directly into the creator's payout balance. <strong className="text-zinc-900 dark:text-zinc-100 font-bold">5%</strong> buy & burn.
         </p>
 
         {/* Live Continuous Fee Stream Bar (usepaid.app signature ticker) */}
@@ -500,14 +500,14 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
       {/* 5. 3-Step "How It Works" Bento */}
       <div className="p-6 sm:p-10 rounded-3xl bg-zinc-900 text-white border border-zinc-800 shadow-2xl space-y-8">
         <div className="text-center max-w-xl mx-auto space-y-2">
-          <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">
+          <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">
             Architecture
           </span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-            How PAID Protocol Works
+            How TIPPED Protocol Works
           </h2>
           <p className="text-xs sm:text-sm text-zinc-400">
-            Autonomous on-chain creator monetization powered by Pump.fun and 𝕏 Money.
+            Autonomous on-chain creator tips powered by Pump.fun and 𝕏 Money.
           </p>
         </div>
 

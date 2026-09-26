@@ -21,9 +21,9 @@ interface FloatingCoinData {
 const FLOATING_COINS: FloatingCoinData[] = [
   {
     id: 'coin-paid',
-    name: 'PAID Protocol',
-    symbol: 'PAID',
-    image: 'https://gateway.pinata.cloud/ipfs/QmRZzpB9Dawb6QrJBJKW1NqtrYo25eAaEf6nY2Q3aZdRZ4',
+    name: 'TIPPED Protocol',
+    symbol: 'TIPPED',
+    image: '/tipped-logo.svg',
     xPct: 12,
     yPct: 22,
     size: 64,
@@ -31,8 +31,8 @@ const FLOATING_COINS: FloatingCoinData[] = [
     floatDelay: 0,
     rotationRange: 15,
     depth: 0.9,
-    colorRing: 'border-emerald-500/60 ring-emerald-500/20',
-    glowColor: 'rgba(16, 185, 129, 0.35)',
+    colorRing: 'border-cyan-500/60 ring-cyan-500/20',
+    glowColor: 'rgba(6, 182, 212, 0.45)',
     sparkle: true,
   },
   {
