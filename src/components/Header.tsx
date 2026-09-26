@@ -26,7 +26,7 @@ import {
   Wind
 } from 'lucide-react';
 import { TreasuryConfig } from '../types';
-import { TippedLogo } from './TippedLogo';
+import { XpaidLogo } from './XpaidLogo';
 import { getLiveSolBalance } from '../services/solanaLaunch';
 import { fetchLiveSolPrice, subscribeToSolPrice } from '../services/solPriceService';
 
@@ -156,13 +156,13 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <div className="relative">
                 <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-400 opacity-60 blur-xs group-hover:opacity-100 transition-opacity" />
-                <TippedLogo className="w-10 h-10 sm:w-11 sm:h-11 relative shrink-0" />
+                <XpaidLogo className="w-10 h-10 sm:w-11 sm:h-11 relative shrink-0" />
               </div>
 
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
                   <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white font-['Outfit']">
-                    TIP<span className="text-cyan-400">PED</span>
+                    x<span className="text-cyan-400">paid</span>
                   </span>
                   <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
                     PROTOCOL
@@ -197,7 +197,7 @@ export const Header: React.FC<HeaderProps> = ({
                 }`}
               >
                 <Rocket className="w-4 h-4" />
-                <span>Launch Studio</span>
+                <span>Launch Terminal</span>
               </button>
 
               <button
@@ -341,7 +341,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <Rocket className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Launch</span>
+            <span>Launch Terminal</span>
           </button>
 
           <button
@@ -432,7 +432,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <div className="flex items-center gap-2.5">
                 <Rocket className="w-4 h-4 text-cyan-400" />
-                <span>Launch Meme Token</span>
+                <span>Launch Terminal</span>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-400" />
             </button>

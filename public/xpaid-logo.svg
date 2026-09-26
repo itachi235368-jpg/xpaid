@@ -1,17 +1,37 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="100%" height="100%">
   <defs>
-    <radialGradient id="tippedBg" cx="80%" cy="85%" r="90%">
-      <stop offset="0%" stop-color="#05c2d6" />
-      <stop offset="25%" stop-color="#028d9f" />
-      <stop offset="55%" stop-color="#103e48" />
-      <stop offset="85%" stop-color="#16272e" />
-      <stop offset="100%" stop-color="#131c21" />
+    <!-- Background Gradient: Deep Cyber Cyan Aura -->
+    <radialGradient id="xpaidBg" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="30%" stop-color="#0891b2" />
+      <stop offset="60%" stop-color="#0f3742" />
+      <stop offset="85%" stop-color="#0a1820" />
+      <stop offset="100%" stop-color="#03080c" />
     </radialGradient>
+
+    <!-- Neon Glow Gradient for X strokes -->
+    <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+
+    <!-- 3D Shadow filter -->
+    <filter id="xpaidShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.6" />
+      <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#06b6d4" flood-opacity="0.4" />
+    </filter>
   </defs>
 
-  <rect width="1024" height="1024" fill="url(#tippedBg)" />
+  <!-- Background Base -->
+  <rect width="1024" height="1024" fill="url(#xpaidBg)" />
 
-  <g id="tipped-emblem">
+  <!-- Ambient Orbit Rings -->
+  <circle cx="512" cy="512" r="410" fill="none" stroke="#22d3ee" stroke-width="2" stroke-opacity="0.12" stroke-dasharray="8 12" />
+  <circle cx="512" cy="512" r="450" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-opacity="0.08" />
+
+  <!-- 3D Isometric Payment Bubble Emblem -->
+  <g filter="url(#xpaidShadow)">
+    <!-- Outer 3D Extrusion Shadow (Deep Obsidian) -->
     <path 
       d="
         M 346 172 
@@ -24,9 +44,13 @@
         L 182 300 
         Z
       " 
-      fill="#000000" 
+      fill="#04070b" 
+      stroke="#0891b2"
+      stroke-width="3"
+      stroke-opacity="0.4"
     />
 
+    <!-- Front Face Shell -->
     <path 
       d="
         M 346 172 
@@ -36,9 +60,10 @@
         L 346 801 
         Z
       " 
-      fill="#000000" 
+      fill="#090e15" 
     />
 
+    <!-- White Inner Plate with chamfered corner & tail -->
     <path 
       d="
         M 386 226 
@@ -53,23 +78,54 @@
       fill="#FFFFFF" 
     />
 
-    <path 
-      d="
-        M 424 258 
-        L 745 258 
-        L 745 376 
-        L 662 376 
-        L 662 334 
-        L 624 334 
-        L 624 682 
-        L 506 682 
-        L 506 334 
-        L 468 334 
-        L 468 376 
-        L 424 376 
-        Z
+    <!-- The 𝕏 Mark: Precision Geometric X -->
+    <!-- Solid Main Diagonal Slash (Top-Right to Bottom-Left) -->
+    <polygon 
+      points="
+        680,270 
+        750,270 
+        490,695 
+        420,695
       " 
-      fill="#000000" 
+      fill="#090e15" 
     />
+
+    <!-- Intersecting Double-Stroke Diagonal (Top-Left to Bottom-Right) -->
+    <!-- Upper Left Segment -->
+    <polygon 
+      points="
+        430,270 
+        500,270 
+        575,372 
+        515,385
+      " 
+      fill="#090e15" 
+    />
+    
+    <!-- Lower Right Segment -->
+    <polygon 
+      points="
+        645,480 
+        705,470 
+        755,695 
+        685,695
+      " 
+      fill="#090e15" 
+    />
+
+    <!-- Parallel Neon Cyan Ray (Giving 𝕏 Money Speed / Payment Stream Effect) -->
+    <polygon 
+      points="
+        450,270 
+        478,270 
+        738,695 
+        710,695
+      " 
+      fill="#06b6d4" 
+    />
+
+    <!-- Cyan Glow Accent on Top-Right Corner of Slash -->
+    <circle cx="715" cy="270" r="10" fill="#22d3ee" />
+    <circle cx="455" cy="695" r="10" fill="#10b981" />
   </g>
 </svg>

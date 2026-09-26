@@ -20,7 +20,6 @@ import {
   DollarSign,
   ChevronDown,
   ChevronUp,
-  Wind,
   Layers,
   Flame,
   Activity,
@@ -34,7 +33,7 @@ import { PRESET_MEME_LOGOS, getXUserProfile, KNOWN_X_USERS } from '../data/mockD
 import { deployPumpFunToken, getLiveSolBalance, getSolanaProvider } from '../services/solanaLaunch';
 import { configurePumpFeeSharingOnChain } from '../services/pumpClaimService';
 import { getCurrentSolPrice, calculatePumpFunMarketCap } from '../services/solPriceService';
-import { TippedLogo } from './TippedLogo';
+import { XpaidLogo } from './XpaidLogo';
 
 interface TokenLaunchWizardProps {
   treasuryConfig: TreasuryConfig;
@@ -250,7 +249,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
         {
           name: name.trim(),
           symbol: symbol.toUpperCase().replace('$', ''),
-          description: description || `TIPPED royalty token for ${beneficiaryHandle}. 95% trading fees auto-route to USD on 𝕏.`,
+          description: description || `xpaid royalty token for ${beneficiaryHandle}. 95% trading fees auto-route to USD on 𝕏.`,
           imageUrl: logoUrl,
           imageFile: customImageFile,
           twitterHandle: beneficiaryHandle.replace('@', ''),
@@ -375,8 +374,8 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
       const deployResult = await deployPumpFunToken(
         {
           name: name.trim() || `${beneficiaryHandle.replace('@', '')} Coin`,
-          symbol: symbol.toUpperCase().replace('$', '') || 'TIP',
-          description: description || `TIPPED royalty token for ${beneficiaryHandle}. 95% trading fees auto-route to USD on 𝕏.`,
+          symbol: symbol.toUpperCase().replace('$', '') || 'XPAID',
+          description: description || `xpaid royalty token for ${beneficiaryHandle}. 95% trading fees auto-route to USD on 𝕏.`,
           imageUrl: logoUrl,
           imageFile: customImageFile,
           twitterHandle: beneficiaryHandle.replace('@', ''),
@@ -479,30 +478,30 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
           <button
             type="button"
             onClick={onBackToHome}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900/80 border border-lime-500/30 hover:border-lime-400 text-xs font-mono font-bold text-slate-300 hover:text-white shadow-lg backdrop-blur-xl transition-all cursor-pointer hover:-translate-x-0.5"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900/80 border border-cyan-500/30 hover:border-cyan-400 text-xs font-mono font-bold text-slate-300 hover:text-white shadow-lg backdrop-blur-xl transition-all cursor-pointer hover:-translate-x-0.5"
           >
-            <ArrowLeft className="w-3.5 h-3.5 text-lime-400" />
-            <span>TERMINAL EXPLORER</span>
+            <ArrowLeft className="w-3.5 h-3.5 text-cyan-400" />
+            <span>EXPLORE SHOWCASE</span>
           </button>
         )}
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-lime-500/10 border border-lime-500/30 text-[11px] font-mono font-bold text-lime-400">
-            <span className="w-2 h-2 rounded-full bg-lime-400 animate-ping" />
-            <span>GAS PRESSURE: 99.8% READY</span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-[11px] font-mono font-bold text-cyan-400">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+            <span>MAINNET BONDING CURVE: 100% READY</span>
           </div>
         </div>
       </div>
 
       {/* Hero Studio Banner */}
-      <div className="relative rounded-3xl overflow-hidden p-6 sm:p-10 border border-lime-500/30 bg-slate-950/80 shadow-2xl backdrop-blur-2xl">
+      <div className="relative rounded-3xl overflow-hidden p-6 sm:p-10 border border-cyan-500/30 bg-slate-950/80 shadow-2xl backdrop-blur-2xl">
         <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
         
         <div className="relative z-10 max-w-3xl space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/40 text-xs font-mono font-bold text-cyan-400">
             <Zap className="w-3.5 h-3.5 text-cyan-400" />
-            <span>TIPPED LAUNCH ENGINE V2.0</span>
+            <span>XPAID LAUNCH ENGINE V2.0</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white font-['Outfit']">
@@ -517,16 +516,16 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
 
       {/* SUCCESS CARD VIEW */}
       {launchedToken && (
-        <div className="rounded-3xl border-2 border-lime-500/50 bg-slate-950/90 p-6 sm:p-10 shadow-2xl space-y-8 animate-in fade-in zoom-in-95 duration-300">
+        <div className="rounded-3xl border-2 border-cyan-500/50 bg-slate-950/90 p-6 sm:p-10 shadow-2xl space-y-8 animate-in fade-in zoom-in-95 duration-300">
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-white/10">
             <div className="flex items-center gap-5">
               <div className="relative">
-                <div className="absolute -inset-1 rounded-3xl bg-lime-400 opacity-75 blur-md" />
+                <div className="absolute -inset-1 rounded-3xl bg-cyan-400 opacity-75 blur-md" />
                 <img 
                   src={launchedToken.logoUrl} 
                   alt={launchedToken.name}
-                  className="w-20 h-20 rounded-2xl object-cover border-2 border-lime-400 relative shrink-0"
+                  className="w-20 h-20 rounded-2xl object-cover border-2 border-cyan-400 relative shrink-0"
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -535,7 +534,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                   <h2 className="text-2xl sm:text-3xl font-black text-white font-['Outfit']">
                     {launchedToken.name}
                   </h2>
-                  <span className="px-2.5 py-1 rounded-xl bg-lime-500/20 text-lime-400 font-mono font-black text-sm border border-lime-500/30">
+                  <span className="px-2.5 py-1 rounded-xl bg-cyan-500/20 text-cyan-400 font-mono font-black text-sm border border-cyan-500/30">
                     ${launchedToken.symbol}
                   </span>
                 </div>
@@ -550,7 +549,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                 href={`https://pump.fun/coin/${launchedToken.mintAddress}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 sm:flex-initial px-5 py-3 rounded-2xl bg-gradient-to-r from-lime-400 to-emerald-400 hover:from-lime-300 hover:to-emerald-300 text-slate-950 font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-lime-500/25 transition-all"
+                className="flex-1 sm:flex-initial px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25 transition-all"
               >
                 <span>Trade on Pump.fun</span>
                 <ExternalLink className="w-4 h-4" />
@@ -569,20 +568,20 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
           <div className="space-y-4">
             <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 rounded-2xl ${
               launchedToken.feeSharingBound 
-                ? 'bg-lime-500/10 border border-lime-500/30' 
+                ? 'bg-cyan-500/10 border border-cyan-500/30' 
                 : 'bg-amber-500/10 border border-amber-500/40'
             }`}>
               <div className="flex items-center gap-2.5">
                 <span className="flex h-2.5 w-2.5 relative">
                   <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                    launchedToken.feeSharingBound ? 'bg-lime-400' : 'bg-amber-400'
+                    launchedToken.feeSharingBound ? 'bg-cyan-400' : 'bg-amber-400'
                   }`}></span>
                   <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-                    launchedToken.feeSharingBound ? 'bg-lime-500' : 'bg-amber-500'
+                    launchedToken.feeSharingBound ? 'bg-cyan-500' : 'bg-amber-500'
                   }`}></span>
                 </span>
                 <span className={`text-xs font-mono font-black uppercase tracking-wide ${
-                  launchedToken.feeSharingBound ? 'text-lime-400' : 'text-amber-400'
+                  launchedToken.feeSharingBound ? 'text-cyan-400' : 'text-amber-400'
                 }`}>
                   {launchedToken.feeSharingBound 
                     ? 'Both Transactions Confirmed On-Chain (Solana Mainnet)'
@@ -602,10 +601,10 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               
               {/* Transaction 1 Card */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-lime-500/30 space-y-3 relative overflow-hidden shadow-lg">
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-cyan-500/30 space-y-3 relative overflow-hidden shadow-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-lime-500/20 text-lime-400 font-mono font-black text-xs flex items-center justify-center border border-lime-500/30">
+                    <div className="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 font-mono font-black text-xs flex items-center justify-center border border-cyan-500/30">
                       1
                     </div>
                     <span className="text-xs font-mono font-black uppercase text-white">
@@ -624,7 +623,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
 
                 <div className="space-y-1.5 pt-1">
                   <span className="text-[10px] font-mono text-slate-400 uppercase">On-Chain Tx Signature</span>
-                  <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-black/60 border border-white/5 font-mono text-xs text-lime-400">
+                  <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-black/60 border border-white/5 font-mono text-xs text-cyan-400">
                     <span className="truncate">{launchedToken.txHash || `${launchedToken.mintAddress.slice(0, 16)}...`}</span>
                     <div className="flex items-center gap-1 shrink-0">
                       <button
@@ -633,13 +632,13 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                         className="p-1.5 rounded-md hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
                         title="Copy Tx 1 Signature"
                       >
-                        {copiedTx1 ? <Check className="w-3.5 h-3.5 text-lime-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copiedTx1 ? <Check className="w-3.5 h-3.5 text-cyan-400" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                       <a
                         href={`https://solscan.io/tx/${launchedToken.txHash || launchedToken.mintAddress}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-2 py-1 rounded-md bg-lime-500/15 hover:bg-lime-500/25 text-lime-400 transition-colors inline-flex items-center gap-1 text-[11px] font-bold"
+                        className="px-2 py-1 rounded-md bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-400 transition-colors inline-flex items-center gap-1 text-[11px] font-bold"
                         title="Verify Tx 1 on Solscan"
                       >
                         <span>Solscan</span>
@@ -771,7 +770,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 rounded-2xl bg-slate-900/80 border border-white/5 space-y-2">
               <span className="text-[11px] font-mono text-slate-400 uppercase">Solana Mint Contract</span>
-              <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-black/50 border border-white/5 font-mono text-xs text-lime-400">
+              <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-black/50 border border-white/5 font-mono text-xs text-cyan-400">
                 <span className="truncate">{launchedToken.mintAddress}</span>
                 <div className="flex items-center gap-1 shrink-0">
                   <button
@@ -780,7 +779,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                     className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
                     title="Copy Mint Address"
                   >
-                    {copiedMint ? <Check className="w-3.5 h-3.5 text-lime-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedMint ? <Check className="w-3.5 h-3.5 text-cyan-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                   <a
                     href={`https://solscan.io/token/${launchedToken.mintAddress}`}
@@ -799,7 +798,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
             <div className="p-4 rounded-2xl bg-slate-900/80 border border-white/5 space-y-2">
               <span className="text-[11px] font-mono text-slate-400 uppercase">Share On X (Twitter)</span>
               <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just launched $${launchedToken.symbol} on @pumpdotfun via Tipped Protocol! 95% creator royalties stream straight to ${launchedToken.beneficiaryXHandle} via 𝕏 Money 🚀\n\nTrade now: https://pump.fun/coin/${launchedToken.mintAddress}`)}`}
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just launched $${launchedToken.symbol} on @pumpdotfun via xpaid Protocol! 95% creator royalties stream straight to ${launchedToken.beneficiaryXHandle} via 𝕏 Money 🚀\n\nTrade now: https://pump.fun/coin/${launchedToken.mintAddress}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="h-10 px-4 rounded-xl bg-[#1DA1F2]/20 hover:bg-[#1DA1F2]/30 border border-[#1DA1F2]/40 text-[#1DA1F2] text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
@@ -818,16 +817,16 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
           
           {/* Left Column: Interactive Form (7 Cols) */}
           <div className="lg:col-span-7 space-y-6">
-            <form onSubmit={handleLaunch} className="rounded-3xl border border-lime-500/30 bg-slate-950/90 p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-xl">
+            <form onSubmit={handleLaunch} className="rounded-3xl border border-cyan-500/30 bg-slate-950/90 p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-xl">
               
               {/* 1. Launch Ecosystem Selector */}
               <div className="space-y-2.5 pb-4 border-b border-white/10">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-mono font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                    <Layers className="w-3.5 h-3.5 text-lime-400" />
+                    <Layers className="w-3.5 h-3.5 text-cyan-400" />
                     <span>1. Launch Ecosystem & Rail</span>
                   </label>
-                  <span className="text-[10px] font-mono text-lime-400 font-bold">FAIR BONDING CURVE</span>
+                  <span className="text-[10px] font-mono text-cyan-400 font-bold">FAIR BONDING CURVE</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -836,13 +835,13 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                     onClick={() => setPlatform('pumpfun')}
                     className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                       platform === 'pumpfun'
-                        ? 'border-lime-400 bg-lime-500/15 shadow-lg shadow-lime-500/20'
+                        ? 'border-cyan-400 bg-cyan-500/15 shadow-lg shadow-cyan-500/20'
                         : 'border-white/10 hover:border-white/20 bg-slate-900/50'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-black text-xs text-white">Pump.fun</span>
-                      <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-lime-400 text-slate-950">LIVE</span>
+                      <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-cyan-400 text-slate-950">LIVE</span>
                     </div>
                     <span className="text-[10px] text-slate-400 font-mono">Solana • 95% SOL Fees</span>
                   </button>
@@ -885,14 +884,14 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-mono font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                    <span className="text-lime-400 font-black">2.</span>
+                    <span className="text-cyan-400 font-black">2.</span>
                     <span>Beneficiary 𝕏 Handle (Fee Recipient)</span>
                   </label>
                   <span className="text-[10px] font-mono text-emerald-400 font-bold">95% TO RECIPIENT</span>
                 </div>
 
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-mono font-bold text-lime-400 text-base">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-mono font-bold text-cyan-400 text-base">
                     @
                   </span>
                   <input
@@ -900,7 +899,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                     value={beneficiaryHandle.replace(/^@/, '')}
                     onChange={(e) => handleHandleChange(e.target.value)}
                     placeholder="elonmusk, matt_furie, mrbeast..."
-                    className="w-full pl-9 pr-4 py-3.5 rounded-2xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-white font-mono font-bold text-sm focus:outline-none transition-all shadow-inner"
+                    className="w-full pl-9 pr-4 py-3.5 rounded-2xl bg-slate-900/90 border border-white/10 focus:border-cyan-400 text-white font-mono font-bold text-sm focus:outline-none transition-all shadow-inner"
                     required
                   />
                 </div>
@@ -915,7 +914,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                       onClick={() => handleHandleChange(p.handle)}
                       className={`px-2.5 py-1 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer ${
                         beneficiaryHandle.toLowerCase() === p.handle.toLowerCase()
-                          ? 'bg-lime-400 text-slate-950 font-black shadow-md'
+                          ? 'bg-cyan-400 text-slate-950 font-black shadow-md'
                           : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-white/5'
                       }`}
                     >
@@ -928,7 +927,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
               {/* 3. Token Identity */}
               <div className="space-y-4 pt-2 border-t border-white/10">
                 <label className="text-xs font-mono font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                  <span className="text-lime-400 font-black">3.</span>
+                  <span className="text-cyan-400 font-black">3.</span>
                   <span>Token Metadata</span>
                 </label>
 
@@ -967,7 +966,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder={`Tipped meme coin for ${beneficiaryHandle}. 95% creator fees route to 𝕏 USD.`}
+                    placeholder={`xpaid meme coin for ${beneficiaryHandle}. 95% creator fees route to 𝕏 USD.`}
                     rows={2}
                     className="w-full px-4 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 focus:border-cyan-400 text-xs text-white focus:outline-none transition-colors"
                   />
@@ -977,7 +976,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
               {/* 4. Artwork / Meme Logo */}
               <div className="space-y-3 pt-2 border-t border-white/10">
                 <label className="text-xs font-mono font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                  <span className="text-lime-400 font-black">4.</span>
+                  <span className="text-cyan-400 font-black">4.</span>
                   <span>Meme Artwork & Logo</span>
                 </label>
 
@@ -992,8 +991,8 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                   }}
                   className={`p-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer flex items-center gap-4 ${
                     isDragging 
-                      ? 'border-lime-400 bg-lime-500/10' 
-                      : 'border-white/10 hover:border-lime-400/50 bg-slate-900/50'
+                      ? 'border-cyan-400 bg-cyan-500/10' 
+                      : 'border-white/10 hover:border-cyan-400/50 bg-slate-900/50'
                   }`}
                 >
                   <input
@@ -1008,12 +1007,12 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                   <img
                     src={logoUrl}
                     alt="Logo Preview"
-                    className="w-14 h-14 rounded-2xl object-cover border-2 border-lime-400/40 shrink-0"
+                    className="w-14 h-14 rounded-2xl object-cover border-2 border-cyan-400/40 shrink-0"
                     referrerPolicy="no-referrer"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-                      <Upload className="w-3.5 h-3.5 text-lime-400" />
+                      <Upload className="w-3.5 h-3.5 text-cyan-400" />
                       <span>{customFileName || 'Upload Custom Meme Image'}</span>
                     </div>
                     <p className="text-[11px] text-slate-400 font-mono mt-0.5">
@@ -1036,7 +1035,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                       }}
                       className={`h-7 px-2.5 rounded-lg border flex items-center gap-1.5 text-[11px] font-mono transition-all cursor-pointer ${
                         logoUrl === p.url
-                          ? 'border-lime-400 bg-lime-500/20 text-lime-300 font-bold shadow-xs'
+                          ? 'border-cyan-400 bg-cyan-500/20 text-cyan-300 font-bold shadow-xs'
                           : 'border-white/10 bg-slate-900/70 text-slate-300 hover:border-white/30'
                       }`}
                     >
@@ -1055,16 +1054,16 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                   className="w-full flex items-center justify-between text-xs font-mono font-black uppercase tracking-wider text-slate-300 hover:text-white transition-colors py-1 cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
-                    <Globe className="w-3.5 h-3.5 text-lime-400" />
-                    <span className="text-lime-400 font-black">5.</span>
+                    <Globe className="w-3.5 h-3.5 text-cyan-400" />
+                    <span className="text-cyan-400 font-black">5.</span>
                     <span>Social Links & Community (Optional)</span>
-                    <span className="text-[10px] lowercase font-normal px-2 py-0.5 rounded-full bg-lime-500/10 text-lime-400 border border-lime-500/20 font-mono">
+                    <span className="text-[10px] lowercase font-normal px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-mono">
                       {showSocials ? 'active' : '+ add links'}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 text-xs text-slate-400 font-mono">
                     <span>{showSocials ? 'Hide' : 'Expand'}</span>
-                    {showSocials ? <ChevronUp className="w-3.5 h-3.5 text-lime-400" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    {showSocials ? <ChevronUp className="w-3.5 h-3.5 text-cyan-400" /> : <ChevronDown className="w-3.5 h-3.5" />}
                   </div>
                 </button>
 
@@ -1080,7 +1079,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                         value={twitterLink}
                         onChange={(e) => setTwitterLink(e.target.value)}
                         placeholder="https://x.com/username"
-                        className="w-full px-4 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-xs font-mono text-white focus:outline-none transition-colors"
+                        className="w-full px-4 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 focus:border-cyan-400 text-xs font-mono text-white focus:outline-none transition-colors"
                       />
                     </div>
 
@@ -1095,7 +1094,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                           value={telegramLink}
                           onChange={(e) => setTelegramLink(e.target.value)}
                           placeholder="https://t.me/community"
-                          className="w-full px-4 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-xs font-mono text-white focus:outline-none transition-colors"
+                          className="w-full px-4 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 focus:border-cyan-400 text-xs font-mono text-white focus:outline-none transition-colors"
                         />
                       </div>
 
@@ -1109,7 +1108,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                           value={websiteLink}
                           onChange={(e) => setWebsiteLink(e.target.value)}
                           placeholder="https://mytoken.fun"
-                          className="w-full px-4 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-xs font-mono text-white focus:outline-none transition-colors"
+                          className="w-full px-4 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 focus:border-cyan-400 text-xs font-mono text-white focus:outline-none transition-colors"
                         />
                       </div>
                     </div>
@@ -1121,12 +1120,12 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
               <div className="space-y-3 pt-2 border-t border-white/10">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-mono font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                    <span className="text-lime-400 font-black">6.</span>
+                    <span className="text-cyan-400 font-black">6.</span>
                     <span>Initial Sniping / Buy (SOL)</span>
                   </label>
                   {walletBalance !== null && (
                     <span className="text-xs font-mono text-slate-400">
-                      Wallet: <strong className="text-lime-400">{walletBalance.toFixed(3)} SOL</strong>
+                      Wallet: <strong className="text-cyan-400">{walletBalance.toFixed(3)} SOL</strong>
                     </span>
                   )}
                 </div>
@@ -1140,13 +1139,13 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                       value={initialBuy}
                       onChange={(e) => setInitialBuy(e.target.value)}
                       placeholder="0.05"
-                      className="w-full pl-4 pr-12 py-3 rounded-xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-white font-mono font-bold text-sm focus:outline-none"
+                      className="w-full pl-4 pr-12 py-3 rounded-xl bg-slate-900/90 border border-white/10 focus:border-cyan-400 text-white font-mono font-bold text-sm focus:outline-none"
                     />
                     <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-slate-400">
                       SOL
                     </span>
                   </div>
-                  <div className="px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-xs font-mono text-lime-400 font-bold shrink-0">
+                  <div className="px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-xs font-mono text-cyan-400 font-bold shrink-0">
                     ≈ ${(parseFloat(initialBuy || '0') * currentSolPrice).toFixed(2)} USD
                   </div>
                 </div>
@@ -1162,7 +1161,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                   <button
                     type="button"
                     onClick={handleLaunchWithTreasury}
-                    className="px-3.5 py-1.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-mono font-black text-[11px] shrink-0 uppercase tracking-wider transition-colors cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-mono font-black text-[11px] shrink-0 uppercase tracking-wider transition-colors cursor-pointer"
                   >
                     Deploy via Protocol Treasury →
                   </button>
@@ -1170,14 +1169,14 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
               )}
 
               {/* Dual On-Chain Protocol Explainer */}
-              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-lime-500/20 text-xs font-mono space-y-1.5 shadow-inner">
-                <div className="flex items-center gap-2 text-lime-400 font-bold uppercase tracking-wider text-[11px]">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-lime-400" />
+              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-cyan-500/20 text-xs font-mono space-y-1.5 shadow-inner">
+                <div className="flex items-center gap-2 text-cyan-400 font-bold uppercase tracking-wider text-[11px]">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
                   <span>Dual On-Chain Launch Flow</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-300">
                   <div className="p-2 rounded-xl bg-black/40 border border-white/5 space-y-0.5">
-                    <span className="text-lime-400 font-bold uppercase block text-[10px]">Step 1 (Tx 1)</span>
+                    <span className="text-cyan-400 font-bold uppercase block text-[10px]">Step 1 (Tx 1)</span>
                     <p className="text-slate-400 leading-snug">Deploys token mint & bonding curve on Pump.fun.</p>
                   </div>
                   <div className="p-2 rounded-xl bg-black/40 border border-cyan-500/20 space-y-0.5">
@@ -1193,26 +1192,26 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                   <button
                     type="button"
                     onClick={onOpenWalletModal}
-                    className="w-full py-4 px-6 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-lime-500/30 text-white font-mono font-black text-sm flex items-center justify-center gap-2.5 shadow-xl transition-all cursor-pointer hover:border-lime-400 active:scale-95"
+                    className="w-full py-4 px-6 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-cyan-500/30 text-white font-mono font-black text-sm flex items-center justify-center gap-2.5 shadow-xl transition-all cursor-pointer hover:border-cyan-400 active:scale-95"
                   >
-                    <Wallet className="w-4 h-4 text-lime-400" />
+                    <Wallet className="w-4 h-4 text-cyan-400" />
                     <span>CONNECT SOLANA WALLET TO LAUNCH</span>
                   </button>
                 ) : (
                   <button
                     type="submit"
                     disabled={isLaunching}
-                    className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-lime-400 via-emerald-400 to-cyan-400 hover:from-lime-300 hover:to-cyan-300 text-slate-950 font-mono font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-xl shadow-lime-500/25 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                    className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-mono font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-xl shadow-cyan-500/25 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                   >
                     {isLaunching ? (
                       <>
                         <div className="w-4 h-4 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" />
-                        <span>{liveStatusText || 'DETONATING ON PUMP.FUN...'}</span>
+                        <span>{liveStatusText || 'DEPLOYING ON PUMP.FUN...'}</span>
                       </>
                     ) : (
                       <>
-                        <Wind className="w-4 h-4 text-slate-950 animate-pulse" />
-                        <span>DETONATE & LAUNCH ON PUMP.FUN</span>
+                        <Rocket className="w-4 h-4 text-slate-950" />
+                        <span>DEPLOY & LAUNCH ON PUMP.FUN</span>
                         <ArrowRight className="w-4 h-4 text-slate-950" />
                       </>
                     )}
@@ -1227,15 +1226,15 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
           <div className="lg:col-span-5 space-y-6">
             
             {/* Live Holographic Card */}
-            <div className="rounded-3xl border border-lime-500/40 bg-slate-950/90 p-6 sm:p-7 space-y-6 shadow-2xl relative overflow-hidden backdrop-blur-2xl">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-lime-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="rounded-3xl border border-cyan-500/40 bg-slate-950/90 p-6 sm:p-7 space-y-6 shadow-2xl relative overflow-hidden backdrop-blur-2xl">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-lime-400 animate-ping" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
                   <span className="text-xs font-mono font-black text-slate-400 uppercase">Live Token Blueprint</span>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-lime-500/20 text-lime-400 border border-lime-500/40">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">
                   95% 𝕏 TIP RAIL ACTIVE
                 </span>
               </div>
@@ -1245,7 +1244,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                 <img
                   src={logoUrl}
                   alt={name || 'Token'}
-                  className="w-16 h-16 rounded-2xl object-cover border-2 border-lime-400 shadow-md shrink-0"
+                  className="w-16 h-16 rounded-2xl object-cover border-2 border-cyan-400 shadow-md shrink-0"
                   referrerPolicy="no-referrer"
                 />
                 <div className="min-w-0 flex-1">
@@ -1311,10 +1310,10 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
             <div className="p-5 rounded-3xl bg-slate-950/60 border border-white/10 space-y-3">
               <h4 className="text-xs font-mono font-black uppercase text-slate-300 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-cyan-400" />
-                <span>How Tipped Protocol Operates</span>
+                <span>How xpaid Protocol Operates</span>
               </h4>
               <p className="text-xs text-slate-400 leading-relaxed font-sans">
-                When you deploy, the creator fee beneficiary is hardcoded to TIPPED's on-chain router. Every trade on Pump.fun generates SOL fees, which are auto-liquidated to USD and settled straight into the recipient's 𝕏 Money account.
+                When you deploy, the creator fee beneficiary is hardcoded to xpaid's on-chain router. Every trade on Pump.fun generates SOL fees, which are auto-liquidated to USD and settled straight into the recipient's 𝕏 Money account.
               </p>
             </div>
 

@@ -10,7 +10,7 @@ export const FloatingCoinsBackground: React.FC<CleanAmbientBackgroundProps> = ()
       className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
       aria-hidden="true"
     >
-      {/* 1. Ambient Tipped Cyan / Teal Aura */}
+      {/* 1. Ambient xpaid Cyan / Teal Aura */}
       <div 
         className="absolute -top-32 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full opacity-20 dark:opacity-15 blur-[140px]"
         style={{

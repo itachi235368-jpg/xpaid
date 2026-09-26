@@ -10,7 +10,7 @@ import { WalletConnectModal } from './components/WalletConnectModal';
 import { TransparencyProofModal } from './components/TransparencyProofModal';
 import { FloatingCoinsBackground } from './components/FloatingCoinsBackground';
 import { FrontLandingPage } from './components/FrontLandingPage';
-import { TippedLogo } from './components/TippedLogo';
+import { XpaidLogo } from './components/XpaidLogo';
 import { 
   INITIAL_TOKENS, 
   INITIAL_FEES, 
@@ -477,8 +477,8 @@ export default function App() {
               xMoneyReferenceId: `XM-${Math.floor(10000000 + Math.random() * 90000000)}-${f.currency}`,
               paymentMethod: isKraken ? 'Kraken USD ➔ 𝕏 Money' : 'X Money (USD Direct)',
               proofTweetText: isKraken
-                ? `⚡ Tipped auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via Kraken Off-Ramp ➔ 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`
-                : `⚡ Tipped auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`,
+                ? `⚡ xpaid auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via Kraken Off-Ramp ➔ 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`
+                : `⚡ xpaid auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`,
               blockchainRefTx: f.sourceTxHash,
               krakenOrderId: isKraken ? `KRK-${Math.floor(1000000 + Math.random() * 9000000)}` : undefined,
               krakenWithdrawalRef: isKraken ? `W-${Math.floor(10000000 + Math.random() * 90000000)}` : undefined,
@@ -558,7 +558,7 @@ export default function App() {
       timestamp: new Date().toISOString(),
       xMoneyReferenceId: `XM-${Math.floor(10000000 + Math.random() * 90000000)}-${fee.currency}`,
       paymentMethod: 'X Money (USD Direct)',
-      proofTweetText: `⚡ Tipped auto-deposited $${fee.beneficiaryCutUsd.toFixed(2)} USD directly to ${fee.beneficiaryXHandle} via 𝕏 Money from $${fee.tokenSymbol} trading fees on ${fee.platform.toUpperCase()}! (Zero claim needed). Ref: ${fee.sourceTxHash}`,
+      proofTweetText: `⚡ xpaid auto-deposited $${fee.beneficiaryCutUsd.toFixed(2)} USD directly to ${fee.beneficiaryXHandle} via 𝕏 Money from $${fee.tokenSymbol} trading fees on ${fee.platform.toUpperCase()}! (Zero claim needed). Ref: ${fee.sourceTxHash}`,
       blockchainRefTx: fee.sourceTxHash,
     };
 
@@ -613,7 +613,7 @@ export default function App() {
           timestamp: new Date().toISOString(),
           xMoneyReferenceId: `XM-${Math.floor(10000000 + Math.random() * 90000000)}-${f.currency}`,
           paymentMethod: 'X Money (USD Direct)',
-          proofTweetText: `⚡ Tipped auto-deposited $${f.beneficiaryCutUsd.toFixed(2)} USD to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} fees on ${f.platform.toUpperCase()}! (Zero claim needed)`,
+          proofTweetText: `⚡ xpaid auto-deposited $${f.beneficiaryCutUsd.toFixed(2)} USD to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} fees on ${f.platform.toUpperCase()}! (Zero claim needed)`,
           blockchainRefTx: f.sourceTxHash,
         });
         return { ...f, status: 'disbursed_x_money' as const, xMoneyPayoutId: pId };
@@ -781,8 +781,8 @@ export default function App() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
             <div className="flex items-center gap-2">
-              <TippedLogo className="w-5 h-5 rounded-lg border border-cyan-500/30" />
-              <span className="font-extrabold text-slate-900 dark:text-white text-sm font-['Outfit']">Tipped Protocol</span>
+              <XpaidLogo className="w-5 h-5 rounded-lg border border-cyan-500/30" />
+              <span className="font-extrabold text-slate-900 dark:text-white text-sm font-['Outfit']">xpaid Protocol</span>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25">
                 Solana Active
               </span>

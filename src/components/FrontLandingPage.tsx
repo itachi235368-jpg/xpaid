@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { TokenLaunchData, TreasuryConfig } from '../types';
 import { KNOWN_X_USERS } from '../data/mockData';
-import { TippedLogo } from './TippedLogo';
+import { XpaidLogo } from './XpaidLogo';
 
 interface FrontLandingPageProps {
   tokens: TokenLaunchData[];
@@ -92,18 +92,18 @@ export const FrontLandingPage: React.FC<FrontLandingPageProps> = ({
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-14 space-y-16 sm:space-y-24 relative z-10">
       
-      {/* 1. Hero Section for Tipped Protocol */}
+      {/* 1. Hero Section for xpaid Protocol */}
       <div className="text-center max-w-3xl mx-auto space-y-6">
         
-        {/* Tipped Brand Emblem */}
+        {/* xpaid Brand Emblem */}
         <div className="flex justify-center -mb-1">
-          <TippedLogo className="w-16 h-16 sm:w-20 sm:h-20 shadow-2xl rounded-3xl border border-cyan-500/40" />
+          <XpaidLogo className="w-16 h-16 sm:w-20 sm:h-20 shadow-2xl rounded-3xl border border-cyan-500/40" />
         </div>
 
         {/* Top Status Eyebrow Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 dark:bg-cyan-950/40 border border-cyan-500/30 text-xs font-semibold text-cyan-800 dark:text-cyan-300 shadow-xs">
           <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-          <span>Tipped Protocol • Pump.fun Automated 𝕏 Royalty Rails</span>
+          <span>xpaid Protocol • Pump.fun Automated 𝕏 Royalty Rails</span>
           <span className="text-zinc-300 dark:text-zinc-700">|</span>
           <span className="text-cyan-600 dark:text-cyan-400 font-bold">95% to 𝕏 User</span>
         </div>

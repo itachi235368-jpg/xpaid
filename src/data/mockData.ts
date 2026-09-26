@@ -29,7 +29,7 @@ export const INITIAL_FEES: FeeCollectionRecord[] = [];
 export const INITIAL_PAYOUTS: XMoneyPayout[] = [];
 
 export const PRESET_MEME_LOGOS = [
-  { name: 'Tipped Official', url: '/tipped-logo.svg' },
+  { name: 'xpaid Official', url: '/xpaid-logo.svg' },
   { name: 'Pepe Thinking', url: '/assets/pepe-thinking.svg' },
   { name: 'Elon 420 Matrix', url: '/assets/elon-crypto.svg' },
   { name: 'Pixel Cat', url: '/assets/pixel-cat.svg' },

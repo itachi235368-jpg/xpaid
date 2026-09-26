@@ -36,7 +36,7 @@ code, pre, .font-mono {
   letter-spacing: -0.035em;
 }
 
-/* Tipped Protocol Cyber Glow & Holographic Mesh */
+/* xpaid Protocol Cyber Glow & Holographic Mesh */
 .bg-cyber-void {
   background-color: #03060c;
   background-image: 
@@ -64,7 +64,7 @@ code, pre, .font-mono {
     linear-gradient(to bottom, rgba(5, 194, 214, 0.04) 1px, transparent 1px);
 }
 
-/* Fart Gas Animations & Floating Particles */
+/* Ambient Atmosphere Animations & Floating Particles */
 @keyframes gasFloat {
   0%, 100% {
     transform: translateY(0px) scale(1) rotate(0deg);
