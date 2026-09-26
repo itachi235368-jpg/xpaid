@@ -178,10 +178,10 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Futuristic Desktop Navigation Tabs */}
             <nav className="hidden lg:flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100/90 dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 text-xs font-semibold backdrop-blur-md">
               <button
-                onClick={() => setActiveTab('home')}
+                onClick={() => { playFartSound('random'); setActiveTab('home'); }}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'home'
-                    ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-black shadow-md shadow-cyan-500/20'
+                    ? 'bg-gradient-to-r from-lime-400 via-emerald-400 to-cyan-400 text-slate-950 font-black shadow-md shadow-lime-500/20'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
                 }`}
               >
@@ -190,10 +190,10 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               <button
-                onClick={() => setActiveTab('launch')}
+                onClick={() => { playFartSound('random'); setActiveTab('launch'); }}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'launch'
-                    ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-black shadow-md shadow-cyan-500/20'
+                    ? 'bg-gradient-to-r from-lime-400 via-emerald-400 to-cyan-400 text-slate-950 font-black shadow-md shadow-lime-500/20'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
                 }`}
               >
@@ -202,10 +202,10 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               <button
-                onClick={() => setActiveTab('fees')}
+                onClick={() => { playFartSound('random'); setActiveTab('fees'); }}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'fees'
-                    ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-black shadow-md shadow-cyan-500/20'
+                    ? 'bg-gradient-to-r from-lime-400 via-emerald-400 to-cyan-400 text-slate-950 font-black shadow-md shadow-lime-500/20'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
                 }`}
               >
@@ -214,10 +214,10 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               <button
-                onClick={() => setActiveTab('streamers')}
+                onClick={() => { playFartSound('random'); setActiveTab('streamers'); }}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'streamers'
-                    ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-black shadow-md shadow-cyan-500/20'
+                    ? 'bg-gradient-to-r from-lime-400 via-emerald-400 to-cyan-400 text-slate-950 font-black shadow-md shadow-lime-500/20'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
                 }`}
               >
@@ -226,10 +226,10 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               <button
-                onClick={() => setActiveTab('payouts')}
+                onClick={() => { playFartSound('random'); setActiveTab('payouts'); }}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'payouts'
-                    ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-black shadow-md shadow-cyan-500/20'
+                    ? 'bg-gradient-to-r from-lime-400 via-emerald-400 to-cyan-400 text-slate-950 font-black shadow-md shadow-lime-500/20'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
                 }`}
               >
@@ -238,10 +238,22 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               <button
-                onClick={() => setActiveTab('how-it-works')}
+                onClick={() => { playFartSound('random'); setActiveTab('lookup'); }}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'lookup'
+                    ? 'bg-gradient-to-r from-lime-400 via-emerald-400 to-cyan-400 text-slate-950 font-black shadow-md shadow-lime-500/20'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
+                }`}
+              >
+                <Search className="w-4 h-4" />
+                <span>Directory</span>
+              </button>
+
+              <button
+                onClick={() => { playFartSound('random'); setActiveTab('how-it-works'); }}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
                   activeTab === 'how-it-works'
-                    ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 font-black shadow-md shadow-cyan-500/20'
+                    ? 'bg-gradient-to-r from-lime-400 via-emerald-400 to-cyan-400 text-slate-950 font-black shadow-md shadow-lime-500/20'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5'
                 }`}
               >
@@ -251,30 +263,31 @@ export const Header: React.FC<HeaderProps> = ({
             </nav>
 
             {/* Header Right Action Suite */}
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3">
               
               {/* Live Gas Pressure Interactive Pill */}
               <button
                 type="button"
                 onClick={() => playFartSound('random')}
-                className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-lime-500/10 hover:bg-lime-500/20 border border-lime-500/30 text-lime-600 dark:text-lime-400 text-xs font-mono font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs"
+                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-xl bg-lime-500/10 hover:bg-lime-500/20 border border-lime-500/30 text-lime-600 dark:text-lime-400 text-[10px] sm:text-xs font-mono font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs"
                 title="Click to release test gas puff!"
               >
-                <Wind className="w-3.5 h-3.5 animate-pulse" />
-                <span>GAS: 99.8%</span>
+                <Wind className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-lime-400 animate-pulse" />
+                <span className="hidden xs:inline">GAS:</span>
+                <span>99.8%</span>
               </button>
 
               {/* Wallet Connect Button */}
               <button
                 type="button"
                 onClick={onToggleWallet}
-                className={`px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer shadow-md ${
+                className={`px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer shadow-md ${
                   connectedWallet
                     ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                    : 'bg-gradient-to-r from-cyan-500 to-teal-400 hover:from-cyan-400 hover:to-teal-300 text-slate-950'
+                    : 'bg-gradient-to-r from-lime-400 via-emerald-400 to-cyan-400 hover:from-lime-300 hover:to-cyan-300 text-slate-950 font-black'
                 }`}
               >
-                <Wallet className="w-4 h-4" />
+                <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>{connectedWallet ? truncate(connectedWallet) : 'Connect'}</span>
               </button>
 
@@ -291,29 +304,121 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               )}
 
-              {/* Mobile Menu Toggle Button */}
+              {/* Mobile More Options Button */}
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(prev => !prev)}
                 className="lg:hidden p-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/10 transition-colors"
+                aria-label="More navigation options"
               >
-                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <MoreHorizontal className="w-5 h-5" />}
+                {isMobileMenuOpen ? <X className="w-4 h-4" /> : <MoreHorizontal className="w-4 h-4" />}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Mobile Dropdown Menu */}
+        {/* Mobile Top Horizontal Quick-Tabs Bar */}
+        <div className="lg:hidden border-t border-slate-200 dark:border-white/5 bg-slate-100/90 dark:bg-slate-950/90 px-3 py-1.5 overflow-x-auto no-scrollbar flex items-center gap-1.5 text-xs">
+          <button
+            type="button"
+            onClick={() => { playFartSound('random'); setActiveTab('home'); }}
+            className={`px-3 py-1 rounded-lg whitespace-nowrap text-xs font-bold transition-all ${
+              activeTab === 'home'
+                ? 'bg-lime-400 text-slate-950 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:text-white bg-slate-200/60 dark:bg-white/5'
+            }`}
+          >
+            Explore
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { playFartSound('random'); setActiveTab('lookup'); }}
+            className={`px-3 py-1 rounded-lg whitespace-nowrap text-xs font-bold transition-all flex items-center gap-1 ${
+              activeTab === 'lookup'
+                ? 'bg-lime-400 text-slate-950 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:text-white bg-slate-200/60 dark:bg-white/5'
+            }`}
+          >
+            <Search className="w-3.5 h-3.5 text-lime-400" />
+            <span>𝕏 Directory</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { playFartSound('random'); setActiveTab('launch'); }}
+            className={`px-3 py-1 rounded-lg whitespace-nowrap text-xs font-bold transition-all flex items-center gap-1 ${
+              activeTab === 'launch'
+                ? 'bg-lime-400 text-slate-950 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:text-white bg-slate-200/60 dark:bg-white/5'
+            }`}
+          >
+            <Rocket className="w-3.5 h-3.5 text-lime-400" />
+            <span>Launch</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { playFartSound('random'); setActiveTab('fees'); }}
+            className={`px-3 py-1 rounded-lg whitespace-nowrap text-xs font-bold transition-all ${
+              activeTab === 'fees'
+                ? 'bg-lime-400 text-slate-950 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:text-white bg-slate-200/60 dark:bg-white/5'
+            }`}
+          >
+            Royalties
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { playFartSound('random'); setActiveTab('payouts'); }}
+            className={`px-3 py-1 rounded-lg whitespace-nowrap text-xs font-bold transition-all ${
+              activeTab === 'payouts'
+                ? 'bg-lime-400 text-slate-950 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:text-white bg-slate-200/60 dark:bg-white/5'
+            }`}
+          >
+            𝕏 Payouts
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { playFartSound('random'); setActiveTab('streamers'); }}
+            className={`px-3 py-1 rounded-lg whitespace-nowrap text-xs font-bold transition-all ${
+              activeTab === 'streamers'
+                ? 'bg-cyan-400 text-slate-950 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:text-white bg-slate-200/60 dark:bg-white/5'
+            }`}
+          >
+            OBS
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { playFartSound('random'); setActiveTab('how-it-works'); }}
+            className={`px-3 py-1 rounded-lg whitespace-nowrap text-xs font-bold transition-all ${
+              activeTab === 'how-it-works'
+                ? 'bg-lime-400 text-slate-950 shadow-xs'
+                : 'text-slate-600 dark:text-slate-300 hover:text-white bg-slate-200/60 dark:bg-white/5'
+            }`}
+          >
+            Docs
+          </button>
+        </div>
+
+        {/* Mobile Dropdown Sheet for extra items like Docs / Streamers */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#060a12]/95 backdrop-blur-2xl p-4 space-y-2 animate-fade-in">
+          <div className="lg:hidden border-t border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#060a12]/95 backdrop-blur-2xl p-4 space-y-2 animate-fade-in shadow-2xl">
+            <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider px-2 pb-1">Quick Navigation</div>
+            
             <button
               onClick={() => { setActiveTab('home'); setIsMobileMenuOpen(false); }}
-              className={`w-full p-3 rounded-xl text-left font-bold text-sm flex items-center justify-between ${
-                activeTab === 'home' ? 'bg-cyan-500/10 text-cyan-500' : 'text-slate-700 dark:text-slate-300'
+              className={`w-full p-2.5 rounded-xl text-left font-bold text-xs sm:text-sm flex items-center justify-between ${
+                activeTab === 'home' ? 'bg-lime-500/15 text-lime-400 font-extrabold' : 'text-slate-700 dark:text-slate-300'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <Compass className="w-4 h-4" />
+              <div className="flex items-center gap-2.5">
+                <Compass className="w-4 h-4 text-lime-400" />
                 <span>Explore Showcase</span>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -321,12 +426,12 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={() => { setActiveTab('launch'); setIsMobileMenuOpen(false); }}
-              className={`w-full p-3 rounded-xl text-left font-bold text-sm flex items-center justify-between ${
-                activeTab === 'launch' ? 'bg-cyan-500/10 text-cyan-500' : 'text-slate-700 dark:text-slate-300'
+              className={`w-full p-2.5 rounded-xl text-left font-bold text-xs sm:text-sm flex items-center justify-between ${
+                activeTab === 'launch' ? 'bg-lime-500/15 text-lime-400 font-extrabold' : 'text-slate-700 dark:text-slate-300'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <Rocket className="w-4 h-4" />
+              <div className="flex items-center gap-2.5">
+                <Rocket className="w-4 h-4 text-lime-400" />
                 <span>Launch Meme Token</span>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -334,12 +439,12 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={() => { setActiveTab('fees'); setIsMobileMenuOpen(false); }}
-              className={`w-full p-3 rounded-xl text-left font-bold text-sm flex items-center justify-between ${
-                activeTab === 'fees' ? 'bg-cyan-500/10 text-cyan-500' : 'text-slate-700 dark:text-slate-300'
+              className={`w-full p-2.5 rounded-xl text-left font-bold text-xs sm:text-sm flex items-center justify-between ${
+                activeTab === 'fees' ? 'bg-lime-500/15 text-lime-400 font-extrabold' : 'text-slate-700 dark:text-slate-300'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <Coins className="w-4 h-4" />
+              <div className="flex items-center gap-2.5">
+                <Coins className="w-4 h-4 text-lime-400" />
                 <span>Royalty Fee Flow</span>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -347,11 +452,11 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={() => { setActiveTab('streamers'); setIsMobileMenuOpen(false); }}
-              className={`w-full p-3 rounded-xl text-left font-bold text-sm flex items-center justify-between ${
-                activeTab === 'streamers' ? 'bg-cyan-500/10 text-cyan-500' : 'text-slate-700 dark:text-slate-300'
+              className={`w-full p-2.5 rounded-xl text-left font-bold text-xs sm:text-sm flex items-center justify-between ${
+                activeTab === 'streamers' ? 'bg-lime-500/15 text-lime-400 font-extrabold' : 'text-slate-700 dark:text-slate-300'
               }`}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <Tv className="w-4 h-4 text-cyan-400" />
                 <span>Streamers OBS Hub</span>
               </div>
@@ -360,19 +465,120 @@ export const Header: React.FC<HeaderProps> = ({
 
             <button
               onClick={() => { setActiveTab('payouts'); setIsMobileMenuOpen(false); }}
-              className={`w-full p-3 rounded-xl text-left font-bold text-sm flex items-center justify-between ${
-                activeTab === 'payouts' ? 'bg-cyan-500/10 text-cyan-500' : 'text-slate-700 dark:text-slate-300'
+              className={`w-full p-2.5 rounded-xl text-left font-bold text-xs sm:text-sm flex items-center justify-between ${
+                activeTab === 'payouts' ? 'bg-lime-500/15 text-lime-400 font-extrabold' : 'text-slate-700 dark:text-slate-300'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <span className="font-bold">𝕏</span>
+              <div className="flex items-center gap-2.5">
+                <span className="font-bold text-lime-400">𝕏</span>
                 <span>𝕏 Money Payouts</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </button>
+
+            <button
+              onClick={() => { setActiveTab('lookup'); setIsMobileMenuOpen(false); }}
+              className={`w-full p-2.5 rounded-xl text-left font-bold text-xs sm:text-sm flex items-center justify-between ${
+                activeTab === 'lookup' ? 'bg-lime-500/15 text-lime-400 font-extrabold' : 'text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Search className="w-4 h-4 text-lime-400" />
+                <span>𝕏 Creator Directory</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </button>
+
+            <button
+              onClick={() => { setActiveTab('how-it-works'); setIsMobileMenuOpen(false); }}
+              className={`w-full p-2.5 rounded-xl text-left font-bold text-xs sm:text-sm flex items-center justify-between ${
+                activeTab === 'how-it-works' ? 'bg-lime-500/15 text-lime-400 font-extrabold' : 'text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <HelpCircle className="w-4 h-4 text-cyan-400" />
+                <span>Documentation & FAQ</span>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-400" />
             </button>
           </div>
         )}
       </header>
+
+      {/* Ultra-Ergonomic Mobile Bottom App Dock */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-2 pb-safe pt-2 bg-[#060a12]/95 backdrop-blur-2xl border-t border-lime-500/20 shadow-[0_-10px_25px_rgba(0,0,0,0.5)]">
+        <div className="max-w-md mx-auto grid grid-cols-5 gap-1 items-center pb-2">
+          
+          {/* 1. Explore Button */}
+          <button
+            type="button"
+            onClick={() => { playFartSound('random'); setActiveTab('home'); }}
+            className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-all cursor-pointer ${
+              activeTab === 'home'
+                ? 'text-lime-400 font-black scale-105'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Compass className={`w-5 h-5 ${activeTab === 'home' ? 'text-lime-400 animate-pulse' : ''}`} />
+            <span className="text-[10px] font-mono tracking-tight mt-0.5">Explore</span>
+          </button>
+
+          {/* 2. Creator Directory Button */}
+          <button
+            type="button"
+            onClick={() => { playFartSound('random'); setActiveTab('lookup'); }}
+            className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-all cursor-pointer ${
+              activeTab === 'lookup'
+                ? 'text-lime-400 font-black scale-105'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Search className={`w-5 h-5 ${activeTab === 'lookup' ? 'text-lime-400 animate-pulse' : ''}`} />
+            <span className="text-[10px] font-mono tracking-tight mt-0.5 font-bold">Directory</span>
+          </button>
+
+          {/* 3. Center Glowing LAUNCH Button (Exactly in the middle) */}
+          <div className="flex justify-center -mt-5">
+            <button
+              type="button"
+              onClick={() => { playFartSound('rip'); setActiveTab('launch'); }}
+              className="w-12 h-12 rounded-2xl bg-gradient-to-br from-lime-400 via-emerald-400 to-cyan-400 text-slate-950 flex items-center justify-center shadow-lg shadow-lime-500/30 border-2 border-black hover:scale-110 active:scale-95 transition-all cursor-pointer"
+              title="Launch Meme Token"
+            >
+              <Rocket className="w-6 h-6 text-slate-950 fill-slate-950" />
+            </button>
+          </div>
+
+          {/* 4. Royalties Flow */}
+          <button
+            type="button"
+            onClick={() => { playFartSound('random'); setActiveTab('fees'); }}
+            className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-all cursor-pointer ${
+              activeTab === 'fees'
+                ? 'text-lime-400 font-black scale-105'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Coins className={`w-5 h-5 ${activeTab === 'fees' ? 'text-lime-400' : ''}`} />
+            <span className="text-[10px] font-mono tracking-tight mt-0.5">Royalties</span>
+          </button>
+
+          {/* 5. Payouts */}
+          <button
+            type="button"
+            onClick={() => { playFartSound('random'); setActiveTab('payouts'); }}
+            className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-all cursor-pointer ${
+              activeTab === 'payouts'
+                ? 'text-lime-400 font-black scale-105'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <span className="text-base font-extrabold leading-none">𝕏</span>
+            <span className="text-[10px] font-mono tracking-tight mt-0.5">Payouts</span>
+          </button>
+
+        </div>
+      </div>
     </>
   );
 };

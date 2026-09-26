@@ -10,7 +10,6 @@ import { WalletConnectModal } from './components/WalletConnectModal';
 import { TransparencyProofModal } from './components/TransparencyProofModal';
 import { FloatingCoinsBackground } from './components/FloatingCoinsBackground';
 import { UsePaidFrontPage } from './components/UsePaidFrontPage';
-import { FartSoundboardWidget } from './components/FartSoundboardWidget';
 import { 
   INITIAL_TOKENS, 
   INITIAL_FEES, 
@@ -802,9 +801,6 @@ export default function App() {
           </div>
         </div>
       </footer>
-
-      {/* Interactive Fart Soundboard Widget */}
-      <FartSoundboardWidget />
     </div>
   );
 }
