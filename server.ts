@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
@@ -9,11 +10,229 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '15mb' }));
 
 const X_BEARER = process.env.X_BEARER_TOKEN || 'AAAAAAAAAAAAAAAAAAAAAG9q%2FgEAAAAABeKYerp06PhfNQml4Abi7SFWDJM%3DLk9eYya1Xo4YtH7ki6U9UPIdoFA7PZOtJra0FhqfimZkdNSrar';
 const KRAKEN_API_KEY = process.env.KRAKEN_API_KEY || 'krk_live_instit_99218d8a7c1b';
 const KRAKEN_API_SECRET = process.env.KRAKEN_API_SECRET || '';
+
+// --- Persistent Global Data Storage ---
+const DATA_DIR = path.join(process.cwd(), 'data');
+if (!fs.existsSync(DATA_DIR)) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  } catch (e) {}
+}
+
+const TOKENS_FILE = path.join(DATA_DIR, 'tokens.json');
+const FEES_FILE = path.join(DATA_DIR, 'fees.json');
+const PAYOUTS_FILE = path.join(DATA_DIR, 'payouts.json');
+
+const DEFAULT_GLOBAL_TOKENS = [
+  {
+    id: 'tok-user-pepe-solana-9s4',
+    name: 'Pepe Solana',
+    symbol: 'PEPE4X',
+    description: 'Fair launch on Pump.fun routing trading fees to Matt Furie via 𝕏 Money [Treasury Auto-Connected] Creator trading fees automatically routed to @matt_furie via Protocol Treasury: ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
+    logoUrl: '/assets/pepe-thinking.svg',
+    platform: 'pumpfun',
+    network: 'solana',
+    beneficiaryXHandle: '@matt_furie',
+    beneficiaryName: 'Matt Furie',
+    beneficiaryAvatar: '/assets/pepe-thinking.svg',
+    initialBuyAmount: 0.05,
+    feeSplitPct: 95,
+    mintAddress: '9S4SnEJyztPy5P5dwXRYxbKzvosHU6mpXFCjsDmcHPXn',
+    pairAddress: '9JinBo4o7KJ3hnLccn9stWxEwNiiq795x25T8EcvwnaT',
+    beneficiaryAccount: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
+    creatorFeeRecipient: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
+    marketCapUsd: 4890.12,
+    volume24hUsd: 89.20,
+    bondingCurveProgress: 0.7,
+    createdAt: new Date().toISOString(),
+    creatorWallet: '8LM7AehSNEmBhxCjKFL1BceUQjYGLEHriXKjtBZEeAk',
+    status: 'active',
+    twitterLink: 'https://x.com/matt_furie',
+    metadataUri: 'https://gateway.pinata.cloud/ipfs/QmTE3YjtYkj5wBEecZc31wViM4rZfS9QETxMqN3S3Sr4K8',
+    ipfsImageUrl: '/assets/pepe-thinking.svg'
+  },
+  {
+    id: 'tok-user-spacex-mars-79k',
+    name: 'SpaceX Martian',
+    symbol: 'MARS',
+    description: 'The official Mars settlement meme coin on Pump.fun with auto 𝕏 Money royalty routing [Treasury Auto-Connected] Creator trading fees automatically routed to @elonmusk via Protocol Treasury: ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
+    logoUrl: '/assets/elon-crypto.svg',
+    platform: 'pumpfun',
+    network: 'solana',
+    beneficiaryXHandle: '@elonmusk',
+    beneficiaryName: 'Elon Musk',
+    beneficiaryAvatar: '/assets/elon-crypto.svg',
+    initialBuyAmount: 0.1,
+    feeSplitPct: 95,
+    mintAddress: '79KZuAWcKWfbxmVAwpkigZc6qBVRfrvNaaEeeUwE74vF',
+    pairAddress: 'FtwaHYHmQkwxZjfB59Gtpr7mibZNjUqwE6tb1Vb5isCj',
+    beneficiaryAccount: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
+    creatorFeeRecipient: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
+    marketCapUsd: 3237.73,
+    volume24hUsd: 142.50,
+    bondingCurveProgress: 4.2,
+    createdAt: new Date().toISOString(),
+    creatorWallet: '7hTGvweCCagv64AFbFda1KVaYyLEqqqqP839aGyqpyK6',
+    status: 'active',
+    twitterLink: 'https://x.com/elonmusk',
+    metadataUri: 'https://gateway.pinata.cloud/ipfs/QmRi9SXWF42uDnmuAMZ5AnVwKgRTfFZ4ShWBDzGQE2LhuH',
+    ipfsImageUrl: '/assets/elon-crypto.svg'
+  },
+  {
+    id: 'tok-user-cyberdog',
+    name: 'CyberDog',
+    symbol: 'CYBERDOG',
+    description: 'Autonomous cybernetic token launched on Pump.fun (Solana). 95% creator trading fees routed directly to @cyberdog via X Money Treasury.',
+    logoUrl: '/assets/pixel-cat.svg',
+    platform: 'pumpfun',
+    network: 'solana',
+    beneficiaryXHandle: '@cyberdog',
+    beneficiaryName: 'CyberDog Community',
+    beneficiaryAvatar: '/assets/pixel-cat.svg',
+    initialBuyAmount: 0.1,
+    feeSplitPct: 95,
+    mintAddress: 'EE3LZQAWuqBid2dWqeVDFSjS3iHkRwywBbooYMhFWtLx',
+    pairAddress: 'TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM',
+    beneficiaryAccount: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
+    creatorFeeRecipient: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
+    marketCapUsd: 5066.23,
+    volume24hUsd: 18.00,
+    bondingCurveProgress: 0.2,
+    createdAt: new Date().toISOString(),
+    creatorWallet: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
+    status: 'active',
+    twitterLink: 'https://x.com/cyberdog',
+    metadataUri: 'https://gateway.pinata.cloud/ipfs/QmUBNGVFkaCPAgnmDNfGaRpMgLkB876vKt1sh3ojzcgwub',
+  }
+];
+
+function readGlobalTokens(): any[] {
+  try {
+    if (fs.existsSync(TOKENS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(TOKENS_FILE, 'utf-8'));
+      if (Array.isArray(data) && data.length > 0) return data;
+    }
+  } catch (e) {}
+  return DEFAULT_GLOBAL_TOKENS;
+}
+
+function writeGlobalTokens(tokens: any[]) {
+  try {
+    fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokens, null, 2), 'utf-8');
+  } catch (e) {}
+}
+
+function readGlobalFees(): any[] {
+  try {
+    if (fs.existsSync(FEES_FILE)) {
+      const data = JSON.parse(fs.readFileSync(FEES_FILE, 'utf-8'));
+      if (Array.isArray(data)) return data;
+    }
+  } catch (e) {}
+  return [];
+}
+
+function writeGlobalFees(fees: any[]) {
+  try {
+    fs.writeFileSync(FEES_FILE, JSON.stringify(fees, null, 2), 'utf-8');
+  } catch (e) {}
+}
+
+function readGlobalPayouts(): any[] {
+  try {
+    if (fs.existsSync(PAYOUTS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(PAYOUTS_FILE, 'utf-8'));
+      if (Array.isArray(data)) return data;
+    }
+  } catch (e) {}
+  return [];
+}
+
+function writeGlobalPayouts(payouts: any[]) {
+  try {
+    fs.writeFileSync(PAYOUTS_FILE, JSON.stringify(payouts, null, 2), 'utf-8');
+  } catch (e) {}
+}
+
+// Global Shared Tokens API Endpoints
+app.get('/api/tokens', (req, res) => {
+  const tokens = readGlobalTokens();
+  res.json({ success: true, tokens, count: tokens.length });
+});
+
+app.post('/api/tokens', (req, res) => {
+  const newToken = req.body;
+  if (!newToken || (!newToken.id && !newToken.mintAddress)) {
+    return res.status(400).json({ error: 'Valid token data required' });
+  }
+
+  const existingTokens = readGlobalTokens();
+  // Check if token already exists (by id or mintAddress)
+  const existsIndex = existingTokens.findIndex(
+    t => (newToken.id && t.id === newToken.id) || (newToken.mintAddress && t.mintAddress === newToken.mintAddress)
+  );
+
+  if (existsIndex >= 0) {
+    existingTokens[existsIndex] = { ...existingTokens[existsIndex], ...newToken };
+  } else {
+    existingTokens.unshift({
+      ...newToken,
+      id: newToken.id || `tok-user-${Date.now()}`,
+      createdAt: newToken.createdAt || new Date().toISOString(),
+    });
+  }
+
+  writeGlobalTokens(existingTokens);
+  res.json({ success: true, token: newToken, tokens: existingTokens });
+});
+
+// Global Shared Fee Stream API Endpoints
+app.get('/api/fees', (req, res) => {
+  const fees = readGlobalFees();
+  res.json({ success: true, fees, count: fees.length });
+});
+
+app.post('/api/fees', (req, res) => {
+  const newFee = req.body;
+  if (!newFee) return res.status(400).json({ error: 'Fee data required' });
+  
+  const existingFees = readGlobalFees();
+  existingFees.unshift({
+    ...newFee,
+    id: newFee.id || `fee-${Date.now()}`,
+    timestamp: newFee.timestamp || new Date().toISOString(),
+  });
+  // Keep last 100 fees
+  const trimmed = existingFees.slice(0, 100);
+  writeGlobalFees(trimmed);
+  res.json({ success: true, fees: trimmed });
+});
+
+// Global Shared Payouts API Endpoints
+app.get('/api/payouts', (req, res) => {
+  const payouts = readGlobalPayouts();
+  res.json({ success: true, payouts, count: payouts.length });
+});
+
+app.post('/api/payouts', (req, res) => {
+  const newPayout = req.body;
+  if (!newPayout) return res.status(400).json({ error: 'Payout data required' });
+  
+  const existingPayouts = readGlobalPayouts();
+  existingPayouts.unshift({
+    ...newPayout,
+    id: newPayout.id || `pay-${Date.now()}`,
+    timestamp: newPayout.timestamp || new Date().toISOString(),
+  });
+  const trimmed = existingPayouts.slice(0, 100);
+  writeGlobalPayouts(trimmed);
+  res.json({ success: true, payouts: trimmed });
+});
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

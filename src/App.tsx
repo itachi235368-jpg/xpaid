@@ -69,6 +69,97 @@ export default function App() {
     return INITIAL_TOKENS;
   });
 
+  // 1. Live Global Synchronization with Server (all visitors see coins launched by anyone)
+  useEffect(() => {
+    let isCancelled = false;
+
+    const fetchGlobalTokens = async () => {
+      try {
+        const res = await fetch('/api/tokens');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.tokens) && data.tokens.length > 0) {
+            if (isCancelled) return;
+            setTokens(prev => {
+              const map = new Map<string, TokenLaunchData>();
+              // Add server tokens
+              data.tokens.forEach((t: TokenLaunchData) => {
+                const key = t.mintAddress || t.id;
+                map.set(key, t);
+              });
+              // Retain any local tokens not yet synced
+              prev.forEach(t => {
+                const key = t.mintAddress || t.id;
+                if (!map.has(key)) {
+                  map.set(key, t);
+                }
+              });
+              return Array.from(map.values());
+            });
+          }
+        }
+      } catch (err) {}
+    };
+
+    fetchGlobalTokens();
+    const interval = setInterval(fetchGlobalTokens, 3500);
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
+  // 2. Live Global Fees & Payouts Synchronization
+  useEffect(() => {
+    let isCancelled = false;
+
+    const fetchGlobalStreams = async () => {
+      try {
+        const [feesRes, payoutsRes] = await Promise.all([
+          fetch('/api/fees'),
+          fetch('/api/payouts')
+        ]);
+        if (feesRes.ok) {
+          const fData = await feesRes.json();
+          if (fData.success && Array.isArray(fData.fees) && fData.fees.length > 0) {
+            if (!isCancelled) {
+              setFees(prev => {
+                const map = new Map<string, FeeCollectionRecord>();
+                fData.fees.forEach((f: FeeCollectionRecord) => map.set(f.id, f));
+                prev.forEach(f => {
+                  if (!map.has(f.id)) map.set(f.id, f);
+                });
+                return Array.from(map.values()).slice(0, 100);
+              });
+            }
+          }
+        }
+        if (payoutsRes.ok) {
+          const pData = await payoutsRes.json();
+          if (pData.success && Array.isArray(pData.payouts) && pData.payouts.length > 0) {
+            if (!isCancelled) {
+              setPayouts(prev => {
+                const map = new Map<string, XMoneyPayout>();
+                pData.payouts.forEach((p: XMoneyPayout) => map.set(p.id, p));
+                prev.forEach(p => {
+                  if (!map.has(p.id)) map.set(p.id, p);
+                });
+                return Array.from(map.values()).slice(0, 100);
+              });
+            }
+          }
+        }
+      } catch (err) {}
+    };
+
+    fetchGlobalStreams();
+    const interval = setInterval(fetchGlobalStreams, 4000);
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
   // Synchronize live market caps for all registered tokens using DexScreener & Bonding Curve mathematics
   useEffect(() => {
     let isCancelled = false;
@@ -242,6 +333,13 @@ export default function App() {
       return [connectedToken, ...prev];
     });
 
+    // Broadcast token globally to all visitors via Server API
+    fetch('/api/tokens', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(connectedToken)
+    }).catch(() => {});
+
     // Create a live Treasury monitoring record for this token on Pump.fun
     const initialTreasuryListenerRecord: FeeCollectionRecord = {
       id: `fee-stream-${Date.now()}`,
@@ -262,6 +360,14 @@ export default function App() {
     };
 
     setFees(prev => [initialTreasuryListenerRecord, ...prev]);
+
+    // Broadcast fee listener globally to all visitors
+    fetch('/api/fees', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(initialTreasuryListenerRecord)
+    }).catch(() => {});
+
     showToast(`Token $${connectedToken.symbol} launched! Protocol Treasury (${treasuryConfig.solanaTreasuryAddress.slice(0, 4)}...${treasuryConfig.solanaTreasuryAddress.slice(-4)}) automatically connected.`);
   };
 
@@ -372,6 +478,11 @@ export default function App() {
       };
 
       setFees(prev => [newFeeRecord, ...prev]);
+      fetch('/api/fees', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newFeeRecord),
+      }).catch(() => {});
     }, intervalSeconds * 1000);
 
     return () => clearInterval(interval);
@@ -394,7 +505,7 @@ export default function App() {
             const profile = getXUserProfile(f.beneficiaryXHandle);
             const pId = `xpay-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
             const isKraken = treasuryConfig.fiatOffRampProvider !== 'jupiter_usdc';
-            newPayoutsList.push({
+            const payoutObj: XMoneyPayout = {
               id: pId,
               recipientHandle: f.beneficiaryXHandle,
               recipientName: profile.name,
@@ -413,7 +524,13 @@ export default function App() {
               krakenOrderId: isKraken ? `KRK-${Math.floor(1000000 + Math.random() * 9000000)}` : undefined,
               krakenWithdrawalRef: isKraken ? `W-${Math.floor(10000000 + Math.random() * 90000000)}` : undefined,
               fiatConversionRate: currentLivePrice,
-            });
+            };
+            newPayoutsList.push(payoutObj);
+            fetch('/api/payouts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payoutObj),
+            }).catch(() => {});
             return { ...f, status: 'disbursed_x_money' as const, xMoneyPayoutId: pId };
           }
           return f;
