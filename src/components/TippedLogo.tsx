@@ -29,11 +29,11 @@ export const TippedLogo: React.FC<TippedLogoProps> = ({
             <defs>
               {/* Cyan / Teal Ambient Glow Background matching uploaded logo */}
               <radialGradient id="tippedBgGradient" cx="82%" cy="86%" r="95%">
-                <stop offset="0%" stop-color="#05c2d6" />
-                <stop offset="30%" stop-color="#028d9f" />
-                <stop offset="60%" stop-color="#103e48" />
-                <stop offset="85%" stop-color="#16272e" />
-                <stop offset="100%" stop-color="#121b20" />
+                <stop offset="0%" stopColor="#05c2d6" />
+                <stop offset="30%" stopColor="#028d9f" />
+                <stop offset="60%" stopColor="#103e48" />
+                <stop offset="85%" stopColor="#16272e" />
+                <stop offset="100%" stopColor="#121b20" />
               </radialGradient>
             </defs>
           )}

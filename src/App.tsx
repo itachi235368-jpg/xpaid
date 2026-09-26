@@ -550,13 +550,13 @@ export default function App() {
   const totalDisbursedUsd = payouts.reduce((acc, curr) => acc + curr.amountUsd, 0);
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark bg-zinc-950 text-zinc-100' : 'bg-zinc-100/70 text-zinc-900'} flex flex-col font-sans transition-colors relative overflow-x-hidden`}>
+    <div className={`min-h-screen ${isDarkMode ? 'dark bg-zinc-950 text-zinc-100' : 'bg-zinc-50 text-zinc-900'} flex flex-col font-sans transition-colors relative overflow-x-hidden`}>
       {/* Floating Animated Coins Layer like usepaid.app */}
       <FloatingCoinsBackground interactive={true} />
 
       {/* Toast Notification - mobile elevated above bottom nav */}
       {toastMessage && (
-        <div className="fixed bottom-20 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-50 bg-zinc-900 dark:bg-zinc-800 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center justify-center sm:justify-start gap-3 border border-zinc-700 dark:border-zinc-600 animate-fade-in text-xs sm:text-sm max-w-sm sm:max-w-md mx-auto sm:mx-0">
+        <div className="fixed bottom-24 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-50 bg-zinc-900 dark:bg-zinc-800 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center justify-center sm:justify-start gap-3 border border-zinc-700 dark:border-zinc-600 animate-fade-in text-xs sm:text-sm max-w-sm sm:max-w-md mx-auto sm:mx-0">
           <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
           <span className="font-medium text-center sm:text-left">{toastMessage}</span>
         </div>
@@ -580,7 +580,7 @@ export default function App() {
       />
 
       {/* Main Content Area - padded for bottom mobile bar */}
-      <main className="flex-1 pb-24 sm:pb-16">
+      <main className="flex-1 pb-28 sm:pb-16">
         {activeTab === 'home' && (
           <UsePaidFrontPage
             tokens={tokens}
@@ -695,7 +695,7 @@ export default function App() {
       />
 
       {/* Footer */}
-      <footer className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-6 px-4 text-center text-xs text-zinc-500 dark:text-zinc-400 mb-16 sm:mb-0 transition-colors">
+      <footer className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-6 px-4 text-center text-xs text-zinc-500 dark:text-zinc-400 mb-20 sm:mb-0 transition-colors">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="font-bold text-zinc-800 dark:text-zinc-200">TIPPED Protocol</span>

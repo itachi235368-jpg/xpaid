@@ -512,7 +512,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
               <span className="text-[11px] text-zinc-400">Multi-Chain Routing</span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {/* Pump.fun (Solana) - Live */}
               <button
                 type="button"
@@ -636,9 +636,6 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                 <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                   1. Beneficiary 𝕏 User (Recipient)
                 </label>
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                  We Pay The 𝕏 User • Not The Creator
-                </span>
               </div>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
                 Enter the 𝕏 handle (@username) of the person who will receive 95% of all trading royalties directly in 𝕏 Money. The token launcher does not receive the fees — the targeted 𝕏 user gets paid directly.
@@ -653,7 +650,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                   value={beneficiaryHandle.replace(/^@/, '')}
                   onChange={(e) => handleHandleChange(e.target.value)}
                   placeholder="elonmusk, matt_furie, vitalikbuterin..."
-                  className="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-semibold text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-all"
+                  className="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-base sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-all"
                   required
                 />
               </div>
