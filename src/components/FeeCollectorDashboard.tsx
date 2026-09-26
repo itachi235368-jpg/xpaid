@@ -70,9 +70,7 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
     });
     return () => unsub();
   }, []);
-  const defaultMint = tokens.find(t => t.mintAddress === '9S4SnEJyztPy5P5dwXRYxbKzvosHU6mpXFCjsDmcHPXn')?.mintAddress
-    || tokens[0]?.mintAddress
-    || '9S4SnEJyztPy5P5dwXRYxbKzvosHU6mpXFCjsDmcHPXn';
+  const defaultMint = tokens[0]?.mintAddress || tokens[0]?.id || '';
   const [selectedTokenMint, setSelectedTokenMint] = useState<string>(defaultMint);
   const [customMintInput, setCustomMintInput] = useState<string>('');
   const [isSharingConfigActive, setIsSharingConfigActive] = useState<boolean | null>(null);
@@ -89,12 +87,18 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
     feeSharingSuccessTx?: string;
     feeSharingError?: string;
   }>({
-    treasuryBalance: 0.010928,
-    creatorBalance: 0.022391,
+    treasuryBalance: 0,
+    creatorBalance: 0,
     isLoading: false,
     isClaiming: false,
     isBindingFee: false,
   });
+
+  useEffect(() => {
+    if (!selectedTokenMint && tokens.length > 0) {
+      setSelectedTokenMint(tokens[0].mintAddress || tokens[0].id);
+    }
+  }, [tokens, selectedTokenMint]);
 
   const selectedToken = tokens.find(t => t.mintAddress === selectedTokenMint || t.id === selectedTokenMint);
 

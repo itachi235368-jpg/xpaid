@@ -56,20 +56,9 @@ export default function App() {
       unsub();
     };
   }, []);
-  const [tokens, setTokens] = useState<TokenLaunchData[]>(() => {
-    try {
-      localStorage.removeItem('xpaid_tokens_v2');
-      localStorage.removeItem('xpaid_tokens');
-      const saved = localStorage.getItem('xpaid_user_launched_tokens_v1');
-      if (saved) {
-        const parsed: TokenLaunchData[] = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch (e) {}
-    return INITIAL_TOKENS;
-  });
+  const [tokens, setTokens] = useState<TokenLaunchData[]>([]);
 
-  // 1. Live Global Synchronization with Server (all visitors see coins launched by anyone)
+  // 1. Live Global Synchronization with Server (all visitors see ONLY real coins launched on this site)
   useEffect(() => {
     let isCancelled = false;
 
@@ -78,24 +67,9 @@ export default function App() {
         const res = await fetch('/api/tokens');
         if (res.ok) {
           const data = await res.json();
-          if (data.success && Array.isArray(data.tokens) && data.tokens.length > 0) {
+          if (data.success && Array.isArray(data.tokens)) {
             if (isCancelled) return;
-            setTokens(prev => {
-              const map = new Map<string, TokenLaunchData>();
-              // Add server tokens
-              data.tokens.forEach((t: TokenLaunchData) => {
-                const key = t.mintAddress || t.id;
-                map.set(key, t);
-              });
-              // Retain any local tokens not yet synced
-              prev.forEach(t => {
-                const key = t.mintAddress || t.id;
-                if (!map.has(key)) {
-                  map.set(key, t);
-                }
-              });
-              return Array.from(map.values());
-            });
+            setTokens(data.tokens);
           }
         }
       } catch (err) {}
@@ -121,31 +95,17 @@ export default function App() {
         ]);
         if (feesRes.ok) {
           const fData = await feesRes.json();
-          if (fData.success && Array.isArray(fData.fees) && fData.fees.length > 0) {
+          if (fData.success && Array.isArray(fData.fees)) {
             if (!isCancelled) {
-              setFees(prev => {
-                const map = new Map<string, FeeCollectionRecord>();
-                fData.fees.forEach((f: FeeCollectionRecord) => map.set(f.id, f));
-                prev.forEach(f => {
-                  if (!map.has(f.id)) map.set(f.id, f);
-                });
-                return Array.from(map.values()).slice(0, 100);
-              });
+              setFees(fData.fees);
             }
           }
         }
         if (payoutsRes.ok) {
           const pData = await payoutsRes.json();
-          if (pData.success && Array.isArray(pData.payouts) && pData.payouts.length > 0) {
+          if (pData.success && Array.isArray(pData.payouts)) {
             if (!isCancelled) {
-              setPayouts(prev => {
-                const map = new Map<string, XMoneyPayout>();
-                pData.payouts.forEach((p: XMoneyPayout) => map.set(p.id, p));
-                prev.forEach(p => {
-                  if (!map.has(p.id)) map.set(p.id, p);
-                });
-                return Array.from(map.values()).slice(0, 100);
-              });
+              setPayouts(pData.payouts);
             }
           }
         }
@@ -208,25 +168,8 @@ export default function App() {
     };
   }, [solPrice, tokens.length]);
 
-  const [fees, setFees] = useState<FeeCollectionRecord[]>(() => {
-    try {
-      localStorage.removeItem('xpaid_fees_v2');
-      localStorage.removeItem('xpaid_fees');
-      const saved = localStorage.getItem('xpaid_fees_v3');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
-    return INITIAL_FEES;
-  });
-
-  const [payouts, setPayouts] = useState<XMoneyPayout[]>(() => {
-    try {
-      localStorage.removeItem('xpaid_payouts_v2');
-      localStorage.removeItem('xpaid_payouts');
-      const saved = localStorage.getItem('xpaid_payouts_v3');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
-    return INITIAL_PAYOUTS;
-  });
+  const [fees, setFees] = useState<FeeCollectionRecord[]>([]);
+  const [payouts, setPayouts] = useState<XMoneyPayout[]>([]);
 
   const [treasuryConfig, setTreasuryConfig] = useState<TreasuryConfig>(() => {
     try {
@@ -538,8 +481,6 @@ export default function App() {
 
         if (newPayoutsList.length > 0) {
           setPayouts(prev => [...newPayoutsList, ...prev]);
-          const totalDisbursedNow = newPayoutsList.reduce((acc, p) => acc + p.amountUsd, 0);
-          showToast(`⚡ Kraken ➔ 𝕏 Money: $${totalDisbursedNow.toFixed(2)} USD automatically converted and deposited to ${newPayoutsList.map(p => p.recipientHandle).join(', ')}!`);
         }
 
         return updatedFees;

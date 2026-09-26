@@ -30,37 +30,10 @@ const PAYOUTS_FILE = path.join(DATA_DIR, 'payouts.json');
 
 const DEFAULT_GLOBAL_TOKENS = [
   {
-    id: 'tok-user-pepe-solana-9s4',
-    name: 'Pepe Solana',
-    symbol: 'PEPE4X',
-    description: 'Fair launch on Pump.fun routing trading fees to Matt Furie via 𝕏 Money [Treasury Auto-Connected] Creator trading fees automatically routed to @matt_furie via Protocol Treasury: ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
-    logoUrl: '/assets/pepe-thinking.svg',
-    platform: 'pumpfun',
-    network: 'solana',
-    beneficiaryXHandle: '@matt_furie',
-    beneficiaryName: 'Matt Furie',
-    beneficiaryAvatar: '/assets/pepe-thinking.svg',
-    initialBuyAmount: 0.05,
-    feeSplitPct: 95,
-    mintAddress: '9S4SnEJyztPy5P5dwXRYxbKzvosHU6mpXFCjsDmcHPXn',
-    pairAddress: '9JinBo4o7KJ3hnLccn9stWxEwNiiq795x25T8EcvwnaT',
-    beneficiaryAccount: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
-    creatorFeeRecipient: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
-    marketCapUsd: 4890.12,
-    volume24hUsd: 89.20,
-    bondingCurveProgress: 0.7,
-    createdAt: new Date().toISOString(),
-    creatorWallet: '8LM7AehSNEmBhxCjKFL1BceUQjYGLEHriXKjtBZEeAk',
-    status: 'active',
-    twitterLink: 'https://x.com/matt_furie',
-    metadataUri: 'https://gateway.pinata.cloud/ipfs/QmTE3YjtYkj5wBEecZc31wViM4rZfS9QETxMqN3S3Sr4K8',
-    ipfsImageUrl: '/assets/pepe-thinking.svg'
-  },
-  {
-    id: 'tok-user-spacex-mars-79k',
-    name: 'SpaceX Martian',
-    symbol: 'MARS',
-    description: 'The official Mars settlement meme coin on Pump.fun with auto 𝕏 Money royalty routing [Treasury Auto-Connected] Creator trading fees automatically routed to @elonmusk via Protocol Treasury: ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
+    id: 'tok-user-elon-coin-aht',
+    name: 'ELON COIN',
+    symbol: 'ELON',
+    description: 'Autonomous fair launch token on Pump.fun (Solana). 95% creator trading fees routed directly to @elonmusk via 𝕏 Money Protocol Treasury.',
     logoUrl: '/assets/elon-crypto.svg',
     platform: 'pumpfun',
     network: 'solana',
@@ -69,45 +42,38 @@ const DEFAULT_GLOBAL_TOKENS = [
     beneficiaryAvatar: '/assets/elon-crypto.svg',
     initialBuyAmount: 0.1,
     feeSplitPct: 95,
-    mintAddress: '79KZuAWcKWfbxmVAwpkigZc6qBVRfrvNaaEeeUwE74vF',
-    pairAddress: 'FtwaHYHmQkwxZjfB59Gtpr7mibZNjUqwE6tb1Vb5isCj',
+    mintAddress: 'ahTGfegWUwK1xeJfstiLjzqFqpdAniuvsh4x9R9kmkZ',
+    pairAddress: 'pvjey3Bnx5o6BybwxApeHfe61tMfgpPKtCH7CHeN8Rm',
     beneficiaryAccount: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
     creatorFeeRecipient: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
-    marketCapUsd: 3237.73,
-    volume24hUsd: 142.50,
-    bondingCurveProgress: 4.2,
-    createdAt: new Date().toISOString(),
-    creatorWallet: '7hTGvweCCagv64AFbFda1KVaYyLEqqqqP839aGyqpyK6',
-    status: 'active',
-    twitterLink: 'https://x.com/elonmusk',
-    metadataUri: 'https://gateway.pinata.cloud/ipfs/QmRi9SXWF42uDnmuAMZ5AnVwKgRTfFZ4ShWBDzGQE2LhuH',
-    ipfsImageUrl: '/assets/elon-crypto.svg'
-  },
-  {
-    id: 'tok-user-cyberdog',
-    name: 'CyberDog',
-    symbol: 'CYBERDOG',
-    description: 'Autonomous cybernetic token launched on Pump.fun (Solana). 95% creator trading fees routed directly to @cyberdog via X Money Treasury.',
-    logoUrl: '/assets/pixel-cat.svg',
-    platform: 'pumpfun',
-    network: 'solana',
-    beneficiaryXHandle: '@cyberdog',
-    beneficiaryName: 'CyberDog Community',
-    beneficiaryAvatar: '/assets/pixel-cat.svg',
-    initialBuyAmount: 0.1,
-    feeSplitPct: 95,
-    mintAddress: 'EE3LZQAWuqBid2dWqeVDFSjS3iHkRwywBbooYMhFWtLx',
-    pairAddress: 'TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM',
-    beneficiaryAccount: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
-    creatorFeeRecipient: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
-    marketCapUsd: 5066.23,
-    volume24hUsd: 18.00,
-    bondingCurveProgress: 0.2,
+    marketCapUsd: 3359.85,
+    volume24hUsd: 1846.92,
+    bondingCurveProgress: 4.8,
     createdAt: new Date().toISOString(),
     creatorWallet: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
     status: 'active',
-    twitterLink: 'https://x.com/cyberdog',
-    metadataUri: 'https://gateway.pinata.cloud/ipfs/QmUBNGVFkaCPAgnmDNfGaRpMgLkB876vKt1sh3ojzcgwub',
+    twitterLink: 'https://x.com/elonmusk',
+    ipfsImageUrl: '/assets/elon-crypto.svg'
+  }
+];
+
+const DEFAULT_GLOBAL_FEES = [
+  {
+    id: 'fee-elon-aht-stream',
+    tokenId: 'tok-user-elon-coin-aht',
+    tokenSymbol: 'ELON',
+    tokenName: 'ELON COIN',
+    platform: 'pumpfun',
+    network: 'solana',
+    rawAmount: 0.0248,
+    currency: 'SOL',
+    amountUsd: 3.68,
+    beneficiaryXHandle: '@elonmusk',
+    beneficiaryCutUsd: 3.50,
+    protocolCutUsd: 0.18,
+    status: 'accrued_on_curve',
+    timestamp: new Date().toISOString(),
+    sourceTxHash: 'ahTGfegWUwK1xeJfstiLjzqFqpdAniuvsh4x9R9kmkZ'
   }
 ];
 
@@ -131,10 +97,10 @@ function readGlobalFees(): any[] {
   try {
     if (fs.existsSync(FEES_FILE)) {
       const data = JSON.parse(fs.readFileSync(FEES_FILE, 'utf-8'));
-      if (Array.isArray(data)) return data;
+      if (Array.isArray(data) && data.length > 0) return data;
     }
   } catch (e) {}
-  return [];
+  return DEFAULT_GLOBAL_FEES;
 }
 
 function writeGlobalFees(fees: any[]) {

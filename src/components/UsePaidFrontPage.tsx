@@ -62,34 +62,27 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
   const RATE_PER_HOUR = 100;
   const RATE_PER_SECOND = RATE_PER_HOUR / 3600;
 
-  const [recentEvents, setRecentEvents] = useState<LiveStreamEvent[]>([
-    { id: '1', tokenSymbol: 'PEPE4X', creatorHandle: 'matt_furie', amountUsd: 0.08, timeAgo: 'just now' },
-    { id: '2', tokenSymbol: 'MARS', creatorHandle: 'elonmusk', amountUsd: 0.12, timeAgo: '2s ago' },
-    { id: '3', tokenSymbol: 'BNBFAN', creatorHandle: 'cz_binance', amountUsd: 0.05, timeAgo: '5s ago' },
-    { id: '4', tokenSymbol: 'ORANGE', creatorHandle: 'saylor', amountUsd: 0.09, timeAgo: '9s ago' },
-  ]);
+  const [recentEvents, setRecentEvents] = useState<LiveStreamEvent[]>([]);
 
   useEffect(() => {
+    if (tokens.length === 0) {
+      setRecentEvents([]);
+      return;
+    }
+
     let tickCount = 0;
     const interval = setInterval(() => {
       tickCount++;
 
-      if (tickCount % 3 === 0) {
-        const sampleCreators = [
-          { handle: 'elonmusk', symbol: 'MARS' },
-          { handle: 'matt_furie', symbol: 'PEPE4X' },
-          { handle: 'cz_binance', symbol: 'BNBFAN' },
-          { handle: 'saylor', symbol: 'ORANGE' },
-          { handle: 'VitalikButerin', symbol: 'GAS' },
-        ];
-        const randomCreator = sampleCreators[Math.floor(Math.random() * sampleCreators.length)];
+      if (tickCount % 3 === 0 && tokens.length > 0) {
+        const randomToken = tokens[Math.floor(Math.random() * tokens.length)];
         const microFee = +(RATE_PER_SECOND * 3).toFixed(2);
 
         setRecentEvents(prev => [
           {
             id: Math.random().toString(),
-            tokenSymbol: randomCreator.symbol,
-            creatorHandle: randomCreator.handle,
+            tokenSymbol: randomToken.symbol,
+            creatorHandle: randomToken.beneficiaryXHandle.replace(/^@/, ''),
             amountUsd: microFee > 0 ? microFee : 0.08,
             timeAgo: 'just now',
           },
@@ -99,7 +92,7 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [RATE_PER_SECOND]);
+  }, [RATE_PER_SECOND, tokens]);
 
   const handleQuickLaunch = (e: React.FormEvent) => {
     e.preventDefault();
