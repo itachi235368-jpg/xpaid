@@ -28,12 +28,12 @@ export const INITIAL_TOKENS: TokenLaunchData[] = [
     name: 'Pepe Solana',
     symbol: 'PEPE4X',
     description: 'Fair launch on Pump.fun routing trading fees to Matt Furie via 𝕏 Money [Treasury Auto-Connected] Creator trading fees automatically routed to @matt_furie via Protocol Treasury: ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
-    logoUrl: 'https://gateway.pinata.cloud/ipfs/QmRZzpB9Dawb6QrJBJKW1NqtrYo25eAaEf6nY2Q3aZdRZ4',
+    logoUrl: '/assets/pepe-thinking.svg',
     platform: 'pumpfun',
     network: 'solana',
     beneficiaryXHandle: '@matt_furie',
     beneficiaryName: 'Matt Furie',
-    beneficiaryAvatar: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=100&auto=format&fit=crop&q=80',
+    beneficiaryAvatar: '/assets/pepe-thinking.svg',
     initialBuyAmount: 0.05,
     feeSplitPct: 95,
     mintAddress: '9S4SnEJyztPy5P5dwXRYxbKzvosHU6mpXFCjsDmcHPXn',
@@ -48,19 +48,19 @@ export const INITIAL_TOKENS: TokenLaunchData[] = [
     status: 'active',
     twitterLink: 'https://x.com/matt_furie',
     metadataUri: 'https://gateway.pinata.cloud/ipfs/QmTE3YjtYkj5wBEecZc31wViM4rZfS9QETxMqN3S3Sr4K8',
-    ipfsImageUrl: 'https://gateway.pinata.cloud/ipfs/QmRZzpB9Dawb6QrJBJKW1NqtrYo25eAaEf6nY2Q3aZdRZ4'
+    ipfsImageUrl: '/assets/pepe-thinking.svg'
   },
   {
     id: 'tok-user-spacex-mars-79k',
     name: 'SpaceX Martian',
     symbol: 'MARS',
     description: 'The official Mars settlement meme coin on Pump.fun with auto 𝕏 Money royalty routing [Treasury Auto-Connected] Creator trading fees automatically routed to @elonmusk via Protocol Treasury: ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
-    logoUrl: 'https://gateway.pinata.cloud/ipfs/QmRZzpB9Dawb6QrJBJKW1NqtrYo25eAaEf6nY2Q3aZdRZ4',
+    logoUrl: '/assets/elon-crypto.svg',
     platform: 'pumpfun',
     network: 'solana',
     beneficiaryXHandle: '@elonmusk',
     beneficiaryName: 'Elon Musk',
-    beneficiaryAvatar: 'https://pbs.twimg.com/profile_images/1838634862464733184/pXj9iWd0_400x400.jpg',
+    beneficiaryAvatar: '/assets/elon-crypto.svg',
     initialBuyAmount: 0.1,
     feeSplitPct: 95,
     mintAddress: '79KZuAWcKWfbxmVAwpkigZc6qBVRfrvNaaEeeUwE74vF',
@@ -75,19 +75,19 @@ export const INITIAL_TOKENS: TokenLaunchData[] = [
     status: 'active',
     twitterLink: 'https://x.com/elonmusk',
     metadataUri: 'https://gateway.pinata.cloud/ipfs/QmRi9SXWF42uDnmuAMZ5AnVwKgRTfFZ4ShWBDzGQE2LhuH',
-    ipfsImageUrl: 'https://gateway.pinata.cloud/ipfs/QmRZzpB9Dawb6QrJBJKW1NqtrYo25eAaEf6nY2Q3aZdRZ4'
+    ipfsImageUrl: '/assets/elon-crypto.svg'
   },
   {
     id: 'tok-user-cyberdog',
     name: 'CyberDog',
     symbol: 'CYBERDOG',
     description: 'Autonomous cybernetic token launched on Pump.fun (Solana). 95% creator trading fees routed directly to @cyberdog via X Money Treasury.',
-    logoUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&auto=format&fit=crop&q=80',
+    logoUrl: '/assets/pixel-cat.svg',
     platform: 'pumpfun',
     network: 'solana',
     beneficiaryXHandle: '@cyberdog',
     beneficiaryName: 'CyberDog Community',
-    beneficiaryAvatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80',
+    beneficiaryAvatar: '/assets/pixel-cat.svg',
     initialBuyAmount: 0.1,
     feeSplitPct: 95,
     mintAddress: 'EE3LZQAWuqBid2dWqeVDFSjS3iHkRwywBbooYMhFWtLx',
@@ -153,12 +153,12 @@ export const INITIAL_FEES: FeeCollectionRecord[] = [
 export const INITIAL_PAYOUTS: XMoneyPayout[] = [];
 
 export const PRESET_MEME_LOGOS = [
+  { name: 'Pepe Thinking', url: '/assets/pepe-thinking.svg' },
+  { name: 'Elon 420 Matrix', url: '/assets/elon-crypto.svg' },
+  { name: 'Pixel Cat', url: '/assets/pixel-cat.svg' },
   { name: 'Cyber Doge', url: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=150&auto=format&fit=crop&q=80' },
   { name: 'Golden Bull', url: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=150&auto=format&fit=crop&q=80' },
-  { name: 'Retro Pepe', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80' },
   { name: 'AI Spark', url: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=150&auto=format&fit=crop&q=80' },
-  { name: 'Rocket Cat', url: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=150&auto=format&fit=crop&q=80' },
-  { name: 'Neon Diamond', url: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=150&auto=format&fit=crop&q=80' },
 ];
 
 export const X_MONEY_REGULATORY_DATA = {

@@ -808,9 +808,9 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
               </div>
 
               {/* Preset Memes row */}
-              <div className="flex items-center gap-2 pt-1">
-                <span className="text-[11px] text-zinc-400">Presets:</span>
-                {PRESET_MEME_LOGOS.slice(0, 4).map(p => (
+              <div className="flex items-center gap-2 pt-1 flex-wrap">
+                <span className="text-[11px] text-zinc-500 font-medium">Default Presets:</span>
+                {PRESET_MEME_LOGOS.map(p => (
                   <button
                     key={p.name}
                     type="button"
@@ -819,10 +819,15 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                       setCustomImageFile(null);
                       setCustomFileName(null);
                     }}
-                    className="w-7 h-7 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 hover:scale-110 transition-transform cursor-pointer"
+                    className={`h-7 px-2 rounded-lg overflow-hidden border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
+                      logoUrl === p.url 
+                        ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/30' 
+                        : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400'
+                    }`}
                     title={p.name}
                   >
-                    <img src={p.url} alt={p.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <img src={p.url} alt={p.name} className="w-4 h-4 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />
+                    <span>{p.name}</span>
                   </button>
                 ))}
               </div>

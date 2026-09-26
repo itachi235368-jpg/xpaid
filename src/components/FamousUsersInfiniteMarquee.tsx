@@ -19,7 +19,7 @@ const FAMOUS_X_USERS_ROW_1: FamousXUser[] = [
   {
     handle: 'elonmusk',
     name: 'Elon Musk',
-    avatar: 'https://pbs.twimg.com/profile_images/1838634862464733184/pXj9iWd0_400x400.jpg',
+    avatar: '/assets/elon-crypto.svg',
     category: 'Tech & Vision',
     followers: '215M',
     verified: true,
@@ -27,7 +27,7 @@ const FAMOUS_X_USERS_ROW_1: FamousXUser[] = [
   {
     handle: 'matt_furie',
     name: 'Matt Furie',
-    avatar: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=120&auto=format&fit=crop&q=80',
+    avatar: '/assets/pepe-thinking.svg',
     category: 'Pepe Creator',
     followers: '145K',
     verified: true,
