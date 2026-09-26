@@ -186,7 +186,17 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('xpaid_theme');
-    return saved ? saved === 'dark' : true;
+    if (saved !== null) {
+      return saved === 'dark';
+    }
+    // On mobile devices, light mode is the default
+    if (typeof window !== 'undefined') {
+      const isMobile = window.innerWidth < 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+      if (isMobile) {
+        return false;
+      }
+    }
+    return false;
   });
 
   useEffect(() => {
