@@ -263,19 +263,20 @@ export const Header: React.FC<HeaderProps> = ({
             </nav>
 
             {/* Header Right Action Suite */}
-            <div className="flex items-center gap-1.5 sm:gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               
-              {/* Live Gas Pressure Interactive Pill */}
-              <button
-                type="button"
-                onClick={() => playFartSound('random')}
-                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-xl bg-lime-500/10 hover:bg-lime-500/20 border border-lime-500/30 text-lime-600 dark:text-lime-400 text-[10px] sm:text-xs font-mono font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs"
-                title="Click to release test gas puff!"
-              >
-                <Wind className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-lime-400 animate-pulse" />
-                <span className="hidden xs:inline">GAS:</span>
-                <span>99.8%</span>
-              </button>
+              {/* Theme Toggle */}
+              {onToggleTheme && (
+                <button
+                  type="button"
+                  onClick={onToggleTheme}
+                  className="p-1.5 sm:p-2.5 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded-xl transition-colors cursor-pointer"
+                  title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  aria-label="Toggle Theme"
+                >
+                  {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
+                </button>
+              )}
 
               {/* Wallet Connect Button */}
               <button
@@ -290,19 +291,6 @@ export const Header: React.FC<HeaderProps> = ({
                 <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>{connectedWallet ? truncate(connectedWallet) : 'Connect'}</span>
               </button>
-
-              {/* Theme Toggle */}
-              {onToggleTheme && (
-                <button
-                  type="button"
-                  onClick={onToggleTheme}
-                  className="p-2 sm:p-2.5 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded-xl transition-colors cursor-pointer"
-                  title={isDarkMode ? 'Light mode' : 'Dark mode'}
-                  aria-label="Toggle Theme"
-                >
-                  {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
-                </button>
-              )}
 
               {/* Mobile More Options Button */}
               <button
@@ -408,8 +396,21 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Mobile Dropdown Sheet for extra items like Docs / Streamers */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#060a12]/95 backdrop-blur-2xl p-4 space-y-2 animate-fade-in shadow-2xl">
-            <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider px-2 pb-1">Quick Navigation</div>
+          <div className="lg:hidden border-t border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#060a12]/95 backdrop-blur-2xl p-4 space-y-3 animate-fade-in shadow-2xl">
+            {/* Quick Theme Selection Row */}
+            {onToggleTheme && (
+              <div className="p-1.5 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-white/10">
+                <button
+                  onClick={() => { onToggleTheme(); }}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs border border-slate-200 dark:border-slate-700 cursor-pointer"
+                >
+                  {isDarkMode ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-slate-700" />}
+                  <span>Toggle Theme: {isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
+                </button>
+              </div>
+            )}
+
+            <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider px-2 pb-1">Navigation</div>
             
             <button
               onClick={() => { setActiveTab('home'); setIsMobileMenuOpen(false); }}

@@ -234,6 +234,7 @@ export default function App() {
   const [connectedWallet, setConnectedWallet] = useState<string | null>(null);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('xpaid_theme');
     if (saved !== null) {
@@ -248,6 +249,12 @@ export default function App() {
     }
     return false;
   });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('fartpay_app_mode', appMode);
+    } catch (e) {}
+  }, [appMode]);
 
   useEffect(() => {
     if (isDarkMode) {

@@ -5,9 +5,10 @@
 
 class FartAudioEngine {
   private ctx: AudioContext | null = null;
+  public isMuted: boolean = false;
 
   private getContext(): AudioContext | null {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === 'undefined' || this.isMuted) return null;
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (AudioCtx) {
