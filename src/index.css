@@ -4,7 +4,7 @@
 
 :root {
   color-scheme: light dark;
-  font-family: 'Inter', 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Outfit', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -14,25 +14,184 @@ html.dark {
 }
 
 body {
-  font-family: 'Inter', 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  letter-spacing: -0.01em;
-  background-color: #fafafa;
-  color: #18181b;
+  font-family: 'Outfit', 'Plus Jakarta Sans', 'Inter', sans-serif;
+  letter-spacing: -0.015em;
+  background-color: #f1f5f9;
+  color: #090d16;
+  min-height: 100vh;
 }
 
 html.dark body {
-  background-color: #09090b;
-  color: #f4f4f5;
+  background-color: #03060c;
+  color: #f8fafc;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Outfit', 'Inter', sans-serif;
-  letter-spacing: -0.025em;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.03em;
 }
 
 code, pre, .font-mono {
   font-family: 'JetBrains Mono', monospace;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
+}
+
+/* Hyper-Futuristic Cyber Glow & Holographic Mesh with Fart Gas Theme */
+.bg-cyber-void {
+  background-color: #03060c;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(132, 204, 22, 0.16), transparent 70%),
+    radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.12), transparent 45%),
+    radial-gradient(circle at 90% 80%, rgba(234, 179, 8, 0.08), transparent 45%),
+    radial-gradient(circle at 50% 60%, rgba(6, 182, 212, 0.06), transparent 50%),
+    linear-gradient(180deg, rgba(3, 6, 12, 0.8) 0%, rgba(3, 6, 12, 1) 100%);
+}
+
+.bg-cyber-light {
+  background-color: #f8fafc;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(132, 204, 22, 0.12), transparent 70%),
+    radial-gradient(circle at 85% 20%, rgba(16, 185, 129, 0.08), transparent 45%),
+    radial-gradient(circle at 15% 80%, rgba(234, 179, 8, 0.06), transparent 45%),
+    linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+}
+
+/* Cyber Matrix Grid Pattern with Toxic Tint */
+.cyber-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(132, 204, 22, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(132, 204, 22, 0.04) 1px, transparent 1px);
+}
+
+/* Fart Gas Animations & Floating Particles */
+@keyframes gasFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1) rotate(0deg);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateY(-25px) scale(1.12) rotate(6deg);
+    opacity: 0.65;
+  }
+}
+
+@keyframes puffRipple {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.85);
+    opacity: 0.8;
+  }
+}
+
+@keyframes bubbleRise {
+  0% {
+    transform: translateY(100vh) scale(0.6);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-10vh) scale(1.2);
+    opacity: 0;
+  }
+}
+
+.animate-gas-float {
+  animation: gasFloat 7s ease-in-out infinite;
+}
+
+.animate-puff-ripple {
+  animation: puffRipple 3.5s ease-in-out infinite;
+}
+
+/* Toxic Gas Glows */
+.glow-toxic {
+  text-shadow: 0 0 20px rgba(132, 204, 22, 0.6), 0 0 40px rgba(16, 185, 129, 0.4);
+}
+
+.glow-box-toxic {
+  box-shadow: 0 0 30px -5px rgba(132, 204, 22, 0.35), 0 0 15px -3px rgba(16, 185, 129, 0.2);
+}
+
+.border-toxic-glow {
+  border-color: rgba(132, 204, 22, 0.4);
+  box-shadow: inset 0 0 15px rgba(132, 204, 22, 0.1);
+}
+
+/* Holographic Glass Card */
+.holo-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+}
+
+html.dark .holo-card {
+  background: linear-gradient(135deg, rgba(12, 18, 30, 0.75) 0%, rgba(6, 10, 18, 0.85) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.holo-card:hover {
+  border-color: rgba(0, 242, 254, 0.5);
+  box-shadow: 0 20px 40px -10px rgba(0, 242, 254, 0.15), inset 0 1px 0 rgba(0, 242, 254, 0.2);
+}
+
+/* Neon Glow utilities */
+.glow-cyan {
+  text-shadow: 0 0 20px rgba(0, 242, 254, 0.5);
+}
+
+.glow-pink {
+  text-shadow: 0 0 20px rgba(255, 46, 147, 0.5);
+}
+
+.glow-box-cyan {
+  box-shadow: 0 0 30px -5px rgba(0, 242, 254, 0.3);
+}
+
+/* 3D Perspective Card Tilt Container */
+.perspective-container {
+  perspective: 1000px;
+}
+
+.tilt-card {
+  transform: rotateX(4deg) rotateY(-4deg);
+  transition: transform 0.3s ease;
+}
+.tilt-card:hover {
+  transform: rotateX(0deg) rotateY(0deg) translateY(-4px);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 242, 254, 0.5);
 }
 
 /* Mobile viewport & touch enhancements */
@@ -42,12 +201,6 @@ html, body {
   touch-action: manipulation;
 }
 
-/* Smooth touch scrolling */
-.touch-scroll {
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Hide scrollbar for mobile horizontal swipe strips while preserving scroll */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -56,7 +209,7 @@ html, body {
   scrollbar-width: none;
 }
 
-/* Safe area inset utilities for mobile navigation and sheets */
+/* Safe area insets */
 .pb-safe {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem));
 }
@@ -64,32 +217,23 @@ html, body {
   margin-bottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem));
 }
 
-/* Infinite Marquee Animations for Famous X Users */
+/* Infinite Marquee */
 @keyframes marquee-scroll {
-  0% {
-    transform: translateX(0%);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
 }
 
 @keyframes marquee-scroll-reverse {
-  0% {
-    transform: translateX(-50%);
-  }
-  100% {
-    transform: translateX(0%);
-  }
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
 }
 
 .animate-marquee {
   display: flex;
   width: max-content;
-  animation: marquee-scroll 42s linear infinite;
+  animation: marquee-scroll 38s linear infinite;
   will-change: transform;
 }
-
 .animate-marquee:hover {
   animation-play-state: paused;
 }
@@ -97,11 +241,18 @@ html, body {
 .animate-marquee-reverse {
   display: flex;
   width: max-content;
-  animation: marquee-scroll-reverse 46s linear infinite;
+  animation: marquee-scroll-reverse 42s linear infinite;
   will-change: transform;
 }
-
 .animate-marquee-reverse:hover {
   animation-play-state: paused;
 }
 
+/* Pulse animation */
+@keyframes cyber-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.92); }
+}
+.animate-cyber-pulse {
+  animation: cyber-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

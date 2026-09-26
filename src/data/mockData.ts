@@ -22,58 +22,14 @@ export const INITIAL_TREASURY_CONFIG: TreasuryConfig = {
   krakenPayoutRail: 'x_money_direct',
 };
 
-export const INITIAL_TOKENS: TokenLaunchData[] = [
-  {
-    id: 'tok-user-elon-coin-aht',
-    name: 'ELON COIN',
-    symbol: 'ELON',
-    description: 'Autonomous fair launch token on Pump.fun (Solana). 95% creator trading fees routed directly to @elonmusk via 𝕏 Money Protocol Treasury.',
-    logoUrl: '/assets/elon-crypto.svg',
-    platform: 'pumpfun',
-    network: 'solana',
-    beneficiaryXHandle: '@elonmusk',
-    beneficiaryName: 'Elon Musk',
-    beneficiaryAvatar: '/assets/elon-crypto.svg',
-    initialBuyAmount: 0.1,
-    feeSplitPct: 95,
-    mintAddress: 'ahTGfegWUwK1xeJfstiLjzqFqpdAniuvsh4x9R9kmkZ',
-    pairAddress: 'pvjey3Bnx5o6BybwxApeHfe61tMfgpPKtCH7CHeN8Rm',
-    beneficiaryAccount: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
-    creatorFeeRecipient: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
-    marketCapUsd: 3359.85,
-    volume24hUsd: 1846.92,
-    bondingCurveProgress: 4.8,
-    createdAt: new Date().toISOString(),
-    creatorWallet: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
-    status: 'active',
-    twitterLink: 'https://x.com/elonmusk',
-    ipfsImageUrl: '/assets/elon-crypto.svg'
-  }
-];
+export const INITIAL_TOKENS: TokenLaunchData[] = [];
 
-export const INITIAL_FEES: FeeCollectionRecord[] = [
-  {
-    id: 'fee-elon-aht-stream',
-    tokenId: 'tok-user-elon-coin-aht',
-    tokenSymbol: 'ELON',
-    tokenName: 'ELON COIN',
-    platform: 'pumpfun',
-    network: 'solana',
-    rawAmount: 0.0248,
-    currency: 'SOL',
-    amountUsd: 3.68,
-    beneficiaryXHandle: '@elonmusk',
-    beneficiaryCutUsd: 3.50,
-    protocolCutUsd: 0.18,
-    status: 'accrued_on_curve',
-    timestamp: new Date().toISOString(),
-    sourceTxHash: 'ahTGfegWUwK1xeJfstiLjzqFqpdAniuvsh4x9R9kmkZ'
-  }
-];
+export const INITIAL_FEES: FeeCollectionRecord[] = [];
 
 export const INITIAL_PAYOUTS: XMoneyPayout[] = [];
 
 export const PRESET_MEME_LOGOS = [
+  { name: 'FartPay Official', url: '/assets/fartpay-logo.svg' },
   { name: 'Pepe Thinking', url: '/assets/pepe-thinking.svg' },
   { name: 'Elon 420 Matrix', url: '/assets/elon-crypto.svg' },
   { name: 'Pixel Cat', url: '/assets/pixel-cat.svg' },

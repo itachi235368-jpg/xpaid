@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Rocket, 
   ArrowRight, 
@@ -11,10 +11,24 @@ import {
   Tv,
   CheckCircle2,
   TrendingUp,
-  ShieldCheck
+  ShieldCheck,
+  DollarSign,
+  Zap,
+  Sliders,
+  Wallet,
+  Globe,
+  Radio,
+  ArrowUpRight,
+  TrendingDown,
+  RefreshCw,
+  Cpu,
+  Terminal,
+  Lock,
+  Share2
 } from 'lucide-react';
 import { TokenLaunchData, FeeCollectionRecord, XMoneyPayout } from '../types';
 import { FamousUsersInfiniteMarquee } from './FamousUsersInfiniteMarquee';
+import { playFartSound } from '../utils/fartSound';
 
 interface UsePaidFrontPageProps {
   tokens: TokenLaunchData[];
@@ -30,10 +44,12 @@ interface UsePaidFrontPageProps {
 }
 
 const FEATURED_CREATORS = [
-  { handle: 'elonmusk', name: 'Elon Musk' },
-  { handle: 'matt_furie', name: 'Matt Furie' },
-  { handle: 'cz_binance', name: 'CZ Binance' },
-  { handle: 'saylor', name: 'Michael Saylor' },
+  { handle: 'elonmusk', name: 'Elon Musk', ticker: 'ELON', avatar: '/assets/elon-crypto.svg' },
+  { handle: 'matt_furie', name: 'Matt Furie', ticker: 'PEPE', avatar: '/assets/pepe-thinking.svg' },
+  { handle: 'vitalikbuterin', name: 'Vitalik', ticker: 'VITALIK', avatar: 'https://unavatar.io/x/vitalikbuterin' },
+  { handle: 'cz_binance', name: 'CZ Binance', ticker: 'CZBNB', avatar: 'https://unavatar.io/x/cz_binance' },
+  { handle: 'mrbeast', name: 'MrBeast', ticker: 'BEAST', avatar: 'https://unavatar.io/x/mrbeast' },
+  { handle: 'saylor', name: 'Michael Saylor', ticker: 'SAYLOR', avatar: 'https://unavatar.io/x/saylor' },
 ];
 
 interface LiveStreamEvent {
@@ -42,6 +58,7 @@ interface LiveStreamEvent {
   creatorHandle: string;
   amountUsd: number;
   timeAgo: string;
+  txHash: string;
 }
 
 export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
@@ -56,20 +73,34 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
   onExploreStreamersClick,
   onSelectToken,
 }) => {
-  const [inputHandle, setInputHandle] = useState('');
+  const [inputHandle, setInputHandle] = useState('elonmusk');
+  const [activeTabSection, setActiveTabSection] = useState<'tokens' | 'simulator' | 'architecture'>('tokens');
   
-  // Real-time continuous fee generator ($100/hr = $0.027778/sec)
-  const RATE_PER_HOUR = 100;
+  // Interactive Revenue Simulator
+  const [simulatedVolume, setSimulatedVolume] = useState<number>(75000);
+  const feeRatePct = 1.0;
+  const creatorCutPct = 0.95;
+
+  const dailyCreatorUsd = useMemo(() => {
+    return (simulatedVolume * (feeRatePct / 100)) * creatorCutPct;
+  }, [simulatedVolume]);
+
+  const monthlyCreatorUsd = useMemo(() => dailyCreatorUsd * 30, [dailyCreatorUsd]);
+  const burnDailyUsd = useMemo(() => (simulatedVolume * (feeRatePct / 100)) * 0.05, [simulatedVolume]);
+
+  // Real-time continuous fee generator
+  const RATE_PER_HOUR = 120;
   const RATE_PER_SECOND = RATE_PER_HOUR / 3600;
 
   const [recentEvents, setRecentEvents] = useState<LiveStreamEvent[]>(() => {
     if (tokens && tokens.length > 0) {
-      return tokens.slice(0, 4).map((t, idx) => ({
+      return tokens.slice(0, 5).map((t, idx) => ({
         id: `init-${t.id || t.mintAddress}-${idx}`,
         tokenSymbol: t.symbol,
         creatorHandle: (t.beneficiaryXHandle || '').replace(/^@/, ''),
-        amountUsd: Number((0.14 + idx * 0.05).toFixed(2)),
-        timeAgo: `${(idx + 1) * 3}s ago`,
+        amountUsd: Number((0.22 + idx * 0.08).toFixed(2)),
+        timeAgo: `${(idx + 1) * 2}s ago`,
+        txHash: (t.mintAddress ? t.mintAddress.slice(0, 8) : '5kL8...9xZq')
       }));
     }
     return [];
@@ -77,18 +108,17 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
 
   useEffect(() => {
     if (tokens.length > 0) {
-      // Whenever tokens are loaded or a new one is added, make sure stream events reflect all launched tokens
       setRecentEvents(prev => {
         if (prev.length === 0) {
-          return tokens.slice(0, 4).map((t, idx) => ({
+          return tokens.slice(0, 5).map((t, idx) => ({
             id: `init-${t.id || t.mintAddress}-${idx}`,
             tokenSymbol: t.symbol,
             creatorHandle: (t.beneficiaryXHandle || '').replace(/^@/, ''),
-            amountUsd: Number((0.14 + idx * 0.05).toFixed(2)),
-            timeAgo: `${(idx + 1) * 3}s ago`,
+            amountUsd: Number((0.22 + idx * 0.08).toFixed(2)),
+            timeAgo: `${(idx + 1) * 2}s ago`,
+            txHash: t.mintAddress ? t.mintAddress.slice(0, 8) : '5kL8...9xZq'
           }));
         }
-        // If the newest token is not represented at the top, prepend it
         const latestToken = tokens[0];
         const hasLatest = prev.slice(0, 2).some(e => e.tokenSymbol === latestToken.symbol);
         if (!hasLatest) {
@@ -97,10 +127,11 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
               id: `launch-live-${Date.now()}`,
               tokenSymbol: latestToken.symbol,
               creatorHandle: (latestToken.beneficiaryXHandle || '').replace(/^@/, ''),
-              amountUsd: 0.18,
+              amountUsd: 0.35,
               timeAgo: 'just now',
+              txHash: latestToken.mintAddress ? latestToken.mintAddress.slice(0, 8) : '8Lm7...Bk3A'
             },
-            ...prev.slice(0, 3)
+            ...prev.slice(0, 4)
           ];
         }
         return prev;
@@ -109,438 +140,552 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
   }, [tokens]);
 
   useEffect(() => {
-    if (tokens.length === 0) {
-      setRecentEvents([]);
-      return;
-    }
+    if (tokens.length === 0) return;
 
-    let tickCount = 0;
     const interval = setInterval(() => {
-      tickCount++;
+      const randomToken = tokens[Math.floor(Math.random() * tokens.length)];
+      const microFee = +(RATE_PER_SECOND * 3).toFixed(2);
 
-      if (tickCount % 3 === 0 && tokens.length > 0) {
-        const randomToken = tokens[Math.floor(Math.random() * tokens.length)];
-        const microFee = +(RATE_PER_SECOND * 3).toFixed(2);
-
-        setRecentEvents(prev => [
-          {
-            id: Math.random().toString(),
-            tokenSymbol: randomToken.symbol,
-            creatorHandle: randomToken.beneficiaryXHandle.replace(/^@/, ''),
-            amountUsd: microFee > 0 ? microFee : 0.08,
-            timeAgo: 'just now',
-          },
-          ...prev.slice(0, 3),
-        ]);
-      }
-    }, 1000);
+      setRecentEvents(prev => [
+        {
+          id: Math.random().toString(),
+          tokenSymbol: randomToken.symbol,
+          creatorHandle: randomToken.beneficiaryXHandle.replace(/^@/, ''),
+          amountUsd: microFee > 0 ? microFee : 0.12,
+          timeAgo: 'just now',
+          txHash: (randomToken.mintAddress ? randomToken.mintAddress.slice(0, 6) : '4xK9') + '...'
+        },
+        ...prev.slice(0, 4),
+      ]);
+    }, 2800);
 
     return () => clearInterval(interval);
   }, [RATE_PER_SECOND, tokens]);
 
-  const handleQuickLaunch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const clean = inputHandle.trim().replace(/^@/, '');
-    onLaunchClick(clean || undefined);
-  };
+  const activeCreatorData = useMemo(() => {
+    const clean = inputHandle.trim().replace(/^@/, '').toLowerCase();
+    const found = FEATURED_CREATORS.find(c => c.handle.toLowerCase() === clean);
+    return found || {
+      handle: clean || 'creator',
+      name: clean ? `@${clean}` : 'Creator',
+      ticker: (clean ? clean.slice(0, 5).toUpperCase() : 'TOKEN'),
+      avatar: `https://unavatar.io/x/${clean || 'twitter'}`
+    };
+  }, [inputHandle]);
 
   return (
-    <div className="relative z-10 max-w-5xl mx-auto px-3 sm:px-6 py-6 sm:py-16 space-y-12 sm:space-y-20">
+    <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 space-y-16">
       
-      {/* 1. Mobile-Optimized Hero Section */}
-      <div className="text-center space-y-4 sm:space-y-6 max-w-3xl mx-auto pt-1 sm:pt-4">
+      {/* 1. Radical Dual-Pane Command Deck (Futuristic Launch Terminal + Live Holographic Card) */}
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch pt-2 sm:pt-4">
         
-        {/* Responsive Text Kicker */}
-        <div className="flex items-center justify-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-semibold tracking-wider uppercase text-cyan-600 dark:text-cyan-400 flex-wrap">
-          <span>TIPPED Protocol</span>
-          <span aria-hidden="true" className="text-zinc-400 dark:text-zinc-600">·</span>
-          <span>95% Creator Royalties</span>
-          <span aria-hidden="true" className="text-zinc-400 dark:text-zinc-600">·</span>
-          <span>Solana Active</span>
-        </div>
-
-        {/* Display Headline */}
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.15] sm:leading-[1.12] font-['Outfit']">
-          Monetize any <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400">𝕏 creator & streamer</span> with meme coins.
-        </h1>
-
-        {/* Subtitle */}
-        <p className="text-sm sm:text-base lg:text-lg text-zinc-600 dark:text-zinc-300 max-w-2xl mx-auto leading-relaxed font-normal px-1 sm:px-0">
-          Launch a token for any 𝕏 account or live streamer. <strong className="text-zinc-900 dark:text-zinc-100 font-semibold">We tip the creator, not the deployer.</strong> 95% of Pump.fun trading fees convert directly to USD and stream into the creator's payout balance. 5% buy & burn.
-        </p>
-
-        {/* Quiet Live Stream Indicator */}
-        <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-[11px] sm:text-xs text-zinc-600 dark:text-zinc-400 max-w-full">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-          <span className="truncate">
-            Live: <strong className="text-zinc-900 dark:text-zinc-200">+${recentEvents[0]?.amountUsd.toFixed(2)} USD</strong> to <span className="text-cyan-500 dark:text-cyan-400">@{recentEvents[0]?.creatorHandle}</span>
-          </span>
-          <span className="text-zinc-300 dark:text-zinc-700 shrink-0">·</span>
-          <span className="font-mono text-[10px] sm:text-[11px] text-zinc-500 shrink-0">$100/hr</span>
-        </div>
-
-        {/* Sleek Mobile-First Fast Launcher Bar */}
-        <div className="pt-2 max-w-xl mx-auto w-full">
-          <form 
-            onSubmit={handleQuickLaunch}
-            className="p-1.5 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm focus-within:border-cyan-500 focus-within:ring-2 focus-within:ring-cyan-500/20 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 transition-all"
-          >
-            <div className="flex items-center gap-2 px-3 py-2 w-full flex-1 min-w-0">
-              <span className="text-zinc-400 dark:text-zinc-500 font-bold text-base select-none">@</span>
-              <input
-                type="text"
-                value={inputHandle}
-                onChange={(e) => setInputHandle(e.target.value)}
-                placeholder="elonmusk, matt_furie, mrbeast..."
-                className="w-full bg-transparent border-none text-base font-medium text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none"
-              />
-            </div>
+        {/* Left Column: Command Launch Terminal */}
+        <div className="lg:col-span-7 holo-card p-6 sm:p-10 rounded-3xl space-y-6 flex flex-col justify-between relative overflow-hidden border border-lime-500/30 shadow-2xl">
+          <div className="space-y-4">
             
-            <button
-              type="submit"
-              className="w-full sm:w-auto h-12 px-6 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 shadow-sm active:scale-[0.98]"
-            >
-              <Rocket className="w-4 h-4 text-cyan-400 dark:text-cyan-600" />
-              <span>Launch Token</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </form>
+            {/* Live Holographic Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-500/10 border border-lime-500/30 text-xs font-mono font-bold text-lime-400">
+              <Radio className="w-3.5 h-3.5 animate-pulse text-lime-400" />
+              <span>FARTPAY CREATOR ROYALTY PROTOCOL</span>
+            </div>
 
-          {/* Quick Pick Handle Chips */}
-          <div className="flex items-center justify-center gap-1.5 flex-wrap pt-2.5 text-xs text-zinc-500 dark:text-zinc-400">
-            <span className="text-zinc-400 dark:text-zinc-500">Popular:</span>
-            {FEATURED_CREATORS.map((c) => (
-              <button
-                key={c.handle}
-                type="button"
-                onClick={() => onLaunchClick(c.handle)}
-                className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium transition-colors cursor-pointer text-xs"
-              >
-                @{c.handle}
-              </button>
-            ))}
+            {/* Display Headline */}
+            <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white leading-[1.1] font-['Outfit']">
+              Launch a meme coin for any <span className="text-transparent bg-clip-text bg-gradient-to-r from-lime-400 via-emerald-300 to-cyan-400">𝕏 creator</span>. We tip them 95%.
+            </h1>
+
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+              100% permissionless. Deploy on Pump.fun and all trading royalties stream directly to the target creator's 𝕏 handle in USD. <strong className="text-slate-900 dark:text-white font-semibold">Zero manual claims needed.</strong>
+            </p>
+
+            {/* Interactive Handle Command Input */}
+            <div className="space-y-3 pt-2">
+              <label className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                <Terminal className="w-3.5 h-3.5 text-lime-400" />
+                <span>Target Beneficiary 𝕏 Handle:</span>
+              </label>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-lime-400 font-bold font-mono">
+                    @
+                  </div>
+                  <input
+                    type="text"
+                    value={inputHandle}
+                    onChange={(e) => setInputHandle(e.target.value)}
+                    placeholder="elonmusk, matt_furie, mrbeast..."
+                    className="w-full pl-8 pr-4 py-3.5 rounded-2xl bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-mono font-bold text-sm focus:outline-none focus:border-lime-400 transition-colors"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    playFartSound('rip');
+                    onLaunchClick(inputHandle.trim().replace(/^@/, ''));
+                  }}
+                  className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-400 hover:from-cyan-400 hover:to-teal-300 text-slate-950 font-black text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg hover:shadow-cyan-500/25 active:scale-95 shrink-0"
+                >
+                  <Rocket className="w-4 h-4 text-slate-950" />
+                  <span>Launch ${activeCreatorData.ticker}</span>
+                  <ArrowRight className="w-4 h-4 text-slate-950" />
+                </button>
+              </div>
+
+              {/* Quick Pick Chips */}
+              <div className="flex items-center gap-1.5 flex-wrap pt-1 text-xs">
+                <span className="text-slate-400 font-mono text-[11px]">Popular:</span>
+                {FEATURED_CREATORS.map(c => (
+                  <button
+                    key={c.handle}
+                    type="button"
+                    onClick={() => setInputHandle(c.handle)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      inputHandle.toLowerCase() === c.handle.toLowerCase()
+                        ? 'bg-lime-400 text-slate-950 font-black shadow-xs'
+                        : 'bg-slate-200 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-white/10'
+                    }`}
+                  >
+                    @{c.handle}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Telemetry Metrics Matrix */}
+          <div className="grid grid-cols-3 gap-2 pt-6 border-t border-slate-200 dark:border-white/10">
+            <div className="p-3 rounded-xl bg-slate-100 dark:bg-black/30 border border-slate-200 dark:border-white/5 text-center">
+              <div className="text-[10px] text-slate-400 font-mono">CREATOR SHARE</div>
+              <div className="text-lg font-black text-lime-400 font-mono">95% USD</div>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-100 dark:bg-black/30 border border-slate-200 dark:border-white/5 text-center">
+              <div className="text-[10px] text-slate-400 font-mono">BUY & BURN</div>
+              <div className="text-lg font-black text-amber-400 font-mono">5% SOL</div>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-100 dark:bg-black/30 border border-slate-200 dark:border-white/5 text-center">
+              <div className="text-[10px] text-slate-400 font-mono">SETTLEMENT</div>
+              <div className="text-lg font-black text-cyan-400 font-mono">&lt; 0.05s</div>
+            </div>
           </div>
         </div>
 
-        {/* Secondary Mobile Actions Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full pt-2 max-w-xl mx-auto">
-          <button
-            type="button"
-            onClick={() => onLaunchClick()}
-            className="h-11 px-4 rounded-xl bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-xs sm:text-sm font-semibold border border-zinc-200 dark:border-zinc-800 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
-          >
-            <Rocket className="w-3.5 h-3.5 text-zinc-500" />
-            <span>Open Launch Studio</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onExploreStreamersClick}
-            className="h-11 px-4 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 text-xs sm:text-sm font-semibold border border-cyan-500/20 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
-          >
-            <Tv className="w-3.5 h-3.5" />
-            <span>Streamers Hub</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onExploreFeesClick}
-            className="h-11 px-4 rounded-xl bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs sm:text-sm font-semibold border border-zinc-200 dark:border-zinc-800 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98]"
-          >
-            <Coins className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Live Fee Flow</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 2. Unified Protocol Metrics Strip (Crisp 1px Grid on all screen widths) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-zinc-200 dark:bg-zinc-800/80 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800/80 shadow-xs max-w-4xl mx-auto">
-        <div className="bg-white dark:bg-zinc-900/90 p-3.5 sm:p-5 text-center flex flex-col justify-center space-y-0.5">
-          <div className="text-lg sm:text-2xl font-extrabold text-zinc-900 dark:text-zinc-50 font-mono tracking-tight">
-            ${totalDisbursedUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <div className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 flex items-center justify-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-            <span className="truncate">Auto-Disbursed</span>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-zinc-900/90 p-3.5 sm:p-5 text-center flex flex-col justify-center space-y-0.5">
-          <div className="text-lg sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
-            95% / 5%
-          </div>
-          <div className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400">
-            Creator / Burn
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-zinc-900/90 p-3.5 sm:p-5 text-center flex flex-col justify-center space-y-0.5">
-          <div className="text-lg sm:text-2xl font-extrabold text-zinc-900 dark:text-zinc-50 font-mono">
-            2-Tx Binding
-          </div>
-          <div className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400">
-            Solana Treasury
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-zinc-900/90 p-3.5 sm:p-5 text-center flex flex-col justify-center space-y-0.5">
-          <div className="text-lg sm:text-2xl font-extrabold text-cyan-600 dark:text-cyan-400 font-mono">
-            &lt; 0.05s
-          </div>
-          <div className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400">
-            𝕏 Money Speed
-          </div>
-        </div>
-      </div>
-
-      {/* 2.5 Infinite Loop of Famous X Users getting paid */}
-      <FamousUsersInfiniteMarquee onLaunchForUser={(handle) => onLaunchClick(handle)} />
-
-      {/* 3. Multi-Chain Platforms & Financial Rails */}
-      <div className="space-y-3 sm:space-y-4">
-        <div>
-          <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-            <Layers className="w-4 h-4 text-cyan-500" />
-            <span>Launchpads & Settlement Rails</span>
-          </h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">Autonomous bonding curves and creator fiat off-ramps</p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          {/* Pump.fun - LIVE */}
-          <div 
-            onClick={() => onLaunchClick()}
-            className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 hover:border-cyan-500/50 shadow-xs hover:shadow-md transition-all cursor-pointer space-y-2.5 group active:scale-[0.99]"
-          >
+        {/* Right Column: Holographic 3D Live Perspective Card Preview & Real-Time Stream */}
+        <div className="lg:col-span-5 space-y-4 flex flex-col justify-between">
+          
+          {/* Holographic Interactive Card Preview */}
+          <div className="holo-card p-6 rounded-3xl border border-lime-500/30 relative overflow-hidden space-y-4 shadow-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">Pump.fun (Solana)</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-lime-400 animate-ping" />
+                <span className="text-xs font-mono font-bold text-slate-400 uppercase">Live Token Blueprint</span>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                Active
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-lime-500/15 text-lime-400 border border-lime-500/30">
+                95% TIP ACTIVE
               </span>
             </div>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Instant token launches on Solana. 95% SOL creator trading fees stream automatically to protocol treasury and convert to USD.
-            </p>
-            <div className="flex items-center gap-1 text-xs font-semibold text-cyan-600 dark:text-cyan-400 group-hover:translate-x-0.5 transition-transform pt-1">
-              <span>Launch on Solana</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </div>
-          </div>
 
-          {/* Four.meme */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/80 shadow-xs space-y-2.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-zinc-400" />
-                <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">Four.meme (BNB)</span>
+            {/* Creator Identity Showcase */}
+            <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/5">
+              <img
+                src={activeCreatorData.avatar}
+                alt={activeCreatorData.name}
+                className="w-14 h-14 rounded-2xl object-cover border-2 border-lime-400 shadow-md shrink-0"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/assets/elon-crypto.svg';
+                }}
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white truncate">
+                    {activeCreatorData.name} COIN
+                  </h3>
+                  <span className="font-mono text-xs font-bold text-lime-400 px-1.5 py-0.5 rounded bg-lime-500/10 border border-lime-500/20">
+                    ${activeCreatorData.ticker}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-mono truncate">
+                  Beneficiary: <span className="text-lime-400 font-bold">@{activeCreatorData.handle}</span>
+                </p>
+                <div className="text-[11px] text-lime-400 font-mono mt-0.5">
+                  Est. 24h Royalties: <span className="font-bold">${(simulatedVolume * 0.0095).toFixed(2)} USD</span>
+                </div>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
-                Testing
-              </span>
             </div>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Binance Smart Chain meme launchpad integration. 95% BNB creator fees collected via PancakeSwap liquidity curves.
-            </p>
-            <div className="text-[11px] text-zinc-500 pt-1">
-              BNB Chain Q2 Release
-            </div>
-          </div>
 
-          {/* Robinhood / Pons */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/80 shadow-xs space-y-2.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-zinc-400" />
-                <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">Pons (Robinhood Chain)</span>
+            {/* Bonding Curve Telemetry Bar */}
+            <div className="space-y-1.5 p-3.5 rounded-xl bg-slate-100 dark:bg-black/30 border border-slate-200 dark:border-white/5">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-slate-400">Pump.fun Curve:</span>
+                <span className="font-bold text-slate-900 dark:text-white">0.00 ◎ / 85.0 ◎ Target</span>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
-                Planned
-              </span>
+              <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 w-[12%] rounded-full animate-pulse" />
+              </div>
             </div>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Zero-gas EVM Layer 2 tailored for Robinhood & 𝕏 creator economies. Direct USD deposits into Robinhood accounts and FedNow rails.
-            </p>
-            <div className="text-[11px] text-zinc-500 pt-1">
-              Brokerage Integration
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* 4. Live Tokens Streams */}
-      <div className="space-y-3 sm:space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
-              <Flame className="w-4 h-4 text-amber-500" />
-              <span>Live Meme Royalty Streams</span>
-            </h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Tokens streaming 95% creator trading royalties into 𝕏 accounts.
-            </p>
-          </div>
-
-          {tokens.length > 0 && (
             <button
               type="button"
-              onClick={onExploreFeesClick}
-              className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
+              onClick={() => onLaunchClick(activeCreatorData.handle)}
+              className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
             >
-              <span>All ({tokens.length})</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <Zap className="w-4 h-4" />
+              <span>Deploy ${activeCreatorData.ticker} to Solana</span>
             </button>
-          )}
-        </div>
+          </div>
 
-        {tokens.length === 0 ? (
-          <div className="p-6 sm:p-10 rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-dashed border-zinc-200 dark:border-zinc-800 text-center space-y-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mx-auto">
-              <Rocket className="w-5 h-5" />
+          {/* Live Micro-Royalty Stream Telemetry */}
+          <div className="holo-card p-4 rounded-2xl border border-white/10 space-y-2.5">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="font-bold text-slate-900 dark:text-white font-mono">Live On-Chain Payout Stream</span>
+              </div>
+              <span className="text-[10px] font-mono text-cyan-400">$120/hr Real-Time</span>
             </div>
-            <div className="max-w-md mx-auto space-y-1">
-              <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">
-                No tokens launched yet
-              </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Launch a token for any 𝕏 handle above to start streaming 95% creator trading fees directly to their 𝕏 balance.
-              </p>
-            </div>
-            <div>
-              <button
-                type="button"
-                onClick={() => onLaunchClick()}
-                className="px-4 py-2 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-white text-white dark:text-zinc-950 font-bold text-xs rounded-xl transition-all cursor-pointer inline-flex items-center gap-2 shadow-xs"
-              >
-                <Rocket className="w-3.5 h-3.5" />
-                <span>Launch First Token</span>
-              </button>
+
+            <div className="space-y-1.5">
+              {recentEvents.slice(0, 3).map((event) => (
+                <div 
+                  key={event.id}
+                  className="flex items-center justify-between p-2 rounded-xl bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/5 text-xs font-mono animate-fade-in"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="text-emerald-400 font-bold">+${event.amountUsd.toFixed(2)}</span>
+                    <span className="text-slate-500">➔</span>
+                    <span className="text-cyan-400 font-semibold truncate">@{event.creatorHandle}</span>
+                    <span className="text-slate-400 font-normal">(${event.tokenSymbol})</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500 shrink-0">{event.timeAgo}</span>
+                </div>
+              ))}
             </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {tokens.slice(0, 24).map((token) => (
-              <div
-                key={token.id}
-                className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/90 hover:border-cyan-500/40 shadow-xs hover:shadow-md transition-all space-y-3.5 group flex flex-col justify-between"
-              >
-                <div className="space-y-2.5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <img
-                        src={token.logoUrl}
-                        alt={token.name}
-                        className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover border border-zinc-200 dark:border-zinc-800 shrink-0"
-                        referrerPolicy="no-referrer"
-                      />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <h3 className="font-bold text-zinc-900 dark:text-zinc-50 text-sm truncate">
-                            {token.name}
-                          </h3>
-                          <span className="font-mono text-[11px] text-zinc-500">
-                            ${token.symbol}
+        </div>
+      </section>
+
+      {/* 2. Unified Master Metrics Matrix */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="holo-card p-5 rounded-2xl text-center space-y-1 border border-white/10">
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">
+            ${totalDisbursedUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1 font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span>DISBURSED TO CREATORS</span>
+          </div>
+        </div>
+
+        <div className="holo-card p-5 rounded-2xl text-center space-y-1 border border-white/10">
+          <div className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">
+            95.0%
+          </div>
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+            DIRECT TO 𝕏 PAYOUTS
+          </div>
+        </div>
+
+        <div className="holo-card p-5 rounded-2xl text-center space-y-1 border border-white/10">
+          <div className="text-2xl sm:text-3xl font-black text-cyan-400 font-mono">
+            0-CLAIM
+          </div>
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+            AUTONOMOUS SETTLEMENT
+          </div>
+        </div>
+
+        <div className="holo-card p-5 rounded-2xl text-center space-y-1 border border-white/10">
+          <div className="text-2xl sm:text-3xl font-black text-amber-400 font-mono">
+            5.0%
+          </div>
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+            AUTOMATIC BUY & BURN
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Interactive Section Switcher (Tokens Grid / Revenue Simulator / Architecture) */}
+      <section className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-4">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveTabSection('tokens')}
+              className={`px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+                activeTabSection === 'tokens'
+                  ? 'bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 shadow-md font-black'
+                  : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-white'
+              }`}
+            >
+              🔥 Live Meme Tokens ({tokens.length})
+            </button>
+
+            <button
+              onClick={() => setActiveTabSection('simulator')}
+              className={`px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+                activeTabSection === 'simulator'
+                  ? 'bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 shadow-md font-black'
+                  : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-white'
+              }`}
+            >
+              ⚡ Creator Earnings Simulator
+            </button>
+
+            <button
+              onClick={() => setActiveTabSection('architecture')}
+              className={`px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer hidden md:block ${
+                activeTabSection === 'architecture'
+                  ? 'bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 shadow-md font-black'
+                  : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-white'
+              }`}
+            >
+              🛡️ Protocol Architecture
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onLaunchClick()}
+            className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs transition-all border border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer self-start sm:self-auto"
+          >
+            <Rocket className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Launch New Coin</span>
+          </button>
+        </div>
+
+        {/* Tab 1: Live Meme Tokens Grid */}
+        {activeTabSection === 'tokens' && (
+          <>
+            {tokens.length === 0 ? (
+              <div className="holo-card p-10 sm:p-14 rounded-3xl border border-lime-500/30 text-center space-y-4 shadow-xl backdrop-blur-xl">
+                <div className="w-16 h-16 rounded-2xl bg-lime-500/10 border border-lime-500/30 flex items-center justify-center mx-auto shadow-inner">
+                  <Rocket className="w-8 h-8 text-lime-400 animate-pulse" />
+                </div>
+                <div className="space-y-1.5 max-w-md mx-auto">
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-['Outfit']">
+                    No Tokens Launched Yet
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-sans leading-relaxed">
+                    Deploy your first token on Pump.fun and all trading royalties will stream directly to the beneficiary's 𝕏 handle in USD!
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onLaunchClick()}
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-lime-400 via-emerald-400 to-cyan-400 hover:from-lime-300 hover:to-cyan-300 text-slate-950 font-mono font-black text-xs uppercase tracking-wider shadow-lg shadow-lime-500/25 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                >
+                  <Rocket className="w-4 h-4 text-slate-950" />
+                  <span>Launch First Meme Coin</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {tokens.slice(0, 24).map((token) => (
+                  <div
+                    key={token.id}
+                    className="holo-card p-6 rounded-3xl space-y-4 flex flex-col justify-between border border-lime-500/30 group transition-all"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <img
+                            src={token.logoUrl || '/assets/elon-crypto.svg'}
+                            alt={token.name}
+                            className="w-13 h-13 rounded-2xl object-cover border-2 border-lime-400/40 shrink-0 shadow-md"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <h3 className="font-extrabold text-slate-900 dark:text-white text-base truncate">
+                                {token.name}
+                              </h3>
+                              <span className="font-mono text-xs font-bold text-lime-400">
+                                ${token.symbol}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-mono truncate">
+                              Creator: <span className="text-lime-400 font-semibold">@{token.beneficiaryXHandle.replace(/^@/, '')}</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-lime-500/15 text-lime-400 border border-lime-500/30 shrink-0">
+                          95% TIP
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                        {token.description}
+                      </p>
+
+                      <div className="space-y-1 pt-1">
+                        <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
+                          <span>Bonding Curve:</span>
+                          <span className="font-bold text-slate-200">
+                            {token.bondingCurveProgress ? `${token.bondingCurveProgress}%` : '5.2%'}
                           </span>
                         </div>
-                        <p className="text-xs text-cyan-600 dark:text-cyan-400 font-medium truncate">
-                          @{token.beneficiaryXHandle.replace(/^@/, '')}
-                        </p>
+                        <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-lime-400 to-cyan-400 rounded-full"
+                            style={{ width: `${Math.min(100, token.bondingCurveProgress || 5.2)}%` }}
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">
-                      95% USD
+                    <div className="pt-3 border-t border-slate-200 dark:border-white/10 space-y-3">
+                      <div className="flex items-center justify-between text-xs font-mono">
+                        <span className="text-slate-400">Market Cap:</span>
+                        <span className="font-extrabold text-slate-900 dark:text-white text-sm">
+                          ${(token.marketCapUsd || 3359.85).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <a
+                          href={`https://pump.fun/coin/${token.mintAddress}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="h-10 px-3 rounded-xl bg-slate-200 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-slate-900 dark:text-white text-xs font-bold font-mono flex items-center justify-center gap-1.5 transition-colors"
+                        >
+                          <span>Pump.fun</span>
+                          <ArrowUpRight className="w-3.5 h-3.5 text-slate-400" />
+                        </a>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            playFartSound('wet');
+                            onLaunchClick(token.beneficiaryXHandle.replace(/^@/, ''));
+                          }}
+                          className="h-10 px-3 rounded-xl bg-gradient-to-r from-lime-400 via-emerald-400 to-cyan-400 hover:from-lime-300 hover:to-cyan-300 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md"
+                        >
+                          <Zap className="w-3.5 h-3.5 text-slate-950" />
+                          <span>Launch Tip</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Tab 2: Interactive Revenue Simulator */}
+        {activeTabSection === 'simulator' && (
+          <div className="holo-card p-6 sm:p-10 rounded-3xl border border-white/10 space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              <div className="lg:col-span-7 space-y-6">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-bold text-slate-300 font-mono">24H TRADING VOLUME:</span>
+                    <span className="font-mono font-black text-2xl text-cyan-400">
+                      ${simulatedVolume.toLocaleString()} USD
                     </span>
                   </div>
-
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2 leading-relaxed">
-                    {token.description}
-                  </p>
+                  <input
+                    type="range"
+                    min="2000"
+                    max="1000000"
+                    step="5000"
+                    value={simulatedVolume}
+                    onChange={(e) => setSimulatedVolume(Number(e.target.value))}
+                    className="w-full h-3 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                  />
+                  <div className="flex justify-between text-xs text-slate-500 font-mono">
+                    <span>$2,000</span>
+                    <span>$250,000</span>
+                    <span>$1,000,000+</span>
+                  </div>
                 </div>
 
-                <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80 space-y-2.5">
-                  <div className="flex items-center justify-between text-xs text-zinc-500">
-                    <span>Market Cap:</span>
-                    <span className="font-bold text-zinc-900 dark:text-zinc-100 font-mono">
-                      ${(token.marketCapUsd || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
+                <div className="grid grid-cols-2 gap-4 text-xs font-mono">
+                  <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-1">
+                    <div className="text-slate-400">PUMP.FUN FEE:</div>
+                    <div className="font-bold text-white text-base">1.0% on Trades</div>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <a
-                      href={`https://pump.fun/coin/${token.mintAddress}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="h-9 px-3 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold flex items-center justify-center gap-1 transition-colors"
-                    >
-                      <span>Pump.fun</span>
-                      <ExternalLink className="w-3 h-3 text-zinc-400" />
-                    </a>
-
-                    <button
-                      type="button"
-                      onClick={() => onLaunchClick(token.beneficiaryXHandle.replace(/^@/, ''))}
-                      className="h-9 px-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
-                    >
-                      <Rocket className="w-3 h-3" />
-                      <span>Launch</span>
-                    </button>
+                  <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-1">
+                    <div className="text-slate-400">CREATOR ROYALTY:</div>
+                    <div className="font-bold text-emerald-400 text-base">95% to 𝕏 Handle</div>
                   </div>
                 </div>
               </div>
-            ))}
+
+              <div className="lg:col-span-5 p-6 rounded-2xl bg-gradient-to-br from-cyan-950/40 via-slate-950 to-slate-900 border border-cyan-500/30 space-y-5">
+                <div className="text-xs font-mono font-bold text-cyan-400 uppercase">
+                  ESTIMATED CREATOR USD FLOW
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400 font-mono">Daily Direct Payout:</div>
+                  <div className="text-4xl font-black text-emerald-400 font-mono">
+                    ${dailyCreatorUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                </div>
+                <div className="pt-3 border-t border-white/10 flex items-center justify-between font-mono text-xs">
+                  <div>
+                    <div className="text-slate-400">30-Day Run Rate:</div>
+                    <div className="text-lg font-bold text-white">
+                      ${monthlyCreatorUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-slate-400">5% Burn:</div>
+                    <div className="text-amber-400 font-bold">${burnDailyUsd.toFixed(2)}/d</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onLaunchClick()}
+                  className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-teal-400 hover:from-cyan-400 hover:to-teal-300 text-slate-950 font-black text-xs rounded-xl cursor-pointer shadow-lg"
+                >
+                  Launch Meme Coin for Creator
+                </button>
+              </div>
+            </div>
           </div>
         )}
-      </div>
 
-      {/* 5. Mobile-Clean Editorial "How It Works" Section */}
-      <div className="p-5 sm:p-10 rounded-2xl bg-white dark:bg-zinc-900/80 text-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-800 space-y-6 sm:space-y-8 shadow-xs">
-        <div className="text-center max-w-xl mx-auto space-y-1.5">
-          <div className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider">
-            Architecture
-          </div>
-          <h2 className="text-xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white font-['Outfit']">
-            How TIPPED Protocol Works
-          </h2>
-          <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
-            Autonomous on-chain creator tip rails powered by Pump.fun and 𝕏 Money.
-          </p>
-        </div>
+        {/* Tab 3: Architecture Section */}
+        {activeTabSection === 'architecture' && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="holo-card p-6 rounded-3xl border border-white/10 space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-mono font-black text-base">
+                01
+              </div>
+              <h3 className="text-base font-bold text-white">Deploy on Pump.fun</h3>
+              <p className="text-xs text-slate-400 leading-relaxed font-mono">
+                Tokens deploy on Solana with 100% fair bonding curve liquidity. Creator address is locked to the FARTPAY Treasury Router.
+              </p>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
-          <div className="p-4 sm:p-5 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 space-y-2">
-            <div className="text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400">01.</div>
-            <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
-              Target Any 𝕏 Creator
-            </h3>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Deploy a coin for any 𝕏 handle or streamer. 95% of all bonding curve creator royalties belong strictly to them, not the deployer.
-            </p>
-          </div>
+            <div className="holo-card p-6 rounded-3xl border border-white/10 space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-mono font-black text-base">
+                02
+              </div>
+              <h3 className="text-base font-bold text-white">Autonomous Treasury Router</h3>
+              <p className="text-xs text-slate-400 leading-relaxed font-mono">
+                95% of creator fees are claimed on-chain and auto-converted to USD via institutional spot off-ramps (Kraken & FedNow).
+              </p>
+            </div>
 
-          <div className="p-4 sm:p-5 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 space-y-2">
-            <div className="text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400">02.</div>
-            <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
-              2-Tx Treasury Binding
-            </h3>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Mint created on Pump.fun with fee collection authority irrevocably bound to the verified Protocol Treasury on Solana.
-            </p>
+            <div className="holo-card p-6 rounded-3xl border border-white/10 space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-mono font-black text-base">
+                03
+              </div>
+              <h3 className="text-base font-bold text-white">Direct 𝕏 Money Settlement</h3>
+              <p className="text-xs text-slate-400 leading-relaxed font-mono">
+                USD deposits directly into the creator's 𝕏 handle balance in &lt;0.05s. Zero manual wallet signing or gas needed.
+              </p>
+            </div>
           </div>
+        )}
+      </section>
 
-          <div className="p-4 sm:p-5 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 space-y-2">
-            <div className="text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400">03.</div>
-            <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
-              Instant 𝕏 Money Settlement
-            </h3>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              When 0.01 SOL in fees accumulates, it auto-converts to USD and deposits directly into the creator's 𝕏 Money account with zero manual claiming.
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* 4. Infinite Loop of Famous Creators */}
+      <FamousUsersInfiniteMarquee onLaunchForUser={(handle) => onLaunchClick(handle)} />
 
     </div>
   );

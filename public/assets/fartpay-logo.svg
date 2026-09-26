@@ -1,0 +1,50 @@
+<svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="128" fill="#090D16"/>
+  <g transform="translate(10, 0)">
+    <!-- Top Wind stream 1 with swirl -->
+    <path
+      d="M 90 205 L 175 205 C 190 205 198 190 198 178 C 198 162 184 150 168 150 C 150 150 142 165 142 178"
+      stroke="#00F2FE"
+      stroke-width="22"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- Top Wind stream 2 leading into cloud upper curve -->
+    <path
+      d="M 110 238 L 195 238 C 215 238 238 220 248 185 C 265 130 325 110 365 145 C 385 162 390 185 390 205 C 430 205 465 240 465 285 C 465 330 425 365 385 365 C 380 395 355 435 305 435 C 260 435 225 395 225 350 C 225 320 200 300 170 300 L 110 300"
+      stroke="#00F2FE"
+      stroke-width="22"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- Middle straight wind nozzle into PAY -->
+    <path
+      d="M 155 268 L 260 268"
+      stroke="#00F2FE"
+      stroke-width="22"
+      stroke-linecap="round"
+    />
+
+    <!-- Bottom wind swirl -->
+    <path
+      d="M 90 332 L 175 332 C 190 332 198 347 198 359 C 198 375 184 387 168 387 C 150 387 142 372 142 359"
+      stroke="#00F2FE"
+      stroke-width="22"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- PAY Word inside the puff -->
+    <text
+      x="332"
+      y="288"
+      text-anchor="middle"
+      fill="#FFFFFF"
+      style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 66px; font-weight: 900; letter-spacing: -0.02em;"
+    >
+      PAY
+    </text>
+  </g>
+</svg>

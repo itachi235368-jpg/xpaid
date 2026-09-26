@@ -19,13 +19,23 @@ import {
   TrendingUp,
   DollarSign,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Wind,
+  Layers,
+  Flame,
+  Activity,
+  Cpu,
+  Share2,
+  Copy,
+  Check
 } from 'lucide-react';
 import { LaunchPlatform, TokenLaunchData, TreasuryConfig } from '../types';
 import { PRESET_MEME_LOGOS, getXUserProfile, KNOWN_X_USERS } from '../data/mockData';
 import { deployPumpFunToken, getLiveSolBalance, getSolanaProvider } from '../services/solanaLaunch';
 import { configurePumpFeeSharingOnChain } from '../services/pumpClaimService';
 import { getCurrentSolPrice, calculatePumpFunMarketCap } from '../services/solPriceService';
+import { playFartSound } from '../utils/fartSound';
+import { FartPayLogo } from './FartPayLogo';
 
 interface TokenLaunchWizardProps {
   treasuryConfig: TreasuryConfig;
@@ -39,11 +49,11 @@ interface TokenLaunchWizardProps {
 }
 
 const POPULAR_HANDLES = [
-  { handle: '@elonmusk', name: 'Elon Musk' },
-  { handle: '@matt_furie', name: 'Matt Furie' },
-  { handle: '@cz_binance', name: 'CZ 🔶' },
-  { handle: '@solana', name: 'Solana' },
-  { handle: '@vitalikbuterin', name: 'Vitalik' },
+  { handle: '@elonmusk', name: 'Elon Musk', ticker: 'ELON' },
+  { handle: '@matt_furie', name: 'Matt Furie', ticker: 'PEPE' },
+  { handle: '@cz_binance', name: 'CZ 🔶', ticker: 'BNB' },
+  { handle: '@solana', name: 'Solana', ticker: 'SOL' },
+  { handle: '@vitalikbuterin', name: 'Vitalik', ticker: 'VITALIK' },
 ];
 
 export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
@@ -78,13 +88,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
   );
   const [beneficiaryName, setBeneficiaryName] = useState('Elon Musk');
   const [initialBuy, setInitialBuy] = useState<string>('0.05');
-  const [feeSplit] = useState<number>(95); // 95% to Creator, 5% Buy & Burn
-
-  useEffect(() => {
-    if (prefilledHandle) {
-      handleHandleChange(prefilledHandle);
-    }
-  }, [prefilledHandle]);
+  const [copiedMint, setCopiedMint] = useState(false);
 
   // Execution states
   const [isLaunching, setIsLaunching] = useState(false);
@@ -97,6 +101,12 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
   const [tx2StatusText, setTx2StatusText] = useState<string>('');
 
   const currentSolPrice = getCurrentSolPrice();
+
+  useEffect(() => {
+    if (prefilledHandle) {
+      handleHandleChange(prefilledHandle);
+    }
+  }, [prefilledHandle]);
 
   useEffect(() => {
     if (connectedWallet) {
@@ -114,6 +124,8 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
     const known = KNOWN_X_USERS.find(u => u.handle.toLowerCase() === formatted.toLowerCase());
     if (known) {
       setBeneficiaryName(known.name);
+      if (!name) setName(`${known.name} Token`);
+      if (!symbol) setSymbol(known.handle.replace('@', '').slice(0, 5).toUpperCase());
     } else {
       setBeneficiaryName(formatted.replace('@', ''));
     }
@@ -183,6 +195,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
         };
         setLaunchedToken(updated);
         onTokenLaunched(updated);
+        playFartSound('wet');
       } else {
         throw new Error(res.error || 'Transaction 2 was not signed.');
       }
@@ -196,6 +209,10 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
 
   const handleLaunch = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Sound effect trigger
+    playFartSound('random');
+
     if (!name.trim() || !symbol.trim()) {
       setErrorMsg('Token Name and Symbol are required.');
       return;
@@ -214,7 +231,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
     setErrorMsg(null);
     setIsLaunching(true);
     setLaunchStep(1);
-    setLiveStatusText('Uploading token metadata & image to IPFS...');
+    setLiveStatusText('Compressing gas metadata & uploading to IPFS...');
 
     let finalMintAddr = '';
     let deployedMetadataUri: string | undefined;
@@ -222,84 +239,92 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
     let deployedTwitterUrl: string | undefined;
     let deployedFeeSharingTx: string | undefined;
 
-    const effectiveBeneficiaryAccount = treasuryConfig.solanaTreasuryAddress;
-
     try {
       setLaunchStep(2);
+      setLiveStatusText('Initiating Pump.fun bonding curve contract...');
       const deployResult = await deployPumpFunToken(
         {
           name: name.trim(),
           symbol: symbol.toUpperCase().replace('$', ''),
-          description: description || `Community token launched for ${beneficiaryHandle} on Pump.fun. 95% trading fees automatically convert to USD via 𝕏 Money.`,
+          description: description || `FARTPAY royalty token for ${beneficiaryHandle}. 95% trading fees auto-route to USD on 𝕏.`,
           imageUrl: logoUrl,
           imageFile: customImageFile,
-          twitterHandle: beneficiaryHandle,
-          twitterLink: twitterLink.trim() || undefined,
-          telegramLink: telegramLink.trim() || undefined,
-          websiteLink: websiteLink.trim() || undefined,
-          initialBuySol: parseFloat(initialBuy) || 0,
-          creatorPublicKey: connectedWallet,
-          beneficiaryAccount: effectiveBeneficiaryAccount,
+          twitterHandle: beneficiaryHandle.replace('@', ''),
+          twitterLink: twitterLink,
+          telegramLink: telegramLink,
+          websiteLink: websiteLink,
+          initialBuySol: parseFloat(initialBuy || '0'),
+          creatorPublicKey: connectedWallet || '',
+          beneficiaryAccount: treasuryConfig.solanaTreasuryAddress,
         },
         treasuryConfig,
         (status) => setLiveStatusText(status)
       );
 
-      if (!deployResult.success && deployResult.error) {
-        setErrorMsg(deployResult.error);
-        setIsLaunching(false);
-        setLaunchStep(0);
-        return;
-      }
+      finalMintAddr = deployResult.mintAddress || '';
+      deployedMetadataUri = deployResult.metadataUri;
+      deployedIpfsImageUrl = deployResult.ipfsImageUrl;
+      deployedTwitterUrl = twitterLink || `https://x.com/${beneficiaryHandle.replace('@', '')}`;
 
-      if (deployResult.mintAddress) finalMintAddr = deployResult.mintAddress;
-      if (deployResult.metadataUri) deployedMetadataUri = deployResult.metadataUri;
-      if (deployResult.ipfsImageUrl) deployedIpfsImageUrl = deployResult.ipfsImageUrl;
-      if (deployResult.twitterUrl) deployedTwitterUrl = deployResult.twitterUrl;
-      if (deployResult.feeSharingTx) deployedFeeSharingTx = deployResult.feeSharingTx;
+      // Transaction 2: Automatic PumpFee Sharing Binding
+      setLaunchStep(3);
+      setLiveStatusText('Binding 95% creator royalties to FARTPAY router...');
+
+      try {
+        const provider = getSolanaProvider();
+        if (provider && finalMintAddr) {
+          const creatorPubkey = provider.publicKey ? provider.publicKey.toString() : (connectedWallet || '');
+          const feeResult = await configurePumpFeeSharingOnChain(
+            provider,
+            creatorPubkey,
+            finalMintAddr,
+            treasuryConfig.solanaTreasuryAddress,
+            treasuryConfig.solanaRpcUrl,
+            (status) => setLiveStatusText(status)
+          );
+          if (feeResult.success && feeResult.txHash) {
+            deployedFeeSharingTx = feeResult.txHash;
+          }
+        }
+      } catch (feeErr) {
+        console.warn('Tx2 background auto-sign not completed:', feeErr);
+      }
     } catch (err: any) {
-      setErrorMsg(err?.message || 'Failed to deploy token on-chain.');
+      console.error('Launch failed:', err);
+      setErrorMsg(err.message || 'Token launch failed. Please check wallet funds and try again.');
       setIsLaunching(false);
-      setLaunchStep(0);
       return;
     }
 
-    const randomHex = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
-    const mintAddr = finalMintAddr || `${randomHex.toUpperCase()}pump`;
-
-    const parsedInitialBuy = parseFloat(initialBuy) || 0;
-    const solPrice = getCurrentSolPrice() || 180;
-    const calculatedBondingProgress = parsedInitialBuy > 0 
-      ? Math.min(100, Number(((parsedInitialBuy / 85) * 100).toFixed(2)))
-      : 0;
-    const { marketCapUsd } = calculatePumpFunMarketCap(parsedInitialBuy, calculatedBondingProgress, solPrice);
+    const initialMcapData = calculatePumpFunMarketCap(parseFloat(initialBuy || '0'), currentSolPrice);
+    const initialMcap = typeof initialMcapData === 'number' ? initialMcapData : initialMcapData.marketCapUsd;
 
     const tokenData: TokenLaunchData = {
-      id: `tok-${Date.now()}`,
+      id: `launch-${Date.now()}`,
       name: name.trim(),
       symbol: symbol.toUpperCase().replace('$', ''),
-      description: description || `Community token launched for ${beneficiaryHandle}. 95% fees convert to USD via 𝕏 Money.`,
+      description: description || `Meme token launched for ${beneficiaryHandle} on Pump.fun. 95% trading fees auto-settle to USD.`,
       logoUrl: deployedIpfsImageUrl || logoUrl,
-      platform: platform,
-      network: platform === 'pons' ? 'robinhood' : platform === 'fourmeme' ? 'bsc' : 'solana',
+      platform,
+      network: 'solana',
       beneficiaryXHandle: beneficiaryHandle,
-      beneficiaryName,
-      beneficiaryAvatar: currentXProfile.avatar || `https://unavatar.io/x/${beneficiaryHandle.replace('@', '')}`,
-      beneficiaryAccount: effectiveBeneficiaryAccount,
-      initialBuyAmount: parsedInitialBuy,
-      feeSplitPct: feeSplit,
-      mintAddress: mintAddr,
-      pairAddress: 'TSLvdd1pWpHVjahSpsvCXUbgwsL3JAcvokwaKt1eokM',
-      creatorFeeRecipient: effectiveBeneficiaryAccount,
-      marketCapUsd: marketCapUsd,
-      volume24hUsd: parsedInitialBuy > 0 ? Number((parsedInitialBuy * solPrice).toFixed(2)) : 0,
-      bondingCurveProgress: calculatedBondingProgress,
+      beneficiaryName: beneficiaryName || beneficiaryHandle.replace('@', ''),
+      beneficiaryAvatar: currentXProfile.avatar,
+      beneficiaryAccount: treasuryConfig.solanaTreasuryAddress,
+      initialBuyAmount: parseFloat(initialBuy || '0'),
+      feeSplitPct: 95,
+      mintAddress: finalMintAddr || 'Fart' + Math.random().toString(36).slice(2, 8).toUpperCase() + 'Sol',
+      pairAddress: 'Pump' + Math.random().toString(36).slice(2, 8).toUpperCase(),
+      creatorFeeRecipient: treasuryConfig.solanaTreasuryAddress,
+      marketCapUsd: initialMcap || 3420,
+      volume24hUsd: parseFloat(initialBuy || '0') * 1.5 * currentSolPrice,
+      bondingCurveProgress: Math.max(2.4, Math.min(100, parseFloat(initialBuy || '0') * 4.2)),
       createdAt: new Date().toISOString(),
-      creatorWallet: connectedWallet || treasuryConfig.solanaTreasuryAddress,
+      creatorWallet: connectedWallet || 'Unknown',
       status: 'active',
-      twitterLink: deployedTwitterUrl || twitterLink.trim() || `https://x.com/${beneficiaryHandle.replace('@', '')}`,
-      telegramLink: telegramLink.trim() || undefined,
-      websiteLink: websiteLink.trim() || undefined,
+      twitterLink: deployedTwitterUrl,
+      telegramLink: telegramLink || undefined,
+      websiteLink: websiteLink || undefined,
       metadataUri: deployedMetadataUri,
       ipfsImageUrl: deployedIpfsImageUrl,
       feeSharingTx: deployedFeeSharingTx,
@@ -309,6 +334,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
     onTokenLaunched(tokenData);
     setLaunchedToken(tokenData);
     setIsLaunching(false);
+    playFartSound('trumpet');
   };
 
   const resetForm = () => {
@@ -323,726 +349,661 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
     setErrorMsg(null);
   };
 
+  const copyMintToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedMint(true);
+    setTimeout(() => setCopiedMint(false), 2000);
+  };
+
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 sm:py-10 relative z-10">
+    <div className="max-w-6xl mx-auto px-4 py-6 sm:py-10 relative z-10 space-y-8">
       
-      {/* Back to Home Button */}
-      {onBackToHome && (
-        <div className="mb-6">
+      {/* Top Breadcrumb & Controls */}
+      <div className="flex items-center justify-between">
+        {onBackToHome && (
           <button
             type="button"
             onClick={onBackToHome}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-xs backdrop-blur-xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900/80 border border-lime-500/30 hover:border-lime-400 text-xs font-mono font-bold text-slate-300 hover:text-white shadow-lg backdrop-blur-xl transition-all cursor-pointer hover:-translate-x-0.5"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>← Back to Explore</span>
+            <ArrowLeft className="w-3.5 h-3.5 text-lime-400" />
+            <span>TERMINAL EXPLORER</span>
           </button>
+        )}
+
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-lime-500/10 border border-lime-500/30 text-[11px] font-mono font-bold text-lime-400">
+            <span className="w-2 h-2 rounded-full bg-lime-400 animate-ping" />
+            <span>GAS PRESSURE: 99.8% READY</span>
+          </div>
         </div>
-      )}
-      
-      {/* Sleek Hero Header */}
-      <div className="text-center mb-8 sm:mb-10 space-y-2.5">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Pump.fun Automated Creator Royalty Bridge</span>
-        </div>
-        
-        <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Launch a token for any 𝕏 account
-        </h1>
-        
-        <p className="text-sm sm:text-base text-zinc-500 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed">
-          <strong className="text-zinc-900 dark:text-zinc-200 font-semibold">95% of trading fees</strong> convert to USD and auto-deposit to their 𝕏 balance. <strong className="text-zinc-900 dark:text-zinc-200 font-semibold">5%</strong> buy & burn.
-        </p>
       </div>
 
-      {/* Success View */}
+      {/* Hero Studio Banner */}
+      <div className="relative rounded-3xl overflow-hidden p-6 sm:p-10 border border-lime-500/30 bg-slate-950/80 shadow-2xl backdrop-blur-2xl">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-lime-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
+        
+        <div className="relative z-10 max-w-3xl space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-500/15 border border-lime-500/40 text-xs font-mono font-bold text-lime-400">
+            <Wind className="w-3.5 h-3.5 text-lime-400" />
+            <span>FARTPAY LAUNCH ENGINE V2.0</span>
+          </div>
+
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white font-['Outfit']">
+            Deploy Meme Token for any <span className="text-transparent bg-clip-text bg-gradient-to-r from-lime-400 via-emerald-400 to-cyan-400">𝕏 Account</span>
+          </h1>
+
+          <p className="text-sm sm:text-base text-slate-400 leading-relaxed font-sans">
+            Pump.fun fair-launch bonding curve with automated <strong className="text-lime-400 font-mono">95% USD Creator Royalties</strong> streamed directly to their 𝕏 Money wallet.
+          </p>
+        </div>
+      </div>
+
+      {/* SUCCESS CARD VIEW */}
       {launchedToken && (
-        <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-emerald-500/40 dark:border-emerald-500/30 p-6 sm:p-8 shadow-xl space-y-6 mb-8 animate-fade-in">
-          <div className="flex items-center gap-4">
-            <img 
-              src={launchedToken.logoUrl} 
-              alt={launchedToken.name}
-              className="w-16 h-16 rounded-2xl object-cover border border-zinc-200 dark:border-zinc-700 shadow-sm shrink-0"
-              referrerPolicy="no-referrer"
-            />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 truncate">
-                  {launchedToken.name}
-                </h2>
-                <span className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 font-mono text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                  ${launchedToken.symbol}
-                </span>
+        <div className="rounded-3xl border-2 border-lime-500/50 bg-slate-950/90 p-6 sm:p-10 shadow-2xl space-y-8 animate-in fade-in zoom-in-95 duration-300">
+          
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-white/10">
+            <div className="flex items-center gap-5">
+              <div className="relative">
+                <div className="absolute -inset-1 rounded-3xl bg-lime-400 opacity-75 blur-md" />
+                <img 
+                  src={launchedToken.logoUrl} 
+                  alt={launchedToken.name}
+                  className="w-20 h-20 rounded-2xl object-cover border-2 border-lime-400 relative shrink-0"
+                  referrerPolicy="no-referrer"
+                />
               </div>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                95% royalties routed to <strong className="text-zinc-900 dark:text-zinc-200">{launchedToken.beneficiaryXHandle}</strong>
-              </p>
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <h2 className="text-2xl sm:text-3xl font-black text-white font-['Outfit']">
+                    {launchedToken.name}
+                  </h2>
+                  <span className="px-2.5 py-1 rounded-xl bg-lime-500/20 text-lime-400 font-mono font-black text-sm border border-lime-500/30">
+                    ${launchedToken.symbol}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-400 font-mono mt-1">
+                  Recipient: <strong className="text-white">{launchedToken.beneficiaryXHandle}</strong> (95% Royalty Share)
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <a
+                href={`https://pump.fun/coin/${launchedToken.mintAddress}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 sm:flex-initial px-5 py-3 rounded-2xl bg-gradient-to-r from-lime-400 to-emerald-400 hover:from-lime-300 hover:to-emerald-300 text-slate-950 font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-lime-500/25 transition-all"
+              >
+                <span>Trade on Pump.fun</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="px-4 py-3 rounded-2xl bg-slate-900 border border-white/10 hover:border-white/20 text-xs font-mono font-bold text-slate-300 hover:text-white transition-colors cursor-pointer"
+              >
+                Launch Another →
+              </button>
             </div>
           </div>
 
+          {/* Royalty Binding Status */}
           {!launchedToken.feeSharingBound ? (
-            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-bold text-amber-900 dark:text-amber-200">
-                  Step 2 of 2: Sign Royalty Binding
+            <div className="p-5 rounded-2xl bg-yellow-500/10 border border-yellow-500/40 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono font-bold text-yellow-300 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  STEP 2 OF 2: SIGN ROYALTY BINDING
                 </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-500/20 text-amber-900 dark:text-amber-200 rounded">
-                  Required
+                <span className="px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-300 text-[10px] font-mono font-black">
+                  ACTION REQUIRED
                 </span>
               </div>
-              <p className="text-xs text-amber-800 dark:text-amber-300">
-                Sign Transaction 2 in your wallet to legally bind 100% of Pump.fun creator fees to the treasury.
+              <p className="text-xs text-yellow-200/80 leading-relaxed font-mono">
+                Sign Transaction 2 in your wallet to legally bind 100% of Pump.fun creator fees to the FARTPAY protocol treasury router.
               </p>
               <button
                 type="button"
                 onClick={handleSignTransaction2}
                 disabled={isSigningTx2}
-                className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                className="w-full py-3 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-yellow-500/20"
               >
                 {isSigningTx2 ? (
                   <>
-                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" />
                     <span>{tx2StatusText || 'Awaiting Signature...'}</span>
                   </>
                 ) : (
                   <>
-                    <Zap className="w-4 h-4 text-amber-200" />
-                    <span>⚡ Sign Transaction 2 (PumpFees Binding)</span>
+                    <Zap className="w-4 h-4 text-slate-950" />
+                    <span>Sign Transaction 2 (PumpFees Binding)</span>
                   </>
                 )}
               </button>
             </div>
           ) : (
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300 font-medium">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span>PumpFees Royalty Successfully Bound on Solana Mainnet!</span>
+            <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 flex items-center gap-3 text-xs font-mono text-emerald-400 font-bold">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              <span>PumpFees Royalty Successfully Bound on Solana Mainnet! 95% auto-converts to 𝕏 USD.</span>
             </div>
           )}
 
-          {/* Two-Transaction On-Chain Status Breakdown */}
-          <div className="space-y-2.5 font-mono text-xs bg-zinc-50 dark:bg-zinc-950 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 font-sans">
-              <span className="font-bold text-zinc-800 dark:text-zinc-200 text-xs">On-Chain Deployment Audit</span>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded">Solana Mainnet</span>
+          {/* Audit Data */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-4 rounded-2xl bg-slate-900/80 border border-white/5 space-y-2">
+              <span className="text-[11px] font-mono text-slate-400 uppercase">Solana Mint Contract</span>
+              <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-black/50 border border-white/5 font-mono text-xs text-lime-400">
+                <span className="truncate">{launchedToken.mintAddress}</span>
+                <button
+                  type="button"
+                  onClick={() => copyMintToClipboard(launchedToken.mintAddress)}
+                  className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                >
+                  {copiedMint ? <Check className="w-3.5 h-3.5 text-lime-400" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
             </div>
 
-            <div className="flex justify-between items-center text-zinc-500">
-              <span className="flex items-center gap-1.5 font-sans">
-                <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] flex items-center justify-center">1</span>
-                <span>Tx 1 (Token Mint):</span>
-              </span>
+            <div className="p-4 rounded-2xl bg-slate-900/80 border border-white/5 space-y-2">
+              <span className="text-[11px] font-mono text-slate-400 uppercase">Share On X (Twitter)</span>
               <a
-                href={`https://solscan.io/token/${launchedToken.mintAddress}`}
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just launched $${launchedToken.symbol} on @pumpdotfun via FartPay Protocol! 95% creator royalties stream straight to ${launchedToken.beneficiaryXHandle} via 𝕏 Money 💨🚀\n\nTrade now: https://pump.fun/coin/${launchedToken.mintAddress}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-mono text-[11px]"
+                className="h-10 px-4 rounded-xl bg-[#1DA1F2]/20 hover:bg-[#1DA1F2]/30 border border-[#1DA1F2]/40 text-[#1DA1F2] text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all"
               >
-                <span>{launchedToken.mintAddress.slice(0, 6)}...{launchedToken.mintAddress.slice(-6)}</span>
-                <ExternalLink className="w-3 h-3" />
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Broadcast Launch Tweet</span>
               </a>
             </div>
-
-            <div className="flex justify-between items-center text-zinc-500">
-              <span className="flex items-center gap-1.5 font-sans">
-                <span className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-[10px] flex items-center justify-center">2</span>
-                <span>Tx 2 (PumpFees Binding):</span>
-              </span>
-              {launchedToken.feeSharingBound ? (
-                <a
-                  href={`https://solscan.io/tx/${launchedToken.feeSharingTx || launchedToken.mintAddress}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-mono text-[11px]"
-                >
-                  <span>{launchedToken.feeSharingTx ? `${launchedToken.feeSharingTx.slice(0, 6)}...${launchedToken.feeSharingTx.slice(-6)}` : 'Bound & Active'}</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              ) : (
-                <span className="text-amber-600 dark:text-amber-400 font-semibold text-[11px] font-sans">Awaiting Tx 2 Signature</span>
-              )}
-            </div>
-
-            <div className="flex justify-between items-center text-zinc-500 pt-1 border-t border-zinc-100 dark:border-zinc-800">
-              <span className="font-sans">Beneficiary Routing:</span>
-              <span className="text-emerald-600 dark:text-emerald-400 font-bold font-sans">{launchedToken.beneficiaryXHandle} (95% USD)</span>
-            </div>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <a
-              href={`https://pump.fun/coin/${launchedToken.mintAddress}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-xs"
-            >
-              <span>View on Pump.fun</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-            <button
-              type="button"
-              onClick={onNavigateToFees}
-              className="py-2.5 px-4 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors"
-            >
-              <Coins className="w-3.5 h-3.5" />
-              <span>Track Fee Flow</span>
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={resetForm}
-            className="w-full py-2 text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors"
-          >
-            Launch Another Token →
-          </button>
         </div>
       )}
 
-      {/* Main Unified Launch Card */}
+      {/* MAIN DUAL-PANE LAUNCH STUDIO */}
       {!launchedToken && (
-        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-2xl p-5 sm:p-8 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Launchpad & Network Selector */}
-          <div className="space-y-2 pb-2 border-b border-zinc-100 dark:border-zinc-800/80">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Launchpad & Ecosystem
-              </label>
-              <span className="text-[11px] text-zinc-400">Multi-Chain Routing</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {/* Pump.fun (Solana) - Live */}
-              <button
-                type="button"
-                onClick={() => setPlatform('pumpfun')}
-                className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                  platform === 'pumpfun'
-                    ? 'border-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10 ring-2 ring-emerald-500/20'
-                    : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-950/50'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100">Pump.fun</span>
-                  </div>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                    LIVE
-                  </span>
-                </div>
-                <div className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                  Solana • 95% SOL Fees
-                </div>
-              </button>
-
-              {/* Four.meme (BNB Chain) - Coming Soon */}
-              <button
-                type="button"
-                onClick={() => setPlatform('fourmeme')}
-                className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                  platform === 'fourmeme'
-                    ? 'border-amber-500 bg-amber-500/5 dark:bg-amber-500/10 ring-2 ring-amber-500/20'
-                    : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-950/50'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100">Four.meme</span>
-                  </div>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                    SOON
-                  </span>
-                </div>
-                <div className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                  BNB Chain • 95% BNB Fees
-                </div>
-              </button>
-
-              {/* Pons (Robinhood Chain) */}
-              <button
-                type="button"
-                onClick={() => setPlatform('pons')}
-                className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                  platform === 'pons'
-                    ? 'border-teal-500 bg-teal-500/10 dark:bg-teal-500/15 ring-2 ring-teal-500/20'
-                    : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-950/50'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-teal-500" />
-                    <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100">Pons (Robinhood Chain)</span>
-                  </div>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-500/15 text-teal-600 dark:text-teal-400">
-                    Robinhood L2
-                  </span>
-                </div>
-                <div className="text-[10px] text-zinc-500 dark:text-zinc-400">
-                  Robinhood EVM • Direct USD & Equity
-                </div>
-              </button>
-            </div>
-
-            {/* Coming Soon Notice when Four.meme is chosen */}
-            {platform === 'fourmeme' && (
-              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-900 dark:text-amber-200 space-y-1.5 animate-fade-in">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold flex items-center gap-1.5">
-                    <span>🟡</span> Four.meme (BNB Smart Chain) Integration
-                  </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300">
-                    In Development
-                  </span>
-                </div>
-                <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
-                  Four.meme token launches will automatically route 95% BNB creator fees from PancakeSwap bonding curves into 𝕏 Money USD settlements. Switch back to <strong>Pump.fun</strong> for live Solana launches.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setPlatform('pumpfun')}
-                  className="mt-1 px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
-                >
-                  Switch to Pump.fun (Solana Live) →
-                </button>
-              </div>
-            )}
-
-            {/* Active Chain Information when Pons (Robinhood Chain) is chosen */}
-            {platform === 'pons' && (
-              <div className="p-3.5 rounded-2xl bg-teal-500/10 border border-teal-500/30 text-xs text-teal-900 dark:text-teal-200 space-y-1.5 animate-fade-in">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold flex items-center gap-1.5">
-                    <span>🟢</span> Pons (Robinhood Chain L2) Active Deployment
-                  </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-700 dark:text-teal-300">
-                    Robinhood Chain L2
-                  </span>
-                </div>
-                <p className="text-[11px] text-teal-800 dark:text-teal-300 leading-relaxed">
-                  Launching on <strong>Pons (Robinhood Chain)</strong> creates a zero-gas EVM contract with direct bridge settlement into <strong>Robinhood brokerage accounts & 𝕏 Money USD balances</strong>.
-                </p>
-              </div>
-            )}
-          </div>
-          
-          <form onSubmit={handleLaunch} className="space-y-6">
-            
-            {/* 1. Target 𝕏 User */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  1. Beneficiary 𝕏 User (Recipient)
-                </label>
-              </div>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Enter the 𝕏 handle (@username) of the person who will receive 95% of all trading royalties directly in 𝕏 Money. The token launcher does not receive the fees — the targeted 𝕏 user gets paid directly.
-              </p>
+          {/* Left Column: Interactive Form (7 Cols) */}
+          <div className="lg:col-span-7 space-y-6">
+            <form onSubmit={handleLaunch} className="rounded-3xl border border-lime-500/30 bg-slate-950/90 p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-xl">
               
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-zinc-400 dark:text-zinc-500 text-sm">
-                  @
-                </span>
-                <input
-                  type="text"
-                  value={beneficiaryHandle.replace(/^@/, '')}
-                  onChange={(e) => handleHandleChange(e.target.value)}
-                  placeholder="elonmusk, matt_furie, vitalikbuterin..."
-                  className="w-full pl-8 pr-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-base sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-all"
-                  required
-                />
-              </div>
+              {/* 1. Launch Ecosystem Selector */}
+              <div className="space-y-2.5 pb-4 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-mono font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <Layers className="w-3.5 h-3.5 text-lime-400" />
+                    <span>1. Launch Ecosystem & Rail</span>
+                  </label>
+                  <span className="text-[10px] font-mono text-lime-400 font-bold">FAIR BONDING CURVE</span>
+                </div>
 
-              {/* Quick Pick Pills */}
-              <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                <span className="text-[11px] text-zinc-400">Popular 𝕏 Users:</span>
-                {POPULAR_HANDLES.map(p => (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <button
-                    key={p.handle}
                     type="button"
-                    onClick={() => handleHandleChange(p.handle)}
-                    className={`px-2 py-0.5 rounded-full text-[11px] font-medium transition-colors ${
-                      beneficiaryHandle.toLowerCase() === p.handle.toLowerCase()
-                        ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-bold'
-                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                    onClick={() => setPlatform('pumpfun')}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                      platform === 'pumpfun'
+                        ? 'border-lime-400 bg-lime-500/15 shadow-lg shadow-lime-500/20'
+                        : 'border-white/10 hover:border-white/20 bg-slate-900/50'
                     }`}
                   >
-                    {p.handle}
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-xs text-white">Pump.fun</span>
+                      <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-lime-400 text-slate-950">LIVE</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono">Solana • 95% SOL Fees</span>
                   </button>
-                ))}
+
+                  <button
+                    type="button"
+                    onClick={() => setPlatform('fourmeme')}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                      platform === 'fourmeme'
+                        ? 'border-amber-400 bg-amber-500/15 shadow-lg shadow-amber-500/20'
+                        : 'border-white/10 hover:border-white/20 bg-slate-900/50 opacity-60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-xs text-white">Four.meme</span>
+                      <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-amber-500/20 text-amber-400">SOON</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono">BNB • 95% BNB Fees</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPlatform('pons')}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                      platform === 'pons'
+                        ? 'border-cyan-400 bg-cyan-500/15 shadow-lg shadow-cyan-500/20'
+                        : 'border-white/10 hover:border-white/20 bg-slate-900/50 opacity-60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-xs text-white">Robinhood L2</span>
+                      <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-cyan-500/20 text-cyan-400">SOON</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono">Pons EVM • Direct USD</span>
+                  </button>
+                </div>
               </div>
 
-              {/* Live Profile Resolution Preview */}
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800/80 mt-2">
-                <img 
-                  src={currentXProfile.avatar} 
-                  alt={currentXProfile.name}
-                  className="w-10 h-10 rounded-full object-cover border border-zinc-200 dark:border-zinc-700 shrink-0"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="min-w-0 flex-1 text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-zinc-900 dark:text-zinc-100 truncate">
-                      {currentXProfile.name}
-                    </span>
-                    {(currentXProfile.verificationBadge !== 'none' || currentXProfile.kycVerified) && (
-                      <span className="text-blue-500 font-bold text-xs" title="Verified 𝕏 User">✓</span>
-                    )}
-                  </div>
-                  <span className="text-zinc-500 dark:text-zinc-400 font-mono text-[11px] block">
-                    {beneficiaryHandle} • Beneficiary 𝕏 User
-                  </span>
-                </div>
-                <div className="text-right text-[11px]">
-                  <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
-                    <DollarSign className="w-3 h-3" />
-                    <span>95% USD Direct to 𝕏 User</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* 2. Token Details */}
-            <div className="space-y-4">
-              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                2. Token Details
-              </label>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-zinc-600 dark:text-zinc-400 mb-1 font-medium">
-                    Token Name
+              {/* 2. Target Beneficiary X User */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-mono font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <span className="text-lime-400 font-black">2.</span>
+                    <span>Beneficiary 𝕏 Handle (Fee Recipient)</span>
                   </label>
+                  <span className="text-[10px] font-mono text-emerald-400 font-bold">95% TO RECIPIENT</span>
+                </div>
+
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-mono font-bold text-lime-400 text-base">
+                    @
+                  </span>
                   <input
                     type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. SpaceX Martian"
-                    className="w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-semibold text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+                    value={beneficiaryHandle.replace(/^@/, '')}
+                    onChange={(e) => handleHandleChange(e.target.value)}
+                    placeholder="elonmusk, matt_furie, mrbeast..."
+                    className="w-full pl-9 pr-4 py-3.5 rounded-2xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-white font-mono font-bold text-sm focus:outline-none transition-all shadow-inner"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs text-zinc-600 dark:text-zinc-400 mb-1 font-medium">
-                    Ticker / Symbol
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-zinc-400 text-xs">
-                      $
-                    </span>
+                {/* Popular Quick Chips */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] text-slate-400 font-mono">Presets:</span>
+                  {POPULAR_HANDLES.map(p => (
+                    <button
+                      key={p.handle}
+                      type="button"
+                      onClick={() => handleHandleChange(p.handle)}
+                      className={`px-2.5 py-1 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer ${
+                        beneficiaryHandle.toLowerCase() === p.handle.toLowerCase()
+                          ? 'bg-lime-400 text-slate-950 font-black shadow-md'
+                          : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-white/5'
+                      }`}
+                    >
+                      {p.handle}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3. Token Identity */}
+              <div className="space-y-4 pt-2 border-t border-white/10">
+                <label className="text-xs font-mono font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                  <span className="text-lime-400 font-black">3.</span>
+                  <span>Token Metadata</span>
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-mono text-slate-400 mb-1">Token Name</label>
                     <input
                       type="text"
-                      value={symbol}
-                      onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-                      placeholder="MARS"
-                      maxLength={10}
-                      className="w-full pl-7 pr-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 uppercase"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Fart Musk"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-white font-bold text-sm focus:outline-none transition-colors"
                       required
                     />
                   </div>
-                </div>
-              </div>
 
-              <div>
-                <label className="block text-xs text-zinc-600 dark:text-zinc-400 mb-1 font-medium">
-                  Description <span className="text-zinc-400 text-[11px] font-normal">(optional)</span>
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder={`Meme token for ${beneficiaryHandle}. 95% trading fees auto-route to their 𝕏 Money wallet.`}
-                  rows={2}
-                  className="w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
-                />
-              </div>
-            </div>
-
-            {/* 3. Artwork & Image */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                3. Artwork / Logo
-              </label>
-
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsDragging(false);
-                  if (e.dataTransfer.files?.[0]) processSelectedFile(e.dataTransfer.files[0]);
-                }}
-                className={`p-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer flex items-center gap-4 ${
-                  isDragging 
-                    ? 'border-emerald-500 bg-emerald-500/5' 
-                    : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-950/50'
-                }`}
-              >
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) processSelectedFile(e.target.files[0]);
-                  }} 
-                  accept="image/*" 
-                  className="hidden" 
-                />
-                <img 
-                  src={logoUrl} 
-                  alt="Token Logo"
-                  className="w-14 h-14 rounded-xl object-cover border border-zinc-200 dark:border-zinc-700 shadow-sm shrink-0"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-900 dark:text-zinc-100">
-                    <Upload className="w-3.5 h-3.5 text-zinc-500" />
-                    <span>{customFileName || 'Upload custom logo'}</span>
-                  </div>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                    Drag & drop or click to choose file (PNG, JPG, GIF up to 8MB)
-                  </p>
-                </div>
-              </div>
-
-              {/* Preset Memes row */}
-              <div className="flex items-center gap-2 pt-1 flex-wrap">
-                <span className="text-[11px] text-zinc-500 font-medium">Default Presets:</span>
-                {PRESET_MEME_LOGOS.map(p => (
-                  <button
-                    key={p.name}
-                    type="button"
-                    onClick={() => {
-                      setLogoUrl(p.url);
-                      setCustomImageFile(null);
-                      setCustomFileName(null);
-                    }}
-                    className={`h-7 px-2 rounded-lg overflow-hidden border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
-                      logoUrl === p.url 
-                        ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/30' 
-                        : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-400'
-                    }`}
-                    title={p.name}
-                  >
-                    <img src={p.url} alt={p.name} className="w-4 h-4 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />
-                    <span>{p.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 4. Social Links (𝕏, Telegram, Website) */}
-            <div className="space-y-3 pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
-              <button
-                type="button"
-                onClick={() => setShowSocials(!showSocials)}
-                className="w-full flex items-center justify-between text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors py-1 cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <Globe className="w-3.5 h-3.5 text-zinc-500" />
-                  <span>Social Links & More Options</span>
-                  <span className="text-[10px] lowercase font-normal px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
-                    optional
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 text-xs text-zinc-400">
-                  <span>{showSocials ? 'Hide' : 'Add Links'}</span>
-                  {showSocials ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                </div>
-              </button>
-
-              {showSocials && (
-                <div className="space-y-3 pt-1 animate-fade-in">
                   <div>
-                    <label className="block text-xs text-zinc-600 dark:text-zinc-400 mb-1 font-medium flex items-center gap-1.5">
-                      <span className="font-bold text-[11px]">𝕏</span>
-                      <span>Twitter / 𝕏 Link</span>
-                    </label>
+                    <label className="block text-[11px] font-mono text-slate-400 mb-1">Ticker / Symbol</label>
                     <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-mono font-bold text-slate-400 text-xs">$</span>
+                      <input
+                        type="text"
+                        value={symbol}
+                        onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+                        placeholder="FMUSK"
+                        maxLength={10}
+                        className="w-full pl-8 pr-4 py-3 rounded-xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-white font-mono font-black text-sm uppercase focus:outline-none transition-colors"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-mono text-slate-400 mb-1">Description (Optional)</label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder={`FartPay meme coin for ${beneficiaryHandle}. 95% creator fees route to 𝕏 USD.`}
+                    rows={2}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-xs text-white focus:outline-none transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* 4. Artwork / Meme Logo */}
+              <div className="space-y-3 pt-2 border-t border-white/10">
+                <label className="text-xs font-mono font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                  <span className="text-lime-400 font-black">4.</span>
+                  <span>Meme Artwork & Logo</span>
+                </label>
+
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragging(false);
+                    if (e.dataTransfer.files?.[0]) processSelectedFile(e.dataTransfer.files[0]);
+                  }}
+                  className={`p-4 rounded-2xl border-2 border-dashed transition-all cursor-pointer flex items-center gap-4 ${
+                    isDragging 
+                      ? 'border-lime-400 bg-lime-500/10' 
+                      : 'border-white/10 hover:border-lime-400/50 bg-slate-900/50'
+                  }`}
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) processSelectedFile(e.target.files[0]);
+                    }}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <img
+                    src={logoUrl}
+                    alt="Logo Preview"
+                    className="w-14 h-14 rounded-2xl object-cover border-2 border-lime-400/40 shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+                      <Upload className="w-3.5 h-3.5 text-lime-400" />
+                      <span>{customFileName || 'Upload Custom Meme Image'}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                      PNG, JPG, SVG, GIF up to 8MB
+                    </p>
+                  </div>
+                </div>
+
+                {/* Preset Logos Row */}
+                <div className="flex items-center gap-2 flex-wrap pt-1">
+                  <span className="text-[11px] text-slate-400 font-mono">Quick Presets:</span>
+                  {PRESET_MEME_LOGOS.map(p => (
+                    <button
+                      key={p.name}
+                      type="button"
+                      onClick={() => {
+                        setLogoUrl(p.url);
+                        setCustomImageFile(null);
+                        setCustomFileName(null);
+                      }}
+                      className={`h-7 px-2.5 rounded-lg border flex items-center gap-1.5 text-[11px] font-mono transition-all cursor-pointer ${
+                        logoUrl === p.url
+                          ? 'border-lime-400 bg-lime-500/20 text-lime-300 font-bold shadow-xs'
+                          : 'border-white/10 bg-slate-900/70 text-slate-300 hover:border-white/30'
+                      }`}
+                    >
+                      <img src={p.url} alt={p.name} className="w-3.5 h-3.5 rounded-full object-cover shrink-0" referrerPolicy="no-referrer" />
+                      <span>{p.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 5. Social Links & Community URLs */}
+              <div className="space-y-3 pt-2 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setShowSocials(!showSocials)}
+                  className="w-full flex items-center justify-between text-xs font-mono font-black uppercase tracking-wider text-slate-300 hover:text-white transition-colors py-1 cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-3.5 h-3.5 text-lime-400" />
+                    <span className="text-lime-400 font-black">5.</span>
+                    <span>Social Links & Community (Optional)</span>
+                    <span className="text-[10px] lowercase font-normal px-2 py-0.5 rounded-full bg-lime-500/10 text-lime-400 border border-lime-500/20 font-mono">
+                      {showSocials ? 'active' : '+ add links'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-slate-400 font-mono">
+                    <span>{showSocials ? 'Hide' : 'Expand'}</span>
+                    {showSocials ? <ChevronUp className="w-3.5 h-3.5 text-lime-400" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </div>
+                </button>
+
+                {showSocials && (
+                  <div className="space-y-3 pt-1 animate-in fade-in zoom-in-95 duration-200">
+                    <div>
+                      <label className="block text-[11px] font-mono text-slate-400 mb-1 flex items-center gap-1.5">
+                        <span className="font-bold text-xs text-white">𝕏</span>
+                        <span>Twitter / 𝕏 Profile Link</span>
+                      </label>
                       <input
                         type="url"
                         value={twitterLink}
                         onChange={(e) => setTwitterLink(e.target.value)}
                         placeholder="https://x.com/username"
-                        className="w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-mono text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+                        className="w-full px-4 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-xs font-mono text-white focus:outline-none transition-colors"
                       />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-mono text-slate-400 mb-1 flex items-center gap-1.5">
+                          <Send className="w-3.5 h-3.5 text-sky-400" />
+                          <span>Telegram Community</span>
+                        </label>
+                        <input
+                          type="url"
+                          value={telegramLink}
+                          onChange={(e) => setTelegramLink(e.target.value)}
+                          placeholder="https://t.me/community"
+                          className="w-full px-4 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-xs font-mono text-white focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-mono text-slate-400 mb-1 flex items-center gap-1.5">
+                          <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Official Website</span>
+                        </label>
+                        <input
+                          type="url"
+                          value={websiteLink}
+                          onChange={(e) => setWebsiteLink(e.target.value)}
+                          placeholder="https://mytoken.fun"
+                          className="w-full px-4 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-xs font-mono text-white focus:outline-none transition-colors"
+                        />
+                      </div>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-zinc-600 dark:text-zinc-400 mb-1 font-medium flex items-center gap-1.5">
-                        <Send className="w-3 h-3 text-sky-500" />
-                        <span>Telegram Link</span>
-                      </label>
-                      <input
-                        type="url"
-                        value={telegramLink}
-                        onChange={(e) => setTelegramLink(e.target.value)}
-                        placeholder="https://t.me/community"
-                        className="w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-mono text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs text-zinc-600 dark:text-zinc-400 mb-1 font-medium flex items-center gap-1.5">
-                        <Globe className="w-3 h-3 text-emerald-500" />
-                        <span>Website Link</span>
-                      </label>
-                      <input
-                        type="url"
-                        value={websiteLink}
-                        onChange={(e) => setWebsiteLink(e.target.value)}
-                        placeholder="https://myproject.fun"
-                        className="w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-mono text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 5. Initial Buy & Economics */}
-            <div className="space-y-3 pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  5. Initial Buy (Optional)
-                </label>
-                {walletBalance !== null && (
-                  <span className="text-xs font-mono text-zinc-500">
-                    Balance: <strong className="text-zinc-900 dark:text-zinc-200">{walletBalance.toFixed(3)} SOL</strong>
-                  </span>
                 )}
               </div>
 
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={initialBuy}
-                    onChange={(e) => setInitialBuy(e.target.value)}
-                    placeholder="0.05"
-                    className="w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100"
-                  />
-                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-400">
-                    SOL
-                  </span>
+              {/* 6. Initial Dev Buy */}
+              <div className="space-y-3 pt-2 border-t border-white/10">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-mono font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <span className="text-lime-400 font-black">6.</span>
+                    <span>Initial Sniping / Buy (SOL)</span>
+                  </label>
+                  {walletBalance !== null && (
+                    <span className="text-xs font-mono text-slate-400">
+                      Wallet: <strong className="text-lime-400">{walletBalance.toFixed(3)} SOL</strong>
+                    </span>
+                  )}
                 </div>
-                <div className="px-3 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs font-mono text-zinc-600 dark:text-zinc-400">
-                  ≈ ${(parseFloat(initialBuy || '0') * currentSolPrice).toFixed(2)} USD
+
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={initialBuy}
+                      onChange={(e) => setInitialBuy(e.target.value)}
+                      placeholder="0.05"
+                      className="w-full pl-4 pr-12 py-3 rounded-xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-white font-mono font-bold text-sm focus:outline-none"
+                    />
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-slate-400">
+                      SOL
+                    </span>
+                  </div>
+                  <div className="px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-xs font-mono text-lime-400 font-bold shrink-0">
+                    ≈ ${(parseFloat(initialBuy || '0') * currentSolPrice).toFixed(2)} USD
+                  </div>
                 </div>
               </div>
 
-              {/* Fee Split Bar */}
-              <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs space-y-1.5">
-                <div className="flex justify-between font-medium">
-                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                    95% Creator Settlement (USD)
-                  </span>
-                  <span className="text-zinc-500">
-                    5% Protocol Buy & Burn
-                  </span>
+              {/* Error Box */}
+              {errorMsg && (
+                <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/40 text-xs text-red-400 flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{errorMsg}</span>
                 </div>
-                <div className="w-full h-2 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden flex">
-                  <div className="h-full bg-emerald-500 w-[95%]" />
-                  <div className="h-full bg-zinc-400 dark:bg-zinc-600 w-[5%]" />
-                </div>
-              </div>
-            </div>
+              )}
 
-            {/* 6. Two-Transaction Protocol Feature */}
-            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-3">
+              {/* SUBMIT BUTTON */}
+              <div className="pt-2">
+                {!connectedWallet ? (
+                  <button
+                    type="button"
+                    onClick={onOpenWalletModal}
+                    className="w-full py-4 px-6 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-lime-500/30 text-white font-mono font-black text-sm flex items-center justify-center gap-2.5 shadow-xl transition-all cursor-pointer hover:border-lime-400 active:scale-95"
+                  >
+                    <Wallet className="w-4 h-4 text-lime-400" />
+                    <span>CONNECT SOLANA WALLET TO LAUNCH</span>
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isLaunching}
+                    className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-lime-400 via-emerald-400 to-cyan-400 hover:from-lime-300 hover:to-cyan-300 text-slate-950 font-mono font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-xl shadow-lime-500/25 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  >
+                    {isLaunching ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" />
+                        <span>{liveStatusText || 'DETONATING ON PUMP.FUN...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Wind className="w-4 h-4 text-slate-950 animate-pulse" />
+                        <span>DETONATE & LAUNCH ON PUMP.FUN</span>
+                        <ArrowRight className="w-4 h-4 text-slate-950" />
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+            </form>
+          </div>
+
+          {/* Right Column: Holographic Real-Time Blueprint Card (5 Cols) */}
+          <div className="lg:col-span-5 space-y-6">
+            
+            {/* Live Holographic Card */}
+            <div className="rounded-3xl border border-lime-500/40 bg-slate-950/90 p-6 sm:p-7 space-y-6 shadow-2xl relative overflow-hidden backdrop-blur-2xl">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-lime-500/10 rounded-full blur-2xl pointer-events-none" />
+
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
-                    2-Transaction Protocol
-                  </span>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-lime-400 animate-ping" />
+                  <span className="text-xs font-mono font-black text-slate-400 uppercase">Live Token Blueprint</span>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  On-Chain Verified
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-black bg-lime-500/20 text-lime-400 border border-lime-500/40">
+                  95% 𝕏 TIP RAIL ACTIVE
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                {/* Tx 1 */}
-                <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 flex items-start gap-2.5">
-                  <div className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
-                    1
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-bold text-zinc-900 dark:text-zinc-100 text-[11px]">
-                      Tx 1: Token Mint & Curve
-                    </div>
-                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight mt-0.5">
-                      Mints token on Pump.fun & pins metadata to IPFS.
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tx 2 */}
-                <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 flex items-start gap-2.5">
-                  <div className="w-5 h-5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
-                    2
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-bold text-zinc-900 dark:text-zinc-100 text-[11px]">
-                      Tx 2: PumpFees Binding
-                    </div>
-                    <div className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight mt-0.5">
-                      Legally binds 100% creator fees for 95% USD payouts.
-                    </div>
+              {/* Avatar & Title */}
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-900/80 border border-white/5">
+                <img
+                  src={logoUrl}
+                  alt={name || 'Token'}
+                  className="w-16 h-16 rounded-2xl object-cover border-2 border-lime-400 shadow-md shrink-0"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-xl font-black text-white font-['Outfit'] truncate">
+                    {name || 'Fart Musk Token'}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="px-2 py-0.5 rounded-md bg-lime-500/20 text-lime-400 font-mono font-black text-xs">
+                      ${symbol || 'FMUSK'}
+                    </span>
+                    <span className="text-xs text-slate-400 font-mono truncate">
+                      {beneficiaryHandle}
+                    </span>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Error Message */}
-            {errorMsg && (
-              <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-600 dark:text-red-400 flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>{errorMsg}</span>
+              {/* Beneficiary Recipient Preview */}
+              <div className="p-4 rounded-2xl bg-slate-900/60 border border-white/5 space-y-2">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-slate-400">Target 𝕏 Recipient:</span>
+                  <span className="font-bold text-white flex items-center gap-1">
+                    {beneficiaryHandle}
+                    <span className="text-blue-400 font-bold">✓</span>
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-slate-400">Royalty Share:</span>
+                  <span className="font-bold text-lime-400">95% USD Direct to 𝕏</span>
+                </div>
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-slate-400">Protocol Buy & Burn:</span>
+                  <span className="font-bold text-yellow-400">5% SOL Burn</span>
+                </div>
               </div>
-            )}
 
-            {/* Primary Launch Action */}
-            <div className="pt-2">
-              {!connectedWallet ? (
-                <button
-                  type="button"
-                  onClick={onOpenWalletModal}
-                  className="w-full py-4 px-6 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-white text-white dark:text-zinc-950 font-bold text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
-                >
-                  <Wallet className="w-4 h-4" />
-                  <span>Connect Wallet to Launch</span>
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={isLaunching}
-                  className="w-full py-4 px-6 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {isLaunching ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>{liveStatusText || 'Launching on Pump.fun...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Rocket className="w-4 h-4" />
-                      <span>Launch Token on Pump.fun</span>
-                      <ArrowRight className="w-4 h-4 ml-1" />
-                    </>
-                  )}
-                </button>
-              )}
+              {/* Live Bonding Curve Preview */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-slate-400">Bonding Curve Target:</span>
+                  <span className="text-lime-400 font-bold">$69,000 USD (Raydium Migration)</span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-lime-400 to-cyan-400 rounded-full w-[12%]" />
+                </div>
+              </div>
+
+              {/* Security Badges */}
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                <div className="p-2.5 rounded-xl bg-slate-900/80 border border-white/5 text-center">
+                  <div className="text-[10px] text-slate-400 font-mono">MINT REVOKE</div>
+                  <div className="text-xs font-bold text-lime-400 font-mono">100% IMMUTABLE</div>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-900/80 border border-white/5 text-center">
+                  <div className="text-[10px] text-slate-400 font-mono">FREEZE AUTHORITY</div>
+                  <div className="text-xs font-bold text-cyan-400 font-mono">PERMANENTLY REVOKED</div>
+                </div>
+              </div>
+
             </div>
 
-          </form>
+            {/* How It Works Micro-Card */}
+            <div className="p-5 rounded-3xl bg-slate-950/60 border border-white/10 space-y-3">
+              <h4 className="text-xs font-mono font-black uppercase text-slate-300 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-lime-400" />
+                <span>How FartPay Protocol Operates</span>
+              </h4>
+              <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                When you deploy, the creator fee beneficiary is hardcoded to FARTPAY's on-chain router. Every trade on Pump.fun generates SOL fees, which are auto-liquidated to USD and settled straight into the recipient's 𝕏 Money account.
+              </p>
+            </div>
+
+          </div>
+
         </div>
       )}
 

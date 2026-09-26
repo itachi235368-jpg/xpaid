@@ -1,5 +1,5 @@
 import React from 'react';
-import { TippedLogo } from './TippedLogo';
+import { FartPayLogo } from './FartPayLogo';
 
 interface XpaidLogoProps {
   className?: string;
@@ -16,7 +16,7 @@ export const XpaidLogo: React.FC<XpaidLogoProps> = ({
   variant = 'badge',
 }) => {
   return (
-    <TippedLogo 
+    <FartPayLogo 
       className={className} 
       showText={showText} 
       textColor={textColor}

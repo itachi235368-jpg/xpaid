@@ -28,60 +28,15 @@ const TOKENS_FILE = path.join(DATA_DIR, 'tokens.json');
 const FEES_FILE = path.join(DATA_DIR, 'fees.json');
 const PAYOUTS_FILE = path.join(DATA_DIR, 'payouts.json');
 
-const DEFAULT_GLOBAL_TOKENS = [
-  {
-    id: 'tok-user-elon-coin-aht',
-    name: 'ELON COIN',
-    symbol: 'ELON',
-    description: 'Autonomous fair launch token on Pump.fun (Solana). 95% creator trading fees routed directly to @elonmusk via 𝕏 Money Protocol Treasury.',
-    logoUrl: '/assets/elon-crypto.svg',
-    platform: 'pumpfun',
-    network: 'solana',
-    beneficiaryXHandle: '@elonmusk',
-    beneficiaryName: 'Elon Musk',
-    beneficiaryAvatar: '/assets/elon-crypto.svg',
-    initialBuyAmount: 0.1,
-    feeSplitPct: 95,
-    mintAddress: 'ahTGfegWUwK1xeJfstiLjzqFqpdAniuvsh4x9R9kmkZ',
-    pairAddress: 'pvjey3Bnx5o6BybwxApeHfe61tMfgpPKtCH7CHeN8Rm',
-    beneficiaryAccount: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
-    creatorFeeRecipient: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
-    marketCapUsd: 3359.85,
-    volume24hUsd: 1846.92,
-    bondingCurveProgress: 4.8,
-    createdAt: new Date().toISOString(),
-    creatorWallet: 'ChKVce7smxzqrtFGxbdBA1d4ZSazfDwWNZbJUcU6EMy8',
-    status: 'active',
-    twitterLink: 'https://x.com/elonmusk',
-    ipfsImageUrl: '/assets/elon-crypto.svg'
-  }
-];
+const DEFAULT_GLOBAL_TOKENS: any[] = [];
 
-const DEFAULT_GLOBAL_FEES = [
-  {
-    id: 'fee-elon-aht-stream',
-    tokenId: 'tok-user-elon-coin-aht',
-    tokenSymbol: 'ELON',
-    tokenName: 'ELON COIN',
-    platform: 'pumpfun',
-    network: 'solana',
-    rawAmount: 0.0248,
-    currency: 'SOL',
-    amountUsd: 3.68,
-    beneficiaryXHandle: '@elonmusk',
-    beneficiaryCutUsd: 3.50,
-    protocolCutUsd: 0.18,
-    status: 'accrued_on_curve',
-    timestamp: new Date().toISOString(),
-    sourceTxHash: 'ahTGfegWUwK1xeJfstiLjzqFqpdAniuvsh4x9R9kmkZ'
-  }
-];
+const DEFAULT_GLOBAL_FEES: any[] = [];
 
 function readGlobalTokens(): any[] {
   try {
     if (fs.existsSync(TOKENS_FILE)) {
       const data = JSON.parse(fs.readFileSync(TOKENS_FILE, 'utf-8'));
-      if (Array.isArray(data) && data.length > 0) return data;
+      if (Array.isArray(data)) return data;
     }
   } catch (e) {}
   return DEFAULT_GLOBAL_TOKENS;
@@ -97,7 +52,7 @@ function readGlobalFees(): any[] {
   try {
     if (fs.existsSync(FEES_FILE)) {
       const data = JSON.parse(fs.readFileSync(FEES_FILE, 'utf-8'));
-      if (Array.isArray(data) && data.length > 0) return data;
+      if (Array.isArray(data)) return data;
     }
   } catch (e) {}
   return DEFAULT_GLOBAL_FEES;
@@ -231,6 +186,29 @@ app.post('/api/payouts', (req, res) => {
   const trimmed = existingPayouts.slice(0, 100);
   writeGlobalPayouts(trimmed);
   res.json({ success: true, payouts: trimmed });
+});
+
+// PumpPortal trade-local proxy endpoint to prevent CORS & timeout issues
+app.post('/api/pump/trade-local', async (req, res) => {
+  try {
+    const forwardRes = await fetch('https://pumpportal.fun/api/trade-local', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body),
+      signal: AbortSignal.timeout(12000)
+    });
+
+    if (!forwardRes.ok) {
+      const errText = await forwardRes.text().catch(() => '');
+      return res.status(forwardRes.status).json({ error: errText || 'PumpPortal transaction generation error' });
+    }
+
+    const buffer = await forwardRes.arrayBuffer();
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.send(Buffer.from(buffer));
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Proxy request to PumpPortal failed' });
+  }
 });
 
 // Health check endpoint

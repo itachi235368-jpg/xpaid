@@ -443,42 +443,55 @@ export async function deployPumpFunToken(
 
   onStatusUpdate('Requesting unsigned Pump.fun bonding curve transaction...');
 
-  // 2. Request create-local transaction from pumpportal with fast timeout
+  // 2. Request create-local transaction from pumpportal (tries local proxy first, then direct)
   let txBytes: ArrayBuffer | null = null;
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000);
+  const payload = {
+    publicKey: params.creatorPublicKey,
+    action: 'create',
+    tokenMetadata: {
+      name: params.name,
+      symbol: params.symbol,
+      uri: metadataUri
+    },
+    mint: mintPubkey,
+    denominatedInSol: 'true',
+    amount: 0,
+    slippage: 10,
+    priorityFee: 0.0005,
+    pool: 'pump'
+  };
 
-    const tradeRes = await fetch('https://pumpportal.fun/api/trade-local', {
+  try {
+    const proxyRes = await fetch('/api/pump/trade-local', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal,
-      body: JSON.stringify({
-        publicKey: params.creatorPublicKey,
-        action: 'create',
-        tokenMetadata: {
-          name: params.name,
-          symbol: params.symbol,
-          uri: metadataUri
-        },
-        mint: mintPubkey,
-        denominatedInSol: 'true',
-        amount: 0, // PumpPortal create endpoint requires 0 amount
-        slippage: 10,
-        priorityFee: 0.0005,
-        pool: 'pump'
-      })
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(8000)
     });
-    clearTimeout(timeoutId);
-
-    if (tradeRes.ok) {
-      txBytes = await tradeRes.arrayBuffer();
+    if (proxyRes.ok) {
+      txBytes = await proxyRes.arrayBuffer();
     }
-  } catch (apiErr) {
-    console.warn('Trade-local skipped or timed out, executing instant on-chain launch path:', apiErr);
+  } catch (proxyErr) {
+    console.warn('Proxy trade-local failed, trying direct:', proxyErr);
   }
 
-  // 3. If real browser wallet is connected, request real signature!
+  if (!txBytes || txBytes.byteLength === 0) {
+    try {
+      const tradeRes = await fetch('https://pumpportal.fun/api/trade-local', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(8000)
+      });
+      if (tradeRes.ok) {
+        txBytes = await tradeRes.arrayBuffer();
+      }
+    } catch (apiErr) {
+      console.warn('Direct Trade-local skipped, proceeding:', apiErr);
+    }
+  }
+
+  // 3. If real browser wallet is connected, request user signatures for the 2-step protocol
   if (provider && txBytes && txBytes.byteLength > 0) {
     try {
       onStatusUpdate('[Step 1 of 2] Please sign Transaction 1 in your wallet (Create Token on Pump.fun)...');
@@ -502,9 +515,9 @@ export async function deployPumpFunToken(
 
       let feeSharingTx: string | undefined;
       let feeSharingError: string | undefined;
+
       try {
         onStatusUpdate('[Step 2 of 2] Preparing on-chain royalty binding (10,000 BPS to Protocol Treasury)...');
-        // Brief pause to allow wallet extension to reset and RPC to index new mint
         await new Promise((r) => setTimeout(r, 1200));
 
         onStatusUpdate('[Step 2 of 2] ACTION REQUIRED: Please sign Transaction 2 in your wallet to bind 100% royalties...');

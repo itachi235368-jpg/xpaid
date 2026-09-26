@@ -109,10 +109,10 @@ export const HowThingsWork: React.FC<HowThingsWorkProps> = ({
             Zero-Friction Tokenomics Architecture
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mb-4">
-            How TIPPED Bridges Pump.fun Fees Directly to 𝕏 Users
+            How FartPay Bridges Pump.fun Fees Directly to 𝕏 Users
           </h2>
           <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-            TIPPED allows anyone to launch a Solana meme token on Pump.fun, and automatically route 95% of trading fees into real USD deposits for any designated 𝕏 User—<strong className="text-emerald-400 font-semibold">we pay the 𝕏 User, not the token creator</strong>.
+            FartPay allows anyone to launch a Solana meme token on Pump.fun, and automatically route 95% of trading fees into real USD deposits for any designated 𝕏 User—<strong className="text-emerald-400 font-semibold">we pay the 𝕏 User, not the token creator</strong>.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -452,14 +452,14 @@ export const HowThingsWork: React.FC<HowThingsWorkProps> = ({
         </div>
       </div>
 
-      {/* Feature Comparison Table: Traditional vs TIPPED */}
+      {/* Feature Comparison Table: Traditional vs FartPay */}
       <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 shadow-sm">
         <div className="mb-6">
           <h3 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-zinc-100">
-            Why TIPPED is Different
+            Why FartPay is Different
           </h3>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            Compare standard meme token creation with TIPPED's frictionless 𝕏 Money rail.
+            Compare standard meme token creation with FartPay's frictionless 𝕏 Money rail.
           </p>
         </div>
 
@@ -469,7 +469,7 @@ export const HowThingsWork: React.FC<HowThingsWorkProps> = ({
               <tr className="border-b border-zinc-200 dark:border-zinc-800 text-zinc-400 uppercase text-[11px]">
                 <th className="pb-3 font-semibold">Aspect</th>
                 <th className="pb-3 font-semibold text-zinc-500 dark:text-zinc-400">Traditional Meme Platforms</th>
-                <th className="pb-3 font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-50/50 dark:bg-cyan-950/40 px-4 rounded-t-lg">TIPPED System</th>
+                <th className="pb-3 font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-50/50 dark:bg-cyan-950/40 px-4 rounded-t-lg">FartPay Protocol</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800 text-zinc-700 dark:text-zinc-300">
@@ -521,7 +521,7 @@ export const HowThingsWork: React.FC<HowThingsWorkProps> = ({
             Frequently Asked Questions
           </h3>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            Common questions about the TIPPED protocol, fees, and 𝕏 Money settlement.
+            Common questions about the FartPay protocol, fees, and 𝕏 Money settlement.
           </p>
         </div>
 
@@ -531,7 +531,7 @@ export const HowThingsWork: React.FC<HowThingsWorkProps> = ({
               Does the 𝕏 creator need to approve or sign anything?
             </h4>
             <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              No. That is the core innovation of TIPPED. You can launch a token honoring any creator (like @elonmusk, @cz_binance, or a favorite artist), and royalties are deposited into their 𝕏 Money balance automatically.
+              No. That is the core innovation of FartPay. You can launch a token honoring any creator (like @elonmusk, @cz_binance, or a favorite artist), and royalties are deposited into their 𝕏 Money balance automatically.
             </p>
           </div>
 
@@ -540,7 +540,7 @@ export const HowThingsWork: React.FC<HowThingsWorkProps> = ({
               Where does the 1% fee come from?
             </h4>
             <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Pump.fun's Solana smart contracts enforce a 1% creator fee on every trade along the bonding curve. TIPPED sets the verified Protocol Treasury as the fee collection authority.
+              Pump.fun's Solana smart contracts enforce a 1% creator fee on every trade along the bonding curve. FartPay sets the verified Protocol Treasury as the fee collection authority.
             </p>
           </div>
 

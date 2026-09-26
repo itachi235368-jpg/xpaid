@@ -10,6 +10,7 @@ import { WalletConnectModal } from './components/WalletConnectModal';
 import { TransparencyProofModal } from './components/TransparencyProofModal';
 import { FloatingCoinsBackground } from './components/FloatingCoinsBackground';
 import { UsePaidFrontPage } from './components/UsePaidFrontPage';
+import { FartSoundboardWidget } from './components/FartSoundboardWidget';
 import { 
   INITIAL_TOKENS, 
   INITIAL_FEES, 
@@ -58,18 +59,17 @@ export default function App() {
   }, []);
   const [tokens, setTokens] = useState<TokenLaunchData[]>(() => {
     try {
-      const saved = localStorage.getItem('tipped_launched_tokens_v1');
+      localStorage.removeItem('tipped_launched_tokens_v1');
+      localStorage.removeItem('fartpay_launched_tokens_v2');
+      const saved = localStorage.getItem('fartpay_launched_tokens_v3');
       if (saved) {
         const parsed: TokenLaunchData[] = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const map = new Map<string, TokenLaunchData>();
-          INITIAL_TOKENS.forEach(t => map.set(t.mintAddress || t.id, t));
-          parsed.forEach(t => map.set(t.mintAddress || t.id, t));
-          return Array.from(map.values());
+        if (Array.isArray(parsed)) {
+          return parsed;
         }
       }
     } catch (e) {}
-    return INITIAL_TOKENS;
+    return [];
   });
 
   // 1. Live Global Synchronization with Server (all visitors see coins launched by anyone)
@@ -81,29 +81,12 @@ export default function App() {
         const res = await fetch('/api/tokens');
         if (res.ok) {
           const data = await res.json();
-          if (data.success && Array.isArray(data.tokens) && data.tokens.length > 0) {
+          if (data.success && Array.isArray(data.tokens)) {
             if (isCancelled) return;
-            setTokens(prev => {
-              const map = new Map<string, TokenLaunchData>();
-              // Put default initial tokens first
-              INITIAL_TOKENS.forEach(t => map.set(t.mintAddress || t.id, t));
-              // Put server tokens
-              data.tokens.forEach((t: TokenLaunchData) => {
-                map.set(t.mintAddress || t.id, t);
-              });
-              // Keep any existing local custom tokens
-              prev.forEach(t => {
-                const key = t.mintAddress || t.id;
-                if (!map.has(key)) {
-                  map.set(key, t);
-                }
-              });
-              const merged = Array.from(map.values());
-              try {
-                localStorage.setItem('tipped_launched_tokens_v1', JSON.stringify(merged));
-              } catch (e) {}
-              return merged;
-            });
+            setTokens(data.tokens);
+            try {
+              localStorage.setItem('fartpay_launched_tokens_v3', JSON.stringify(data.tokens));
+            } catch (e) {}
           }
         }
       } catch (err) {}
@@ -129,32 +112,17 @@ export default function App() {
         ]);
         if (feesRes.ok) {
           const fData = await feesRes.json();
-          if (fData.success && Array.isArray(fData.fees) && fData.fees.length > 0) {
+          if (fData.success && Array.isArray(fData.fees)) {
             if (!isCancelled) {
-              setFees(prev => {
-                const map = new Map<string, FeeCollectionRecord>();
-                INITIAL_FEES.forEach(f => map.set(f.id, f));
-                fData.fees.forEach((f: FeeCollectionRecord) => map.set(f.id, f));
-                prev.forEach(f => {
-                  if (!map.has(f.id)) map.set(f.id, f);
-                });
-                return Array.from(map.values()).slice(0, 100);
-              });
+              setFees(fData.fees);
             }
           }
         }
         if (payoutsRes.ok) {
           const pData = await payoutsRes.json();
-          if (pData.success && Array.isArray(pData.payouts) && pData.payouts.length > 0) {
+          if (pData.success && Array.isArray(pData.payouts)) {
             if (!isCancelled) {
-              setPayouts(prev => {
-                const map = new Map<string, XMoneyPayout>();
-                pData.payouts.forEach((p: XMoneyPayout) => map.set(p.id, p));
-                prev.forEach(p => {
-                  if (!map.has(p.id)) map.set(p.id, p);
-                });
-                return Array.from(map.values()).slice(0, 100);
-              });
+              setPayouts(pData.payouts);
             }
           }
         }
@@ -510,8 +478,8 @@ export default function App() {
               xMoneyReferenceId: `XM-${Math.floor(10000000 + Math.random() * 90000000)}-${f.currency}`,
               paymentMethod: isKraken ? 'Kraken USD ➔ 𝕏 Money' : 'X Money (USD Direct)',
               proofTweetText: isKraken
-                ? `⚡ @Tipped auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via Kraken Off-Ramp ➔ 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`
-                : `⚡ @Tipped auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`,
+                ? `⚡ FartPay auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via Kraken Off-Ramp ➔ 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`
+                : `⚡ FartPay auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`,
               blockchainRefTx: f.sourceTxHash,
               krakenOrderId: isKraken ? `KRK-${Math.floor(1000000 + Math.random() * 9000000)}` : undefined,
               krakenWithdrawalRef: isKraken ? `W-${Math.floor(10000000 + Math.random() * 90000000)}` : undefined,
@@ -591,7 +559,7 @@ export default function App() {
       timestamp: new Date().toISOString(),
       xMoneyReferenceId: `XM-${Math.floor(10000000 + Math.random() * 90000000)}-${fee.currency}`,
       paymentMethod: 'X Money (USD Direct)',
-      proofTweetText: `⚡ @Tipped auto-deposited $${fee.beneficiaryCutUsd.toFixed(2)} USD directly to ${fee.beneficiaryXHandle} via 𝕏 Money from $${fee.tokenSymbol} trading fees on ${fee.platform.toUpperCase()}! (Zero claim needed). Ref: ${fee.sourceTxHash}`,
+      proofTweetText: `⚡ FartPay auto-deposited $${fee.beneficiaryCutUsd.toFixed(2)} USD directly to ${fee.beneficiaryXHandle} via 𝕏 Money from $${fee.tokenSymbol} trading fees on ${fee.platform.toUpperCase()}! (Zero claim needed). Ref: ${fee.sourceTxHash}`,
       blockchainRefTx: fee.sourceTxHash,
     };
 
@@ -646,7 +614,7 @@ export default function App() {
           timestamp: new Date().toISOString(),
           xMoneyReferenceId: `XM-${Math.floor(10000000 + Math.random() * 90000000)}-${f.currency}`,
           paymentMethod: 'X Money (USD Direct)',
-          proofTweetText: `⚡ @Tipped auto-deposited $${f.beneficiaryCutUsd.toFixed(2)} USD to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} fees on ${f.platform.toUpperCase()}! (Zero claim needed)`,
+          proofTweetText: `⚡ FartPay auto-deposited $${f.beneficiaryCutUsd.toFixed(2)} USD to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} fees on ${f.platform.toUpperCase()}! (Zero claim needed)`,
           blockchainRefTx: f.sourceTxHash,
         });
         return { ...f, status: 'disbursed_x_money' as const, xMoneyPayoutId: pId };
@@ -667,14 +635,14 @@ export default function App() {
   const totalDisbursedUsd = payouts.reduce((acc, curr) => acc + curr.amountUsd, 0);
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark bg-zinc-950 text-zinc-100' : 'bg-zinc-50 text-zinc-900'} flex flex-col font-sans transition-colors relative overflow-x-hidden`}>
-      {/* Floating Animated Coins Layer like usepaid.app */}
+    <div className={`min-h-screen ${isDarkMode ? 'dark bg-[#06080d] bg-mesh-dark text-slate-100' : 'bg-[#f8fafc] bg-mesh-light text-slate-900'} flex flex-col font-sans transition-colors relative overflow-x-hidden selection:bg-cyan-500 selection:text-black`}>
+      {/* Floating Animated Coins Layer */}
       <FloatingCoinsBackground interactive={true} />
 
       {/* Toast Notification - mobile elevated above bottom nav */}
       {toastMessage && (
-        <div className="fixed bottom-24 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-50 bg-zinc-900 dark:bg-zinc-800 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center justify-center sm:justify-start gap-3 border border-zinc-700 dark:border-zinc-600 animate-fade-in text-xs sm:text-sm max-w-sm sm:max-w-md mx-auto sm:mx-0">
-          <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+        <div className="fixed bottom-24 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-50 bg-slate-900 dark:bg-slate-800 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-center sm:justify-start gap-3 border border-slate-700 dark:border-slate-600 animate-fade-in text-xs sm:text-sm max-w-sm sm:max-w-md mx-auto sm:mx-0 backdrop-blur-md">
+          <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
           <span className="font-medium text-center sm:text-left">{toastMessage}</span>
         </div>
       )}
@@ -696,8 +664,8 @@ export default function App() {
         onToggleTheme={() => setIsDarkMode(prev => !prev)}
       />
 
-      {/* Main Content Area - padded for bottom mobile bar */}
-      <main className="flex-1 pb-28 sm:pb-16">
+      {/* Main Content Area */}
+      <main className="flex-1 pb-24 sm:pb-16">
         {activeTab === 'home' && (
           <UsePaidFrontPage
             tokens={tokens}
@@ -811,35 +779,22 @@ export default function App() {
         }}
       />
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-8 px-4 text-xs text-zinc-500 dark:text-zinc-400 mb-20 sm:mb-0 transition-colors">
+      {/* Modern High-End Footer */}
+      <footer className="border-t border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md py-8 px-4 text-xs text-slate-500 dark:text-slate-400 mb-20 sm:mb-0 transition-colors">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm font-['Outfit']">TIPPED Protocol</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
-                Solana Mainnet
+              <span className="font-extrabold text-slate-900 dark:text-white text-sm font-['Outfit']">FartPay Protocol</span>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-lime-500/10 text-lime-600 dark:text-lime-400 border border-lime-500/25">
+                Solana Active
               </span>
             </div>
-            <span className="hidden sm:inline text-zinc-300 dark:text-zinc-700">•</span>
+            <span className="hidden sm:inline text-slate-300 dark:text-slate-700">•</span>
             <span>Fee & Tip Bridge for Pump.fun (95% Creator Royalties • 𝕏 Money Settlement)</span>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <a
-              href="https://x.com/usetipped?s=11"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-white dark:text-zinc-100 font-semibold text-xs transition-all border border-zinc-700/60 shadow-xs hover:scale-105 active:scale-95 group"
-            >
-              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 24.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
-              <span>Follow @usetipped on 𝕏</span>
-              <ExternalLink className="w-3 h-3 text-zinc-400 group-hover:text-white transition-colors" />
-            </a>
-
-            <div className="flex items-center gap-3 text-zinc-400 text-xs">
+            <div className="flex items-center gap-3 text-slate-400 text-xs">
               <span>Creator Royalty Router</span>
               <span>•</span>
               <span>𝕏 Money Settlement</span>
@@ -847,6 +802,9 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Interactive Fart Soundboard Widget */}
+      <FartSoundboardWidget />
     </div>
   );
 }
