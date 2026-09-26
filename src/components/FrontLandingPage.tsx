@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { TokenLaunchData, TreasuryConfig } from '../types';
 import { KNOWN_X_USERS } from '../data/mockData';
+import { TippedLogo } from './TippedLogo';
 
 interface FrontLandingPageProps {
   tokens: TokenLaunchData[];
@@ -91,21 +92,26 @@ export const FrontLandingPage: React.FC<FrontLandingPageProps> = ({
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-14 space-y-16 sm:space-y-24 relative z-10">
       
-      {/* 1. Hero Section like usepaid.app */}
+      {/* 1. Hero Section for Tipped Protocol */}
       <div className="text-center max-w-3xl mx-auto space-y-6">
         
+        {/* Tipped Brand Emblem */}
+        <div className="flex justify-center -mb-1">
+          <TippedLogo className="w-16 h-16 sm:w-20 sm:h-20 shadow-2xl rounded-3xl border border-cyan-500/40" />
+        </div>
+
         {/* Top Status Eyebrow Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-800 dark:text-zinc-200 shadow-xs">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Pump.fun Automated 𝕏 User Royalty Bridge</span>
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 dark:bg-cyan-950/40 border border-cyan-500/30 text-xs font-semibold text-cyan-800 dark:text-cyan-300 shadow-xs">
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+          <span>Tipped Protocol • Pump.fun Automated 𝕏 Royalty Rails</span>
           <span className="text-zinc-300 dark:text-zinc-700">|</span>
-          <span className="text-emerald-600 dark:text-emerald-400 font-bold">95% to 𝕏 User (Not Creator)</span>
+          <span className="text-cyan-600 dark:text-cyan-400 font-bold">95% to 𝕏 User</span>
         </div>
 
         {/* Display Headline */}
-        <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.1]">
+        <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.1] font-['Outfit']">
           Create a memecoin for <br className="hidden sm:inline" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-500 dark:from-emerald-400 dark:via-teal-300 dark:to-emerald-400">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400">
             any 𝕏 user.
           </span>
         </h1>
@@ -117,9 +123,9 @@ export const FrontLandingPage: React.FC<FrontLandingPageProps> = ({
 
         {/* Core Interactive Action Bar (Search & Launch) */}
         <div className="pt-2 max-w-xl mx-auto">
-          <form onSubmit={handleQuickLaunch} className="flex flex-col sm:flex-row items-center gap-2 p-1.5 rounded-2xl sm:rounded-full bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 shadow-xl focus-within:border-emerald-500 transition-all">
+          <form onSubmit={handleQuickLaunch} className="flex flex-col sm:flex-row items-center gap-2 p-1.5 rounded-2xl sm:rounded-full bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 shadow-xl focus-within:border-cyan-500 transition-all">
             <div className="flex items-center gap-2 flex-1 w-full px-4 py-2 sm:py-0">
-              <span className="text-zinc-400 font-bold text-base">@</span>
+              <span className="text-cyan-500 font-bold text-base">@</span>
               <input
                 type="text"
                 value={searchHandle}
@@ -130,11 +136,11 @@ export const FrontLandingPage: React.FC<FrontLandingPageProps> = ({
             </div>
             <button
               type="submit"
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl sm:rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition-all cursor-pointer whitespace-nowrap shrink-0"
+              className="w-full sm:w-auto px-6 py-3.5 rounded-xl sm:rounded-full bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 active:scale-95 text-slate-950 text-sm font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all cursor-pointer whitespace-nowrap shrink-0"
             >
-              <Rocket className="w-4 h-4" />
+              <Rocket className="w-4 h-4 text-slate-950" />
               <span>Launch Coin</span>
-              <ArrowRight className="w-4 h-4 ml-0.5" />
+              <ArrowRight className="w-4 h-4 ml-0.5 text-slate-950" />
             </button>
           </form>
 
@@ -146,7 +152,7 @@ export const FrontLandingPage: React.FC<FrontLandingPageProps> = ({
                 key={handle}
                 type="button"
                 onClick={() => onLaunchClick(handle)}
-                className="px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-mono text-[11px] cursor-pointer"
+                className="px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 hover:bg-cyan-500/10 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors font-mono text-[11px] cursor-pointer"
               >
                 {handle}
               </button>
@@ -161,7 +167,7 @@ export const FrontLandingPage: React.FC<FrontLandingPageProps> = ({
             onClick={onNavigateToFees}
             className="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5 transition-colors cursor-pointer"
           >
-            <Coins className="w-3.5 h-3.5 text-emerald-500" />
+            <Coins className="w-3.5 h-3.5 text-cyan-400" />
             <span>View Live Fee Flow</span>
           </button>
           <button
@@ -169,7 +175,7 @@ export const FrontLandingPage: React.FC<FrontLandingPageProps> = ({
             onClick={onNavigateToPayouts}
             className="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5 transition-colors cursor-pointer"
           >
-            <span className="font-bold text-[11px]">𝕏</span>
+            <span className="font-bold text-[11px] text-cyan-400">𝕏</span>
             <span>Check 𝕏 Disbursements</span>
           </button>
         </div>

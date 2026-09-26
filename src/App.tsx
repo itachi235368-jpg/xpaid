@@ -9,7 +9,8 @@ import { StreamerHub } from './components/StreamerHub';
 import { WalletConnectModal } from './components/WalletConnectModal';
 import { TransparencyProofModal } from './components/TransparencyProofModal';
 import { FloatingCoinsBackground } from './components/FloatingCoinsBackground';
-import { UsePaidFrontPage } from './components/UsePaidFrontPage';
+import { FrontLandingPage } from './components/FrontLandingPage';
+import { TippedLogo } from './components/TippedLogo';
 import { 
   INITIAL_TOKENS, 
   INITIAL_FEES, 
@@ -58,9 +59,7 @@ export default function App() {
   }, []);
   const [tokens, setTokens] = useState<TokenLaunchData[]>(() => {
     try {
-      localStorage.removeItem('tipped_launched_tokens_v1');
-      localStorage.removeItem('fartpay_launched_tokens_v2');
-      const saved = localStorage.getItem('fartpay_launched_tokens_v3');
+      const saved = localStorage.getItem('tipped_launched_tokens_v3') || localStorage.getItem('fartpay_launched_tokens_v3');
       if (saved) {
         const parsed: TokenLaunchData[] = JSON.parse(saved);
         if (Array.isArray(parsed)) {
@@ -84,7 +83,7 @@ export default function App() {
             if (isCancelled) return;
             setTokens(data.tokens);
             try {
-              localStorage.setItem('fartpay_launched_tokens_v3', JSON.stringify(data.tokens));
+              localStorage.setItem('tipped_launched_tokens_v3', JSON.stringify(data.tokens));
             } catch (e) {}
           }
         }
@@ -478,8 +477,8 @@ export default function App() {
               xMoneyReferenceId: `XM-${Math.floor(10000000 + Math.random() * 90000000)}-${f.currency}`,
               paymentMethod: isKraken ? 'Kraken USD ➔ 𝕏 Money' : 'X Money (USD Direct)',
               proofTweetText: isKraken
-                ? `⚡ FartPay auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via Kraken Off-Ramp ➔ 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`
-                : `⚡ FartPay auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`,
+                ? `⚡ Tipped auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via Kraken Off-Ramp ➔ 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`
+                : `⚡ Tipped auto-disbursed $${f.beneficiaryCutUsd.toFixed(2)} USD directly to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} trading fees on ${f.platform.toUpperCase()}! Zero claim needed. Ref: ${f.sourceTxHash}`,
               blockchainRefTx: f.sourceTxHash,
               krakenOrderId: isKraken ? `KRK-${Math.floor(1000000 + Math.random() * 9000000)}` : undefined,
               krakenWithdrawalRef: isKraken ? `W-${Math.floor(10000000 + Math.random() * 90000000)}` : undefined,
@@ -559,7 +558,7 @@ export default function App() {
       timestamp: new Date().toISOString(),
       xMoneyReferenceId: `XM-${Math.floor(10000000 + Math.random() * 90000000)}-${fee.currency}`,
       paymentMethod: 'X Money (USD Direct)',
-      proofTweetText: `⚡ FartPay auto-deposited $${fee.beneficiaryCutUsd.toFixed(2)} USD directly to ${fee.beneficiaryXHandle} via 𝕏 Money from $${fee.tokenSymbol} trading fees on ${fee.platform.toUpperCase()}! (Zero claim needed). Ref: ${fee.sourceTxHash}`,
+      proofTweetText: `⚡ Tipped auto-deposited $${fee.beneficiaryCutUsd.toFixed(2)} USD directly to ${fee.beneficiaryXHandle} via 𝕏 Money from $${fee.tokenSymbol} trading fees on ${fee.platform.toUpperCase()}! (Zero claim needed). Ref: ${fee.sourceTxHash}`,
       blockchainRefTx: fee.sourceTxHash,
     };
 
@@ -614,7 +613,7 @@ export default function App() {
           timestamp: new Date().toISOString(),
           xMoneyReferenceId: `XM-${Math.floor(10000000 + Math.random() * 90000000)}-${f.currency}`,
           paymentMethod: 'X Money (USD Direct)',
-          proofTweetText: `⚡ FartPay auto-deposited $${f.beneficiaryCutUsd.toFixed(2)} USD to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} fees on ${f.platform.toUpperCase()}! (Zero claim needed)`,
+          proofTweetText: `⚡ Tipped auto-deposited $${f.beneficiaryCutUsd.toFixed(2)} USD to ${f.beneficiaryXHandle} via 𝕏 Money from $${f.tokenSymbol} fees on ${f.platform.toUpperCase()}! (Zero claim needed)`,
           blockchainRefTx: f.sourceTxHash,
         });
         return { ...f, status: 'disbursed_x_money' as const, xMoneyPayoutId: pId };
@@ -667,22 +666,19 @@ export default function App() {
       {/* Main Content Area */}
       <main className="flex-1 pb-24 sm:pb-16">
         {activeTab === 'home' && (
-          <UsePaidFrontPage
+          <FrontLandingPage
             tokens={tokens}
-            fees={fees}
-            payouts={payouts}
+            treasuryConfig={treasuryConfig}
             totalCollectedUsd={totalCollectedUsd}
             totalDisbursedUsd={totalDisbursedUsd}
             onLaunchClick={(handle) => {
               setPrefilledLaunchHandle(handle);
               setActiveTab('launch');
             }}
-            onExploreFeesClick={() => setActiveTab('fees')}
-            onExplorePayoutsClick={() => setActiveTab('payouts')}
-            onExploreStreamersClick={() => setActiveTab('streamers')}
-            onSelectToken={(token) => {
-              setActiveTab('fees');
-            }}
+            onNavigateToFees={() => setActiveTab('fees')}
+            onNavigateToPayouts={() => setActiveTab('payouts')}
+            onNavigateToLookup={() => setActiveTab('lookup')}
+            onNavigateToHowItWorks={() => setActiveTab('how-it-works')}
           />
         )}
 
@@ -785,8 +781,9 @@ export default function App() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-slate-900 dark:text-white text-sm font-['Outfit']">FartPay Protocol</span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-lime-500/10 text-lime-600 dark:text-lime-400 border border-lime-500/25">
+              <TippedLogo className="w-5 h-5 rounded-lg border border-cyan-500/30" />
+              <span className="font-extrabold text-slate-900 dark:text-white text-sm font-['Outfit']">Tipped Protocol</span>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/25">
                 Solana Active
               </span>
             </div>

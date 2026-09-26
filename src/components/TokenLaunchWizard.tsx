@@ -34,8 +34,7 @@ import { PRESET_MEME_LOGOS, getXUserProfile, KNOWN_X_USERS } from '../data/mockD
 import { deployPumpFunToken, getLiveSolBalance, getSolanaProvider } from '../services/solanaLaunch';
 import { configurePumpFeeSharingOnChain } from '../services/pumpClaimService';
 import { getCurrentSolPrice, calculatePumpFunMarketCap } from '../services/solPriceService';
-import { playFartSound } from '../utils/fartSound';
-import { FartPayLogo } from './FartPayLogo';
+import { TippedLogo } from './TippedLogo';
 
 interface TokenLaunchWizardProps {
   treasuryConfig: TreasuryConfig;
@@ -197,7 +196,6 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
         };
         setLaunchedToken(updated);
         onTokenLaunched(updated);
-        playFartSound('wet');
       } else {
         throw new Error(res.error || 'Transaction 2 was not signed.');
       }
@@ -218,9 +216,6 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
   const handleLaunch = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Sound effect trigger
-    playFartSound('random');
-
     if (!name.trim() || !symbol.trim()) {
       setErrorMsg('Token Name and Symbol are required.');
       return;
@@ -239,7 +234,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
     setErrorMsg(null);
     setIsLaunching(true);
     setLaunchStep(1);
-    setLiveStatusText('Compressing gas metadata & uploading to IPFS...');
+    setLiveStatusText('Uploading metadata & artwork to IPFS...');
 
     let finalMintAddr = '';
     let deployedTxHash: string | undefined;
@@ -255,7 +250,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
         {
           name: name.trim(),
           symbol: symbol.toUpperCase().replace('$', ''),
-          description: description || `FARTPAY royalty token for ${beneficiaryHandle}. 95% trading fees auto-route to USD on 𝕏.`,
+          description: description || `TIPPED royalty token for ${beneficiaryHandle}. 95% trading fees auto-route to USD on 𝕏.`,
           imageUrl: logoUrl,
           imageFile: customImageFile,
           twitterHandle: beneficiaryHandle.replace('@', ''),
@@ -346,7 +341,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
       beneficiaryAccount: treasuryConfig.solanaTreasuryAddress,
       initialBuyAmount: parseFloat(initialBuy || '0'),
       feeSplitPct: 95,
-      mintAddress: finalMintAddr || 'Fart' + Math.random().toString(36).slice(2, 8).toUpperCase() + 'Sol',
+      mintAddress: finalMintAddr || 'Tip' + Math.random().toString(36).slice(2, 8).toUpperCase() + 'Sol',
       pairAddress: 'Pump' + Math.random().toString(36).slice(2, 8).toUpperCase(),
       creatorFeeRecipient: treasuryConfig.solanaTreasuryAddress,
       marketCapUsd: initialMcap || 3420,
@@ -368,7 +363,6 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
     onTokenLaunched(tokenData);
     setLaunchedToken(tokenData);
     setIsLaunching(false);
-    playFartSound('trumpet');
   };
 
   const handleLaunchWithTreasury = async () => {
@@ -381,8 +375,8 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
       const deployResult = await deployPumpFunToken(
         {
           name: name.trim() || `${beneficiaryHandle.replace('@', '')} Coin`,
-          symbol: symbol.toUpperCase().replace('$', '') || 'FART',
-          description: description || `FARTPAY royalty token for ${beneficiaryHandle}. 95% trading fees auto-route to USD on 𝕏.`,
+          symbol: symbol.toUpperCase().replace('$', '') || 'TIP',
+          description: description || `TIPPED royalty token for ${beneficiaryHandle}. 95% trading fees auto-route to USD on 𝕏.`,
           imageUrl: logoUrl,
           imageFile: customImageFile,
           twitterHandle: beneficiaryHandle.replace('@', ''),
@@ -397,7 +391,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
         (status) => setLiveStatusText(status)
       );
 
-      const finalMint = deployResult.mintAddress || `Fart${Math.random().toString(36).slice(2, 8).toUpperCase()}Sol`;
+      const finalMint = deployResult.mintAddress || `Tip${Math.random().toString(36).slice(2, 8).toUpperCase()}Sol`;
       const initialMcapData = calculatePumpFunMarketCap(parseFloat(initialBuy || '0'), currentSolPrice);
       const initialMcap = typeof initialMcapData === 'number' ? initialMcapData : initialMcapData.marketCapUsd;
 
@@ -407,7 +401,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
       const tokenData: TokenLaunchData = {
         id: `launch-${Date.now()}`,
         name: name.trim() || `${beneficiaryHandle.replace('@', '')} Token`,
-        symbol: symbol.toUpperCase().replace('$', '') || 'FART',
+        symbol: symbol.toUpperCase().replace('$', '') || 'TIP',
         description: description || `Meme token launched for ${beneficiaryHandle} on Pump.fun. 95% trading fees auto-settle to USD.`,
         logoUrl: deployResult.ipfsImageUrl || logoUrl,
         platform,
@@ -440,7 +434,6 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
       onTokenLaunched(tokenData);
       setLaunchedToken(tokenData);
       setIsLaunching(false);
-      playFartSound('trumpet');
     } catch (err: any) {
       setErrorMsg(err?.message || 'Treasury deployment failed.');
       setIsLaunching(false);
@@ -503,21 +496,21 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
 
       {/* Hero Studio Banner */}
       <div className="relative rounded-3xl overflow-hidden p-6 sm:p-10 border border-lime-500/30 bg-slate-950/80 shadow-2xl backdrop-blur-2xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-lime-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
         
         <div className="relative z-10 max-w-3xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-500/15 border border-lime-500/40 text-xs font-mono font-bold text-lime-400">
-            <Wind className="w-3.5 h-3.5 text-lime-400" />
-            <span>FARTPAY LAUNCH ENGINE V2.0</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/40 text-xs font-mono font-bold text-cyan-400">
+            <Zap className="w-3.5 h-3.5 text-cyan-400" />
+            <span>TIPPED LAUNCH ENGINE V2.0</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white font-['Outfit']">
-            Deploy Meme Token for any <span className="text-transparent bg-clip-text bg-gradient-to-r from-lime-400 via-emerald-400 to-cyan-400">𝕏 Account</span>
+            Deploy Meme Token for any <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400">𝕏 Account</span>
           </h1>
 
           <p className="text-sm sm:text-base text-slate-400 leading-relaxed font-sans">
-            Pump.fun fair-launch bonding curve with automated <strong className="text-lime-400 font-mono">95% USD Creator Royalties</strong> streamed directly to their 𝕏 Money wallet.
+            Pump.fun fair-launch bonding curve with automated <strong className="text-cyan-400 font-mono">95% USD Creator Royalties</strong> streamed directly to their 𝕏 Money wallet.
           </p>
         </div>
       </div>
@@ -806,7 +799,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
             <div className="p-4 rounded-2xl bg-slate-900/80 border border-white/5 space-y-2">
               <span className="text-[11px] font-mono text-slate-400 uppercase">Share On X (Twitter)</span>
               <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just launched $${launchedToken.symbol} on @pumpdotfun via FartPay Protocol! 95% creator royalties stream straight to ${launchedToken.beneficiaryXHandle} via 𝕏 Money 💨🚀\n\nTrade now: https://pump.fun/coin/${launchedToken.mintAddress}`)}`}
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`I just launched $${launchedToken.symbol} on @pumpdotfun via Tipped Protocol! 95% creator royalties stream straight to ${launchedToken.beneficiaryXHandle} via 𝕏 Money 🚀\n\nTrade now: https://pump.fun/coin/${launchedToken.mintAddress}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="h-10 px-4 rounded-xl bg-[#1DA1F2]/20 hover:bg-[#1DA1F2]/30 border border-[#1DA1F2]/40 text-[#1DA1F2] text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
@@ -946,8 +939,8 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. Fart Musk"
-                      className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-white font-bold text-sm focus:outline-none transition-colors"
+                      placeholder="e.g. Elon Doge"
+                      className="w-full px-4 py-3 rounded-xl bg-slate-900/90 border border-white/10 focus:border-cyan-400 text-white font-bold text-sm focus:outline-none transition-colors"
                       required
                     />
                   </div>
@@ -960,9 +953,9 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                         type="text"
                         value={symbol}
                         onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-                        placeholder="FMUSK"
+                        placeholder="EDOGE"
                         maxLength={10}
-                        className="w-full pl-8 pr-4 py-3 rounded-xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-white font-mono font-black text-sm uppercase focus:outline-none transition-colors"
+                        className="w-full pl-8 pr-4 py-3 rounded-xl bg-slate-900/90 border border-white/10 focus:border-cyan-400 text-white font-mono font-black text-sm uppercase focus:outline-none transition-colors"
                         required
                       />
                     </div>
@@ -974,9 +967,9 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder={`FartPay meme coin for ${beneficiaryHandle}. 95% creator fees route to 𝕏 USD.`}
+                    placeholder={`Tipped meme coin for ${beneficiaryHandle}. 95% creator fees route to 𝕏 USD.`}
                     rows={2}
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 focus:border-lime-400 text-xs text-white focus:outline-none transition-colors"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-900/90 border border-white/10 focus:border-cyan-400 text-xs text-white focus:outline-none transition-colors"
                   />
                 </div>
               </div>
@@ -1257,11 +1250,11 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                 />
                 <div className="min-w-0 flex-1">
                   <h3 className="text-xl font-black text-white font-['Outfit'] truncate">
-                    {name || 'Fart Musk Token'}
+                    {name || 'Elon Doge Token'}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="px-2 py-0.5 rounded-md bg-lime-500/20 text-lime-400 font-mono font-black text-xs">
-                      ${symbol || 'FMUSK'}
+                    <span className="px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-400 font-mono font-black text-xs">
+                      ${symbol || 'EDOGE'}
                     </span>
                     <span className="text-xs text-slate-400 font-mono truncate">
                       {beneficiaryHandle}
@@ -1281,11 +1274,11 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
                 </div>
                 <div className="flex items-center justify-between text-xs font-mono">
                   <span className="text-slate-400">Royalty Share:</span>
-                  <span className="font-bold text-lime-400">95% USD Direct to 𝕏</span>
+                  <span className="font-bold text-cyan-400">95% USD Direct to 𝕏</span>
                 </div>
                 <div className="flex items-center justify-between text-xs font-mono">
                   <span className="text-slate-400">Protocol Buy & Burn:</span>
-                  <span className="font-bold text-yellow-400">5% SOL Burn</span>
+                  <span className="font-bold text-teal-400">5% SOL Burn</span>
                 </div>
               </div>
 
@@ -1293,10 +1286,10 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs font-mono">
                   <span className="text-slate-400">Bonding Curve Target:</span>
-                  <span className="text-lime-400 font-bold">$69,000 USD (Raydium Migration)</span>
+                  <span className="text-cyan-400 font-bold">$69,000 USD (Raydium Migration)</span>
                 </div>
                 <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-lime-400 to-cyan-400 rounded-full w-[12%]" />
+                  <div className="h-full bg-gradient-to-r from-cyan-400 to-teal-400 rounded-full w-[12%]" />
                 </div>
               </div>
 
@@ -1304,7 +1297,7 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
               <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
                 <div className="p-2.5 rounded-xl bg-slate-900/80 border border-white/5 text-center">
                   <div className="text-[10px] text-slate-400 font-mono">MINT REVOKE</div>
-                  <div className="text-xs font-bold text-lime-400 font-mono">100% IMMUTABLE</div>
+                  <div className="text-xs font-bold text-cyan-400 font-mono">100% IMMUTABLE</div>
                 </div>
                 <div className="p-2.5 rounded-xl bg-slate-900/80 border border-white/5 text-center">
                   <div className="text-[10px] text-slate-400 font-mono">FREEZE AUTHORITY</div>
@@ -1317,11 +1310,11 @@ export const TokenLaunchWizard: React.FC<TokenLaunchWizardProps> = ({
             {/* How It Works Micro-Card */}
             <div className="p-5 rounded-3xl bg-slate-950/60 border border-white/10 space-y-3">
               <h4 className="text-xs font-mono font-black uppercase text-slate-300 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-lime-400" />
-                <span>How FartPay Protocol Operates</span>
+                <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                <span>How Tipped Protocol Operates</span>
               </h4>
               <p className="text-xs text-slate-400 leading-relaxed font-sans">
-                When you deploy, the creator fee beneficiary is hardcoded to FARTPAY's on-chain router. Every trade on Pump.fun generates SOL fees, which are auto-liquidated to USD and settled straight into the recipient's 𝕏 Money account.
+                When you deploy, the creator fee beneficiary is hardcoded to TIPPED's on-chain router. Every trade on Pump.fun generates SOL fees, which are auto-liquidated to USD and settled straight into the recipient's 𝕏 Money account.
               </p>
             </div>
 
