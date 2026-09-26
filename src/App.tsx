@@ -251,12 +251,6 @@ export default function App() {
   });
 
   useEffect(() => {
-    try {
-      localStorage.setItem('fartpay_app_mode', appMode);
-    } catch (e) {}
-  }, [appMode]);
-
-  useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('xpaid_theme', 'dark');

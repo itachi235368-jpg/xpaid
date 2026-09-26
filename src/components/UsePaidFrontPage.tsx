@@ -144,13 +144,14 @@ export const UsePaidFrontPage: React.FC<UsePaidFrontPageProps> = ({
 
     const interval = setInterval(() => {
       const randomToken = tokens[Math.floor(Math.random() * tokens.length)];
+      if (!randomToken) return;
       const microFee = +(RATE_PER_SECOND * 3).toFixed(2);
 
       setRecentEvents(prev => [
         {
           id: Math.random().toString(),
-          tokenSymbol: randomToken.symbol,
-          creatorHandle: randomToken.beneficiaryXHandle.replace(/^@/, ''),
+          tokenSymbol: randomToken.symbol || 'COIN',
+          creatorHandle: (randomToken.beneficiaryXHandle || 'creator').replace(/^@/, ''),
           amountUsd: microFee > 0 ? microFee : 0.12,
           timeAgo: 'just now',
           txHash: (randomToken.mintAddress ? randomToken.mintAddress.slice(0, 6) : '4xK9') + '...'
