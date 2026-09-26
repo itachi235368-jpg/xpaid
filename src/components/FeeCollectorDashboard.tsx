@@ -783,6 +783,34 @@ export const FeeCollectorDashboard: React.FC<FeeCollectorDashboardProps> = ({
                         Auto-Connected
                       </span>
                     </div>
+
+                    {/* On-Chain Dual Transactions (Tx 1: Creation & Tx 2: Royalty Binding) */}
+                    <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-800/50 p-2 rounded-lg border border-zinc-200/50 dark:border-zinc-700/50">
+                      <span className="font-semibold text-zinc-700 dark:text-zinc-300">Dual On-Chain Tx:</span>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`https://solscan.io/tx/${token.txHash || token.mintAddress}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-lime-600 dark:text-lime-400 hover:underline inline-flex items-center gap-0.5 font-bold"
+                          title="Verify Tx 1 (Token Creation) on Solscan"
+                        >
+                          <span>Tx 1 (Create)</span>
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                        <span>•</span>
+                        <a
+                          href={`https://solscan.io/tx/${token.feeSharingTx || token.creatorFeeRecipient || treasuryConfig.solanaTreasuryAddress}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-cyan-600 dark:text-cyan-400 hover:underline inline-flex items-center gap-0.5 font-bold"
+                          title="Verify Tx 2 (PumpFees Royalty Binding) on Solscan"
+                        >
+                          <span>Tx 2 (PumpFees)</span>
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

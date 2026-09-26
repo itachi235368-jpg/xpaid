@@ -72,6 +72,7 @@ export interface TokenLaunchData {
   websiteLink?: string;
   metadataUri?: string;
   ipfsImageUrl?: string;
+  txHash?: string;
   feeSharingTx?: string;
   feeSharingBound?: boolean;
 }
